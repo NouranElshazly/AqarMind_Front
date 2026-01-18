@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import global dark mode styles */
+@import './styles/global.css';
+
+/* Base styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure all pages have proper dark mode */
+#root {
+  min-height: 100vh;
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Force dark mode on common elements */
+.dark .bg-white {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark .text-gray-900,
+.dark .text-slate-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .border-gray-200,
+.dark .border-slate-200 {
+  border-color: var(--border-primary) !important;
+}
+
+.dark .shadow-sm,
+.dark .shadow,
+.dark .shadow-lg {
+  box-shadow: 0 1px 3px 0 var(--shadow-color) !important;
+}
+
+/* Form elements */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-secondary) !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  outline: none;
+  border-color: var(--text-accent) !important;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1) !important;
+}

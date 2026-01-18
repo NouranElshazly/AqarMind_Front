@@ -1,0 +1,50 @@
+Grad proj. tasks :
+1- check out all the apis is working perfect.✅
+2-install and setup vite✅ and Tailwind.css.✅
+3-Edit all the desing of the proj✅ and check the gaurds.✅
+4-Add pages from the reqs.//
+-edit reply dropdown✅
+5-edit save feature.✅
+6-edit comments feature.✅ 
+7-edit port cofilction.✅ 'apiconfig page in service folder'
+8-edit landing page based on token and role.✅ 
+8-edit chat design page.✅ 
+
+
+
+
+
+final changes and API updates:
+-register
+(
+/api/Auth/register✅
+)
+
+-login 
+(
+/api/Auth/login✅
+)
+
+-Pending Landlord Approvals 
+(
+/api/admin/waitingLandlords✅
+/api/admin/accept-waiting-landlord/{landlordId}✅
+/api/admin/reject-waiting-landlord/{landlordId}✅
+)
+
+-landlord dashboard
+(
+/api/Landlord/create-post/{userId}✅
+/api/Landlord/get-my-posts/{userId}✅
+/api/Landlord/edit-post/{postId}✅
+/api/Landlord/delete-post/{postId}✅
+) 
+
+
+-Pending posts
+(
+/api/admin/waitingPosts✅
+/api/admin/accept-post/{id}✅
+/api/admin/reject-post/{id}✅
+)
+

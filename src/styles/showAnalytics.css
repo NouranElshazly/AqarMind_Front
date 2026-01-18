@@ -1,0 +1,94 @@
+.admin-approvals-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .admin-approvals-container h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 600;
+  }
+  
+  .landlords-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .approval-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .approval-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-header {
+    background-color: #3498db;
+    color: white;
+    padding: 1rem;
+  }
+  
+  .card-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .card-body p {
+    margin: 0.5rem 0;
+    color: #34495e;
+    line-height: 1.6;
+  }
+  
+  .card-body strong {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+  
+  .loading-message,
+  .error-message,
+  .info-message {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 5px;
+    margin: 1rem 0;
+  }
+  
+  .loading-message {
+    color: #3498db;
+    background-color: #ebf5fb;
+  }
+  
+  .error-message {
+    color: #e74c3c;
+    background-color: #fdedec;
+  }
+  
+  .info-message {
+    color: #f39c12;
+    background-color: #fef5e7;
+  }
+  
+  @media (max-width: 768px) {
+    .admin-approvals-container {
+      padding: 1rem;
+    }
+    
+    .landlords-grid {
+      grid-template-columns: 1fr;
+    }
+  }
