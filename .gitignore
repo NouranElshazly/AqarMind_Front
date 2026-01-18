@@ -1,2 +1,26 @@
-node/
+# Dependencies
 node_modules/
+node/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+ 
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vite
+.vite/
