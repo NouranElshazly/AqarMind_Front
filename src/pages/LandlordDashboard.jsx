@@ -641,7 +641,6 @@ useEffect(() => {
               className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg"
               variants={itemVariants}
               whileHover="hover"
-              variants={cardHoverVariants}
             >
               <div className="flex items-start justify-between">
                 <div>

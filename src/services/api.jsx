@@ -329,4 +329,68 @@ export const fetchLandlordActivity = () =>
 
 export default API;
 
-// ===== Tenant Profile ====> 
+// ======================= Tenant Profile =====================
+/* get current user complete profile (private )
+ * Returns: fullName, email, phone, address, profilePhotoPath, nidPath, ownershipDocumentPath
+*/
+export const getMyProfile = (userId) => 
+  API.get(`${API_BASE_URL}/api/Profile/me/${userId}`);
+
+/**
+ * Get any user's public profile (public view)
+ * Returns: fullName, profilePhotoPath, rate (for landlords only)
+ * @param {number} userId - The ID of the user to view
+ */
+export const getUserProfile = (userId) => 
+  API.get(`${API_BASE_URL}/api/Profile/${userId}`);
+
+/**
+ * Update current user's profile information
+ * All fields are optional - only send the fields you want to update
+ * @param {number} userId - The ID of the current user
+ * @param {Object} profileData - Profile data to update
+ * @param {string} [profileData.username] - New username
+ * @param {string} [profileData.email] - New email address
+ * @param {string} [profileData.phone] - New phone number (Egyptian format)
+ * @param {string} [profileData.address] - New address
+ * @param {File} [profileData.profilePhoto] - New profile photo file
+ * @param {File} [profileData.nidFile] - New National ID document file
+ */
+export const updateMyProfile = (userId, profileData) => {
+  const formData = new FormData();
+  
+  if (profileData.username) formData.append('username', profileData.username);
+  if (profileData.email) formData.append('email', profileData.email);
+  if (profileData.phone) formData.append('phone', profileData.phone);
+  if (profileData.address) formData.append('address', profileData.address);
+  if (profileData.profilePhoto) formData.append('profilePhoto', profileData.profilePhoto);
+  if (profileData.nidFile) formData.append('nidFile', profileData.nidFile);
+  
+  return API.put(`${API_BASE_URL}/api/Profile/me/${userId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
+/**
+ * Update user's password
+ * Validates that new password is different from old password
+ * @param {number} userId - The ID of the current user
+ * @param {Object} passwordData - Password change data
+ * @param {string} passwordData.oldPassword - Current password (required)
+ * @param {string} passwordData.newPassword - New password (required)
+ * @param {string} passwordData.confirmPassword - Confirm new password (required, must match newPassword)
+ */
+export const updatePassword = (userId, passwordData) => {
+  const formData = new FormData();
+  formData.append('oldPassword', passwordData.oldPassword);
+  formData.append('newPassword', passwordData.newPassword);
+  formData.append('confirmPassword', passwordData.confirmPassword);
+  
+  return API.put(`${API_BASE_URL}/api/Profile/me/${userId}/password`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}
