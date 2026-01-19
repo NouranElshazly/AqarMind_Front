@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import io from "socket.io-client"; 
 import API_BASE_URL from "../services/ApiConfig";
+import "./Login.css";
 
-// --- Face Login Modal Component (تصميم دائري فخم) ---
+// --- Face Login Modal Component ---
 const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -31,7 +32,6 @@ const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
     });
     setSocket(newSocket);
 
-    // استخدام جودة مناسبة للمربع الدائري
     navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 400, facingMode: "user" } }) 
       .then((stream) => {
         if (videoRef.current) videoRef.current.srcObject = stream;
@@ -75,7 +75,6 @@ const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
 
       if (videoRef.current && canvasRef.current) {
         const context = canvasRef.current.getContext("2d");
-        // رسم بجودة خفيفة للإرسال
         context.drawImage(videoRef.current, 0, 0, 200, 200);
         const base64 = canvasRef.current.toDataURL("image/jpeg", 0.5);
         
@@ -87,75 +86,49 @@ const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
   }, [socket, usernameOrEmail]);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
-      
-      {/* ستايل الأنيميشن الخاص بالمسح الضوئي */}
-      <style>{`
-        @keyframes scanMove {
-          0% { top: -10%; opacity: 0; }
-          15% { opacity: 1; }
-          85% { opacity: 1; }
-          100% { top: 110%; opacity: 0; }
-        }
-        .scan-line {
-          animation: scanMove 2s linear infinite;
-        }
-      `}</style>
-
-      <div className="relative bg-white/10 border border-white/20 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl backdrop-blur-xl">
+    <div className="face-modal-overlay">
+      <div className="face-modal-content">
         
-        {/* زر الإغلاق */}
-        <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 text-white/50 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-all"
-        >
+        <button onClick={onClose} className="face-modal-close">
             &times;
         </button>
 
-        <h3 className="text-2xl font-bold mb-6 text-white tracking-wide">Face ID</h3>
+        <h3 className="face-modal-title">Face ID</h3>
         
-        {/* حاوية الفيديو الدائرية الفخمة */}
-        <div className="relative mx-auto w-64 h-64 mb-6">
-            {/* الحلقة الخارجية المشعة */}
-            <div className={`absolute inset-0 rounded-full border-[3px] ${isSuccessRef.current ? "border-green-500 shadow-[0_0_50px_rgba(34,197,94,0.6)]" : "border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.6)]"} transition-all duration-500`}></div>
+        <div className="face-video-container">
+            <div className={`face-video-ring ${isSuccessRef.current ? "face-video-ring-success" : "face-video-ring-scanning"}`}></div>
             
-            {/* حلقة داخلية رفيعة */}
-            <div className="absolute inset-2 rounded-full border border-white/20"></div>
+            <div className="face-video-inner-ring"></div>
 
-            {/* الحاوية المقصوصة دائرياً */}
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-black">
-                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
+            <div className="face-video-wrapper">
+                <video ref={videoRef} autoPlay playsInline muted className="face-video" />
                 
-                {/* تأثير المسح الضوئي (يظهر فقط أثناء البحث) */}
                 {!isSuccessRef.current && !error && (
-                    <div className="absolute w-full h-12 bg-gradient-to-b from-transparent via-blue-400/50 to-transparent scan-line shadow-[0_0_15px_rgba(96,165,250,0.8)]"></div>
+                    <div className="face-scan-line"></div>
                 )}
 
-                {/* طبقة نجاح خضراء شفافة */}
                 {isSuccessRef.current && (
-                    <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center backdrop-blur-[2px]">
-                         <svg className="w-16 h-16 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="face-success-overlay">
+                         <svg className="face-success-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                 )}
             </div>
 
-            {/* الكانفاس المخفي */}
-            <canvas ref={canvasRef} width="200" height="200" className="hidden" />
+            <canvas ref={canvasRef} width="200" height="200" style={{ display: 'none' }} />
         </div>
 
-        {/* حالة النص */}
-        <div className="h-8">
+        <div className="face-status-container">
             {error ? (
-                <span className="inline-block px-4 py-1 rounded-full bg-red-500/20 text-red-200 text-sm font-medium border border-red-500/30">
+                <span className="face-status-badge face-status-error">
                     {error}
                 </span>
             ) : (
-                <span className={`inline-block px-6 py-1.5 rounded-full text-sm font-medium tracking-wide transition-all duration-300 ${
+                <span className={`face-status-badge ${
                     isSuccessRef.current 
-                    ? "bg-green-500/20 text-green-300 border border-green-500/30" 
-                    : "bg-blue-500/20 text-blue-200 border border-blue-500/30 animate-pulse"
+                    ? "face-status-success" 
+                    : "face-status-scanning"
                 }`}>
                     {status}
                 </span>
@@ -166,7 +139,7 @@ const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
   );
 };
 
-// --- Main Login Component (كما هي تماماً) ---
+// --- Main Login Component ---
 const Login = () => {
   const [formData, setFormData] = useState({
     usernameOrEmail: "",
@@ -298,7 +271,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-slate-700 via-slate-600 to-blue-500">
+    <div className="login-container">
       
       {showFaceModal && (
           <FaceLoginModal 
@@ -308,85 +281,159 @@ const Login = () => {
           />
       )}
 
-      {/* Animated background overlay */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse top-10 -left-20"></div>
-        <div className="absolute w-96 h-96 bg-slate-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse bottom-10 -right-20 animation-delay-2000"></div>
-      </div>
+      {/* Animated background elements */}
+      <div className="login-bg-element login-bg-element-1"></div>
+      <div className="login-bg-element login-bg-element-2"></div>
 
-      <div className="relative z-10 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className="grid md:grid-cols-5 gap-0">
+      <div className="login-card">
+        <div className="login-grid">
           {/* Left Side - Branding */}
-          <div className="md:col-span-2 bg-gradient-to-br from-slate-700 to-blue-600 p-10 flex flex-col justify-center items-center text-white relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black opacity-20"></div>
-            <div className="relative z-10 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-white bg-opacity-20 backdrop-blur-sm">
-                <svg viewBox="0 0 24 24" className="w-10 h-10 fill-white">
-                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+          <div className="login-brand-panel">
+            <div className="login-brand-overlay"></div>
+            
+            {/* Decorative elements */}
+            <div className="login-decoration-1"></div>
+            <div className="login-decoration-2"></div>
+            
+            <div className="login-brand-content">
+              <div className="login-brand-icon">
+                <svg viewBox="0 0 24 24" style={{ width: '3rem', height: '3rem', fill: 'white' }}>
+                  <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1M12 7C13.11 7 14 7.89 14 9C14 10.11 13.11 11 12 11C10.89 11 10 10.11 10 9C10 7.89 10.89 7 12 7M12 14.5C14.67 14.5 16.94 16.14 17 18.5H7C7.06 16.14 9.33 14.5 12 14.5Z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold mb-4">Welcome Back</h2>
-              <p className="text-blue-100 text-sm leading-relaxed mb-8">
-                Sign in to access your real estate account and manage your properties.
+              <h2 className="login-brand-title">Welcome Back</h2>
+              <p className="login-brand-description">
+                Access your real estate dashboard and manage your properties with ease.
               </p>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                 
+              <div className="login-feature-list">
+                <div className="login-feature-item">
+                  <div className="login-feature-dot"></div>
+                  <span className="login-feature-text">Secure authentication</span>
+                </div>
+                <div className="login-feature-item">
+                  <div className="login-feature-dot"></div>
+                  <span className="login-feature-text">Face ID technology</span>
+                </div>
+                <div className="login-feature-item">
+                  <div className="login-feature-dot"></div>
+                  <span className="login-feature-text">Property management</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Form */}
-          <div className="md:col-span-3 p-10">
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Sign In</h3>
-              <p className="text-gray-500 text-sm">Enter your credentials to continue</p>
+          <div className="login-form-panel">
+            <div className="login-form-header">
+              <h3 className="login-form-title">Sign In</h3>
+              <p className="login-form-subtitle">Enter your credentials to access your account</p>
             </div>
 
             {message.text && (
-              <div className={`p-3 mb-5 rounded-lg text-center text-sm font-medium ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : message.type === "error" ? "bg-red-50 text-red-700 border border-red-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
+              <div className={`login-message ${
+                message.type === "success" 
+                  ? "login-message-success" 
+                  : message.type === "error" 
+                    ? "login-message-error" 
+                    : "login-message-info"
+              }`}>
                 {message.text}
               </div>
             )}
 
-            <div className="space-y-5">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="usernameOrEmail" className="text-slate-700 font-semibold text-sm">Username or Email</label>
-                <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 fill-gray-400 transition-colors peer-focus:fill-blue-500" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
-                  <input type="text" id="usernameOrEmail" name="usernameOrEmail" value={formData.usernameOrEmail} onChange={handleChange} placeholder="Enter username or email" required className="peer w-full py-3 pr-3 pl-11 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100" />
+            <div className="login-form">
+              <div className="login-field">
+                <label htmlFor="usernameOrEmail" className="login-label">
+                  Username or Email
+                </label>
+                <div className="login-input-wrapper">
+                  <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input 
+                    type="text" 
+                    id="usernameOrEmail" 
+                    name="usernameOrEmail" 
+                    value={formData.usernameOrEmail} 
+                    onChange={handleChange} 
+                    placeholder="Enter your username or email" 
+                    required 
+                    className="login-input" 
+                  />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="password" className="text-slate-700 font-semibold text-sm">Password</label>
-                <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 fill-gray-400 transition-colors peer-focus:fill-blue-500" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" /></svg>
-                  <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Enter your password" required className="peer w-full py-3 pr-3 pl-11 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm transition-all duration-300 focus:bg-white focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100" />
+              <div className="login-field">
+                <label htmlFor="password" className="login-label">
+                  Password
+                </label>
+                <div className="login-input-wrapper">
+                  <svg className="login-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    placeholder="Enter your password" 
+                    required 
+                    className="login-input" 
+                  />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                  <button onClick={handleSubmit} disabled={isLoading} className="flex-1 py-3.5 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-xl text-sm shadow-lg shadow-slate-700/20 transition-all duration-300 hover:from-slate-800 hover:to-slate-900 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed">
-                    {isLoading ? "Signing in..." : "Sign In"}
-                  </button>
+              <div className="login-buttons">
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={isLoading} 
+                  className="login-btn login-btn-primary"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="login-loading-spinner"></div>
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </button>
 
-                  <button onClick={startFaceLogin} disabled={isLoading} className="flex-1 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Face ID
-                  </button>
+                <button 
+                  onClick={startFaceLogin} 
+                  disabled={isLoading} 
+                  className="login-btn login-btn-face"
+                >
+                  <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Face ID
+                </button>
               </div>
             </div>
 
-            <div className="mt-6">
-              <div className="flex items-center text-gray-400 text-xs my-4">
-                <div className="flex-1 border-b border-gray-200"></div>
-                <span className="px-3">or</span>
-                <div className="flex-1 border-b border-gray-200"></div>
+            <div className="login-divider">
+              <div className="login-divider-line">
+                <div className="login-divider-border">
+                  <div className="login-divider-border-line"></div>
+                </div>
+                <div className="login-divider-text">
+                  <span>or</span>
+                </div>
               </div>
-              <button onClick={enterAsGuest} className="w-full py-3 px-4 bg-white text-slate-700 font-semibold rounded-xl text-sm border-2 border-slate-300 transition-all duration-300 hover:bg-slate-50 hover:border-slate-400">Continue as Guest</button>
-              <p className="text-center text-gray-500 text-xs mt-4">Don't have an account? <a href="/register" className="text-blue-600 font-semibold hover:underline transition-all duration-200">Register</a></p>
+              
+              <button onClick={enterAsGuest} className="login-guest-btn">
+                Continue as Guest
+              </button>
+              
+              <p className="login-footer">
+                Don't have an account? 
+                <a href="/register" className="login-footer-link">
+                  Create one
+                </a>
+              </p>
             </div>
           </div>
         </div>

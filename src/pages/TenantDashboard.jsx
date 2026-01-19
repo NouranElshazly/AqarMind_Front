@@ -6,14 +6,12 @@ import {
   FaFileAlt,
   FaComments,
   FaUser,
-  FaHeart,
   FaSearch,
   FaEnvelope,
   FaCalendarAlt,
   FaBookmark,
   FaEye,
   FaMapMarkerAlt,
-  FaDollarSign,
   FaBed,
   FaBath,
   FaRulerCombined,
@@ -22,9 +20,11 @@ import {
   FaClock,
   FaShieldAlt,
   FaRocket,
-  FaRegBookmark
+  FaRegBookmark,
+  FaArrowRight
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
+import "./TenantDashboard.css";
 
 // Helper functions
 const getUserId = () => localStorage.getItem("userId");
@@ -364,31 +364,114 @@ const TenantDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center animate-pulse">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-xl text-gray-600 font-semibold">Loading your dashboard...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="tenant-dashboard">
+      {/* Hero Section */}
+      <section className="dashboard-hero">
+        <div className="hero-background">
+          <div className="hero-gradient"></div>
+          <div className="hero-pattern"></div>
+        </div>
+        
+        <div className="hero-content">
+          <div className="hero-text">
+            <h1 className="hero-title">
+              Welcome back, <span className="hero-name">{user?.name || "Tenant"}</span>! 
+              <span className="hero-emoji">🏠</span>
+            </h1>
+            <p className="hero-subtitle">
+              Your dream home is just a click away. Explore thousands of verified properties, 
+              track your applications, and find the perfect place to call home.
+            </p>
+            
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <div className="hero-stat-number">{stats.savedCount}</div>
+                <div className="hero-stat-label">Saved Properties</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-number">{stats.applicationsCount}</div>
+                <div className="hero-stat-label">Applications</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-number">{stats.viewsCount}</div>
+                <div className="hero-stat-label">Properties Viewed</div>
+              </div>
+            </div>
+
+            <div className="hero-actions">
+              <Link to="/show-all-post" className="hero-btn hero-btn-primary">
+                <FaSearch />
+                Find Properties
+              </Link>
+              <Link to="/saved-posts" className="hero-btn hero-btn-secondary">
+                <FaBookmark />
+                View Saved
+              </Link>
+            </div>
+          </div>
+
+          <div className="hero-visual">
+            <div className="hero-avatar">
+              <div className="avatar-ring"></div>
+              <div className="avatar-content">
+                {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+              </div>
+              <div className="avatar-status">
+                <FaShieldAlt />
+              </div>
+            </div>
+            
+            <div className="hero-badges">
+              <div className="hero-badge">
+                <FaCalendarAlt />
+                <span>
+                  {new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric"
+                  })}
+                </span>
+              </div>
+              <div className="hero-badge active">
+                <FaRocket />
+                <span>Active Tenant</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="hero-scroll">
+          <div className="scroll-mouse">
+            <div className="scroll-wheel"></div>
+          </div>
+          <span>Scroll to explore</span>
+        </div>
+      </section>
+
+      <div className="dashboard-container">
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 mb-12 animate-fade-in">
-          <div className="flex-1">
-            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+        <div className="dashboard-header">
+          <div className="header-content">
+            <h1 className="dashboard-title">
               Welcome back, {user?.name || "Tenant"}! 👋
             </h1>
-            <p className="text-xl text-gray-600 mb-6 max-w-2xl">
+            <p className="dashboard-subtitle">
               Ready to find your perfect home? Explore thousands of verified properties and make your dream a reality.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-3 px-4 py-3 bg-white/80 backdrop-blur-sm rounded-2xl font-semibold text-gray-700 shadow-lg border border-gray-200">
-                <FaCalendarAlt className="text-blue-600 text-sm" />
-                <span className="text-sm">
+            <div className="header-badges">
+              <div className="date-badge">
+                <FaCalendarAlt />
+                <span>
                   {new Date().toLocaleDateString("en-US", {
                     weekday: "long",
                     month: "long",
@@ -397,195 +480,233 @@ const TenantDashboard = () => {
                   })}
                 </span>
               </div>
-              <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg">
-                <FaRocket className="text-lg" />
-                <span className="font-semibold">Active Tenant</span>
+              <div className="status-badge">
+                <FaRocket />
+                <span>Active Tenant</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center text-3xl font-bold shadow-2xl ring-4 ring-white/20">
-                {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
-              </div>
-              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-                <FaShieldAlt className="text-white text-xs" />
+          <div className="header-profile">
+            <div className="tenant-profile-avatar">
+              {user?.name ? user.name.charAt(0).toUpperCase() : "T"}
+              <div className="profile-status">
+                <FaShieldAlt />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {[
-            {
-              icon: FaBookmark,
-              label: "Saved Properties",
-              value: stats.savedCount,
-              description: "Properties you've saved",
-              color: "blue",
-              gradient: "from-blue-500 to-blue-600"
-            },
-            {
-              icon: FaFileAlt,
-              label: "Applications",
-              value: stats.applicationsCount,
-              description: "Active applications",
-              color: "purple",
-              gradient: "from-purple-500 to-purple-600"
-            },
-            {
-              icon: FaEye,
-              label: "Properties Viewed",
-              value: stats.viewsCount,
-              description: "Properties you've explored",
-              color: "green",
-              gradient: "from-green-500 to-green-600"
-            }
-          ].map((stat, index) => (
-            <div 
-              key={index}
-              className="group p-6 rounded-3xl bg-white/80 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-white/20 animate-slide-up"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-2xl text-white shadow-lg`}>
-                  <stat.icon />
+        {/* Stats Overview - Detailed Cards */}
+        <section className="stats-section">
+          <div className="stats-grid detailed">
+            {[
+              {
+                icon: FaBookmark,
+                label: "Saved Properties",
+                value: stats.savedCount,
+                description: "Properties you've saved",
+                color: "blue",
+                trend: "+12%"
+              },
+              {
+                icon: FaFileAlt,
+                label: "Applications",
+                value: stats.applicationsCount,
+                description: "Active applications",
+                color: "purple",
+                trend: "+5%"
+              },
+              {
+                icon: FaEye,
+                label: "Properties Viewed",
+                value: stats.viewsCount,
+                description: "Properties you've explored",
+                color: "green",
+                trend: "+23%"
+              }
+            ].map((stat, index) => (
+              <div 
+                key={index}
+                className="stat-card enhanced"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="stat-card-header">
+                  <div className={`stat-icon ${stat.color}`}>
+                    <stat.icon />
+                  </div>
+                  <div className="stat-trend">
+                    <span className="trend-value">{stat.trend}</span>
+                    <span className="trend-label">vs last month</span>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                  <p className="text-sm text-gray-600">{stat.description}</p>
+                <div className="stat-details">
+                  <p className="stat-label">{stat.label}</p>
+                  <p className="stat-value">{stat.value}</p>
+                  <p className="stat-description">{stat.description}</p>
+                </div>
+                <div className="stat-progress">
+                  <div className={`progress-bar ${stat.color}`}></div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
 
         {/* Featured Properties */}
-        <section className="mb-12">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                Featured Properties 🔥
+        <section className="featured-section">
+          <div className="section-header">
+            <div className="header-content">
+              <div className="section-badge">
+                <FaStar />
+                <span>Handpicked for You</span>
+              </div>
+              <h2 className="section-title">
+                Featured Properties
               </h2>
-              <p className="text-lg text-gray-600">Based on your preferences</p>
+              <p className="section-subtitle">Discover amazing properties that match your preferences and budget</p>
             </div>
             <Link
               to="/show-all-post"
               onClick={() => handleQuickAction('view_all_properties')}
-              className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="view-all-btn"
             >
-              View All Properties
-              <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
-                →
-              </span>
+              <span>View All Properties</span>
+              <div className="btn-icon">
+                <FaSearch />
+              </div>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="properties-grid enhanced">
             {featuredProperties.map((property, index) => (
               <div
                 key={property.postId}
-                className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-200 cursor-pointer animate-fade-in hover:-translate-y-2"
+                className="property-card enhanced"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
                 {/* Property Image */}
                 <div 
-                  className="relative h-48 overflow-hidden"
+                  className="property-image"
                   onClick={() => handlePropertyClick(property.postId)}
                 >
                   {property.image ? (
                     <img
                       src={property.image}
                       alt={property.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <FaHome className="text-4xl text-gray-400" />
+                    <div className="property-placeholder">
+                      <FaHome />
+                      <span>No Image Available</span>
                     </div>
                   )}
                   
-                  {/* Save Button - Changed to Bookmark */}
+                  {/* Property Overlay */}
+                  <div className="property-overlay">
+                    <button className="quick-view-btn">
+                      <FaEye />
+                      <span>Quick View</span>
+                    </button>
+                  </div>
+                  
+                  {/* Save Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSaveProperty(property.postId, property.isSaved);
                     }}
-                    className={`absolute top-4 left-4 p-3 rounded-2xl backdrop-blur-sm transition-all duration-300 ${
-                      property.isSaved 
-                        ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                        : 'bg-white/90 text-gray-600 hover:bg-white hover:text-blue-500'
-                    }`}
+                    className={`save-btn ${property.isSaved ? 'saved' : ''}`}
                     disabled={savingStates[property.postId]}
                   >
                     {savingStates[property.postId] ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <div className="loading-spinner" style={{ width: '1rem', height: '1rem' }}></div>
                     ) : property.isSaved ? (
-                      <FaBookmark className="text-lg" />
+                      <FaBookmark />
                     ) : (
-                      <FaRegBookmark className="text-lg" />
+                      <FaRegBookmark />
                     )}
                   </button>
 
-                  {/* Rating and Views */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    <div className="flex items-center gap-1 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      <FaStar className="text-yellow-400" />
+                  {/* Property Badges */}
+                  <div className="property-badges">
+                    <div className="rating-badge">
+                      <FaStar />
                       {property.rating}
                     </div>
-                    <div className="flex items-center gap-1 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                      <FaEye className="text-xs" />
+                    <div className="views-badge">
+                      <FaEye />
                       {property.views || 0}
                     </div>
                   </div>
-                  
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
 
                 {/* Property Details */}
-                <div className="p-6">
-                  <h3 
-                    className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer"
-                    onClick={() => handlePropertyClick(property.postId)}
-                  >
-                    {property.title}
-                  </h3>
-
-                  <div className="flex items-center text-gray-600 mb-3">
-                    <FaMapMarkerAlt className="text-red-500 mr-2" />
-                    <span className="text-sm">{property.location}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-green-600">
-                      ${property.price?.toLocaleString()}
-                      <span className="text-sm text-gray-500 font-normal">/month</span>
-                    </span>
+                <div className="property-content">
+                  <div className="property-header">
+                    <h3 
+                      className="property-title"
+                      onClick={() => handlePropertyClick(property.postId)}
+                    >
+                      {property.title}
+                    </h3>
                     {property.isSaved && (
-                      <div className="flex items-center gap-1 text-blue-600 text-sm font-semibold bg-blue-50 px-2 py-1 rounded-full">
-                        <FaBookmark className="text-xs" />
-                        Saved
+                      <div className="saved-indicator">
+                        <FaBookmark />
                       </div>
                     )}
                   </div>
 
+                  <div className="property-location">
+                    <FaMapMarkerAlt />
+                    <span>{property.location}</span>
+                  </div>
+
+                  <div className="property-price">
+                    <span className="price-amount">
+                      ${property.price?.toLocaleString()}
+                    </span>
+                    <span className="price-period">/month</span>
+                  </div>
+
                   {/* Property Features */}
-                  <div className="flex items-center justify-between text-sm text-gray-600 border-t border-gray-200 pt-4">
-                    <div className="flex items-center gap-1">
-                      <FaBed className="text-blue-500" />
-                      <span>{property.bedrooms} beds</span>
+                  <div className="property-features">
+                    <div className="feature-item">
+                      <FaBed />
+                      <span>{property.bedrooms}</span>
+                      <label>Beds</label>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaBath className="text-green-500" />
-                      <span>{property.bathrooms} baths</span>
+                    <div className="feature-item">
+                      <FaBath />
+                      <span>{property.bathrooms}</span>
+                      <label>Baths</label>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaRulerCombined className="text-purple-500" />
-                      <span>{property.size} sqft</span>
+                    <div className="feature-item">
+                      <FaRulerCombined />
+                      <span>{property.size}</span>
+                      <label>Sqft</label>
                     </div>
+                  </div>
+
+                  {/* Property Actions */}
+                  <div className="property-actions">
+                    <button 
+                      className="action-btn primary"
+                      onClick={() => handlePropertyClick(property.postId)}
+                    >
+                      <FaEye />
+                      View Details
+                    </button>
+                    <button 
+                      className="action-btn secondary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Add contact functionality here
+                      }}
+                    >
+                      <FaEnvelope />
+                      Contact
+                    </button>
                   </div>
                 </div>
               </div>
@@ -594,88 +715,96 @@ const TenantDashboard = () => {
         </section>
 
         {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bottom-grid enhanced">
           {/* Quick Actions */}
-          <section className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20 animate-fade-in">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Quick Actions 🚀</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <section className="dashboard-section actions-section">
+            <div className="section-header-small">
+              <div className="section-badge">
+                <FaRocket />
+                <span>Quick Access</span>
+              </div>
+              <h2 className="section-title-small">Quick Actions</h2>
+              <p className="section-subtitle-small">Everything you need at your fingertips</p>
+            </div>
+            <div className="actions-grid enhanced">
               {[
-                { icon: FaSearch, label: "Find Properties", path: "/show-all-post", color: "blue", action: "find_properties" },
-                { icon: FaBookmark, label: "Saved Homes", path: "/saved-posts", color: "pink", action: "saved_homes" },
-                { icon: FaFileAlt, label: "My Applications", path: "/UserProperties", color: "purple", action: "my_applications" },
-                { icon: FaEnvelope, label: "Messages", path: "/messages", color: "green", action: "messages" },
-                { icon: FaUser, label: "Profile", path: "/profile", color: "orange", action: "profile" },
-                { icon: FaComments, label: "Support", path: "/contact", color: "gray", action: "support" }
+                { icon: FaSearch, label: "Find Properties", path: "/show-all-post", color: "blue", action: "find_properties", description: "Browse all listings" },
+                { icon: FaBookmark, label: "Saved Homes", path: "/saved-posts", color: "pink", action: "saved_homes", description: "Your favorites" },
+                { icon: FaFileAlt, label: "My Applications", path: "/UserProperties", color: "purple", action: "my_applications", description: "Track progress" },
+                { icon: FaEnvelope, label: "Messages", path: "/messages", color: "green", action: "messages", description: "Chat with agents" },
+                { icon: FaUser, label: "Profile", path: "/profile", color: "orange", action: "profile", description: "Account settings" },
+                { icon: FaComments, label: "Support", path: "/contact", color: "gray", action: "support", description: "Get help" }
               ].map((action, index) => (
                 <Link
                   key={index}
                   to={action.path}
                   onClick={() => handleQuickAction(action.action)}
-                  className="group flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 border border-gray-200 hover:border-blue-200"
+                  className="action-item enhanced"
                 >
-                  <div className={`w-12 h-12 rounded-2xl bg-${action.color}-100 text-${action.color}-600 flex items-center justify-center text-xl mb-3 group-hover:bg-${action.color}-600 group-hover:text-white transition-colors duration-300`}>
-                    <action.icon />
+                  <div className="action-header">
+                    <div className={`action-icon ${action.color}`}>
+                      <action.icon />
+                    </div>
+                    <div className="action-indicator">
+                      <FaArrowRight />
+                    </div>
                   </div>
-                  <span className="font-semibold text-gray-900 text-sm">{action.label}</span>
+                  <div className="action-content">
+                    <span className="action-label">{action.label}</span>
+                    <span className="action-description">{action.description}</span>
+                  </div>
                 </Link>
               ))}
             </div>
           </section>
 
           {/* Recent Activity */}
-          <section className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20 animate-fade-in">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Recent Activity 📈</h2>
-            <div className="space-y-4">
+          <section className="dashboard-section activity-section">
+            <div className="section-header-small">
+              <div className="section-badge">
+                <FaChartLine />
+                <span>Your Activity</span>
+              </div>
+              <h2 className="section-title-small">Recent Activity</h2>
+              <p className="section-subtitle-small">Keep track of your property journey</p>
+            </div>
+            <div className="activity-list enhanced">
               {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white transition-colors duration-200">
-                  <div className={`w-10 h-10 rounded-xl ${
-                    activity.type === 'view' ? 'bg-blue-100 text-blue-600' :
-                    activity.type === 'save' ? 'bg-green-100 text-green-600' :
-                    activity.type === 'apply' ? 'bg-purple-100 text-purple-600' :
-                    'bg-gray-100 text-gray-600'
-                  } flex items-center justify-center flex-shrink-0`}>
+                <div key={index} className="activity-item enhanced">
+                  <div className={`activity-icon ${
+                    activity.type === 'view' ? 'view' :
+                    activity.type === 'save' ? 'save' :
+                    activity.type === 'apply' ? 'apply' :
+                    'default'
+                  }`}>
                     {activity.type === 'view' ? <FaEye /> :
                      activity.type === 'save' ? <FaBookmark /> :
                      activity.type === 'apply' ? <FaFileAlt /> :
                      <FaClock />}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{activity.action}</p>
-                    <p className="text-sm text-gray-600">{activity.property}</p>
+                  <div className="activity-content">
+                    <p className="activity-action">{activity.action}</p>
+                    <p className="activity-property">{activity.property}</p>
                   </div>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    {activity.time}
-                  </span>
+                  <div className="activity-meta">
+                    <span className="activity-time">{activity.time}</span>
+                    <div className="activity-status">
+                      <div className="status-dot"></div>
+                    </div>
+                  </div>
                 </div>
               ))}
+              
+              {/* View All Activity Button */}
+              <Link to="/UserHistory" className="view-all-activity">
+                <FaChartLine />
+                <span>View Complete History</span>
+                <FaArrowRight />
+              </Link>
             </div>
           </section>
         </div>
       </div>
-
-      {/* Custom Animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out forwards;
-        }
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };

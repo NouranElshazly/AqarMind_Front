@@ -328,3 +328,5 @@ export const fetchLandlordActivity = () =>
   API.get("/landlord/dashboard/activity");
 
 export default API;
+
+// ===== Tenant Profile ====> 

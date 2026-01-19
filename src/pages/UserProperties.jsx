@@ -4,6 +4,7 @@ import { FaCalendarAlt, FaTrashAlt, FaEnvelope, FaFilePdf, FaClock, FaCheckCircl
 import { RingLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../services/ApiConfig";
+import './UserProperties.css';
 
 const getUserId = () => localStorage.getItem("userId");
 const getToken = () => localStorage.getItem("token");
@@ -216,10 +217,12 @@ const MyProperties = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <RingLoader color="#6366f1" size={80} />
-          <p className="mt-6 text-xl text-gray-600 font-semibold">
+      <div className="loading-state">
+        <div className="loading-content">
+          <div className="loading-spinner">
+            <RingLoader color="#dc2626" size={80} />
+          </div>
+          <p className="loading-text">
             Loading your applications...
           </p>
         </div>
@@ -229,16 +232,16 @@ const MyProperties = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md text-center border border-gray-200">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="error-state">
+        <div className="error-card">
+          <div className="error-icon">
             <FaTimesCircle className="text-3xl text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Error Loading Applications</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="error-title">Error Loading Applications</h2>
+          <p className="error-description">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+            className="retry-button"
           >
             Try Again
           </button>
@@ -248,7 +251,7 @@ const MyProperties = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
+    <div className="user-properties-container">
       <FileViewerModal
         isOpen={isFileModalOpen}
         onClose={() => setIsFileModalOpen(false)}
@@ -257,23 +260,23 @@ const MyProperties = () => {
         fileType={selectedFile?.fileType}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="properties-wrapper">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
+        <div className="properties-header">
+          <h1 className="properties-title">
             My Applications
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="properties-subtitle">
             Track and manage all your property applications in one place
           </p>
         </div>
 
         {myProperties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="properties-grid">
             {myProperties.map((property, index) => (
               <div
                 key={property.postId}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-white/20 transform hover:-translate-y-2 animate-fadeInUp"
+                className="property-card"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* PDF Preview Section */}

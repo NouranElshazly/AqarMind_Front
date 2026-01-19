@@ -7,6 +7,7 @@ import {
   FaBed, FaBath, FaRulerCombined, FaBookmark,
   FaExclamationTriangle, FaTimes, FaCheck
 } from "react-icons/fa";
+import './SavedPosts.css';
 
 const getTenantRole = () => {
   return localStorage.getItem("role");
@@ -170,96 +171,114 @@ const SavedPosts = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-xl text-gray-600 font-medium">Loading saved properties...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner">
+            <div className="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mx-auto"></div>
+          </div>
+          <p className="loading-text">Loading saved properties...</p>
         </div>
       </div>
     );
 
   if (error)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md text-center border border-gray-200">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FaTimes className="text-3xl text-red-600" />
+      <div className="saved-posts-container">
+        <div className="saved-posts-wrapper">
+          <div className="empty-state">
+            <div className="empty-state-card">
+              <div className="empty-state-icon">
+                <FaTimes className="text-5xl text-red-500" />
+              </div>
+              <h2 className="empty-state-title">Error Loading Properties</h2>
+              <p className="empty-state-description">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="browse-btn"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Error Loading Properties</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="saved-posts-container">
+      <div className="saved-posts-wrapper">
         {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
+        <div className="saved-posts-header">
+          <div className="saved-posts-icon">
+            <FaBookmark className="text-white text-3xl" />
+          </div>
+          <h1 className="saved-posts-title">
             Your Saved Properties
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="saved-posts-subtitle">
             All your favorite properties in one place
           </p>
         </div>
 
         {/* Search and Actions Bar */}
         {savedProperties.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-6 mb-8 border border-white/20">
-            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-              <div className="flex-1 w-full lg:max-w-md">
-                <div className="relative">
-                  <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                  <input
-                    type="text"
-                    placeholder="Search saved properties..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm text-lg"
-                  />
-                </div>
+          <div className="saved-posts-controls">
+            <div className="controls-grid">
+              <div className="search-container">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search saved properties..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
               </div>
               
-              <div className="flex gap-4">
-                <div className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-2xl font-semibold border border-indigo-200">
-                  {savedProperties.length} {savedProperties.length === 1 ? 'Property' : 'Properties'}
-                </div>
-                <button
-                  onClick={openBulkDeleteModal}
-                  disabled={savedProperties.length === 0}
-                  className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-2xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl"
-                >
-                  <FaTrash className="text-lg" />
-                  Delete All
-                </button>
+              <button
+                onClick={openBulkDeleteModal}
+                disabled={savedProperties.length === 0}
+                className="clear-all-btn"
+              >
+                <FaTrash />
+                Delete All
+              </button>
+            </div>
+            
+            <div className="results-info">
+              <div className="results-count">
+                Showing <span className="results-count-highlight">{filteredProperties.length}</span> of{' '}
+                <span className="results-count-highlight">{savedProperties.length}</span> properties
               </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="clear-search-btn"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
           </div>
         )}
 
         {/* Properties Grid */}
         {filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map((property) => (
+          <div className="posts-grid">
+            {filteredProperties.map((property, index) => (
               <div
                 key={property.postId}
-                className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:-translate-y-2 relative border border-gray-100"
+                className="post-card"
+                style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handlePropertyClick(property.postId)}
               >
                 {/* Image Section */}
-                <div className="relative overflow-hidden h-64">
+                <div className="post-image-container">
                   {property.fileBase64 ? (
                     <img
                       src={`data:image/png;base64,${property.fileBase64}`}
                       alt={property.title || "property"}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="post-image"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -269,67 +288,43 @@ const SavedPosts = () => {
                       </div>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   
-                  {/* Remove Button */}
-                  <button
-                    className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 z-10 flex items-center gap-2"
-                    onClick={(e) => openDeleteModal(property.postId, property.title, e)}
-                  >
-                    <FaTrash className="text-sm" />
-                    Remove
-                  </button>
-
-                  {/* Saved Badge */}
-                  <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-2 rounded-2xl font-semibold shadow-lg flex items-center gap-2 z-10">
-                    <FaBookmark className="text-sm" />
-                    Saved
+                  <div className="post-overlay">
+                    <div className="post-price">
+                      ${property.price?.toLocaleString()}
+                    </div>
                   </div>
                 </div>
 
                 {/* Content Section */}
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-4 line-clamp-2 group-hover:text-indigo-600 transition-colors duration-300 leading-tight">
+                <div className="post-content">
+                  <h3 className="post-title">
                     {property.title}
                   </h3>
 
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                      ${property.price?.toLocaleString()}
-                      <span className="text-lg text-gray-500 font-normal">/month</span>
-                    </span>
-                    <span className="flex items-center text-gray-600 text-lg font-medium bg-gray-50 px-3 py-2 rounded-xl">
-                      <FaMapMarkerAlt className="mr-2 text-red-500" />
-                      {property.location}
-                    </span>
+                  <div className="post-location">
+                    <FaMapMarkerAlt className="post-location-icon" />
+                    {property.location}
                   </div>
 
-                  <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3 text-lg">
+                  <p className="post-description">
                     {property.description?.length > 120
                       ? `${property.description.substring(0, 120)}...`
                       : property.description}
                   </p>
 
-                  {/* Property Features */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-                    {property.bedrooms && (
-                      <span className="inline-flex items-center bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-sm font-semibold border border-blue-200">
-                        <FaBed className="mr-2 text-blue-600" />
-                        {property.bedrooms} beds
-                      </span>
-                    )}
-                    {property.bathrooms && (
-                      <span className="inline-flex items-center bg-purple-50 text-purple-700 px-4 py-2 rounded-xl text-sm font-semibold border border-purple-200">
-                        <FaBath className="mr-2 text-purple-600" />
-                        {property.bathrooms} baths
-                      </span>
-                    )}
-                    {property.size && (
-                      <span className="inline-flex items-center bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-semibold border border-green-200">
-                        <FaRulerCombined className="mr-2 text-green-600" />
-                        {property.size} sqft
-                      </span>
-                    )}
+                  <div className="post-actions">
+                    <button className="action-btn view-btn">
+                      <FaEye />
+                      View Details
+                    </button>
+                    <button
+                      className="action-btn remove-btn"
+                      onClick={(e) => openDeleteModal(property.postId, property.title, e)}
+                    >
+                      <FaTrash />
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
@@ -337,16 +332,18 @@ const SavedPosts = () => {
           </div>
         ) : savedProperties.length > 0 ? (
           // No search results
-          <div className="text-center py-20">
-            <div className="bg-white rounded-3xl shadow-xl p-12 max-w-2xl mx-auto border border-gray-200">
-              <FaSearch className="text-6xl text-gray-400 mx-auto mb-6" />
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">No properties found</h3>
-              <p className="text-gray-600 text-lg mb-8">
+          <div className="empty-state">
+            <div className="empty-state-card">
+              <div className="empty-state-icon">
+                <FaSearch className="text-5xl text-gray-400" />
+              </div>
+              <h3 className="empty-state-title">No properties found</h3>
+              <p className="empty-state-description">
                 No saved properties match your search criteria. Try different keywords.
               </p>
               <button
                 onClick={() => setSearchQuery("")}
-                className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
+                className="browse-btn"
               >
                 Clear Search
               </button>
@@ -354,22 +351,21 @@ const SavedPosts = () => {
           </div>
         ) : (
           // No saved properties
-          <div className="text-center py-20">
-            <div className="bg-white rounded-3xl shadow-xl p-12 max-w-2xl mx-auto border border-gray-200">
-              <div className="w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                <FaBookmark className="text-5xl text-indigo-600" />
+          <div className="empty-state">
+            <div className="empty-state-card">
+              <div className="empty-state-icon">
+                <FaBookmark className="text-5xl text-gray-400" />
               </div>
-              <h3 className="text-4xl font-bold text-gray-800 mb-6">No Saved Properties Yet</h3>
-              <p className="text-gray-600 text-xl leading-relaxed mb-8">
+              <h3 className="empty-state-title">No Saved Properties Yet</h3>
+              <p className="empty-state-description">
                 Start exploring and save your favorite properties to see them here!
-                <br />
                 Your saved properties will appear in this collection for easy access.
               </p>
               <button
                 onClick={() => navigate("/properties")}
-                className="inline-flex items-center gap-4 px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-bold text-lg shadow-2xl hover:shadow-3xl hover:scale-105"
+                className="browse-btn"
               >
-                <FaSearch className="text-xl" />
+                <FaSearch />
                 Browse Properties
               </button>
             </div>

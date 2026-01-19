@@ -7,6 +7,7 @@ import {
     FaUserTie, FaMapMarkerAlt, FaDollarSign,
     FaExclamationTriangle, FaImage, FaClock, FaCalendarAlt
 } from 'react-icons/fa';
+import './UserHistory.css';
 
 // --- دوال المساعدة ---
 const decodeJWT = (token) => { 
@@ -395,7 +396,7 @@ const UserHistory = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className="user-history-container">
             <ConfirmModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -404,52 +405,49 @@ const UserHistory = () => {
                 message={modalConfig.message}
             />
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="history-wrapper">
                 {/* Header */}
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl shadow-2xl mb-6">
+                <div className="history-header">
+                    <div className="history-icon">
                         <FaHistory className="text-3xl text-white" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
+                    <h1 className="history-title">
                         Activity History
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                    <p className="history-subtitle">
                         Track your journey through properties, searches, and interactions
                     </p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 border-l-4 border-red-500 rounded-2xl p-6 mb-8 shadow-lg animate-fadeIn">
-                        <div className="flex items-center">
-                            <FaExclamationTriangle className="text-red-500 text-xl mr-3" />
-                            <p className="text-red-700 font-medium">{error}</p>
+                    <div className="error-alert">
+                        <div className="error-content">
+                            <FaExclamationTriangle className="error-icon" />
+                            <p className="error-text">{error}</p>
                         </div>
                     </div>
                 )}
 
                 {/* Filter and Search Card */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8 border border-white/20 animate-fadeInUp">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
-                        <div className="lg:col-span-5">
-                            <div className="relative">
-                                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                                <input
-                                    type="text"
-                                    placeholder="Search in your history..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 shadow-sm text-lg"
-                                />
-                            </div>
+                <div className="filter-search-card">
+                    <div className="filter-grid">
+                        <div className="search-group">
+                            <FaSearch className="search-icon" />
+                            <input
+                                type="text"
+                                placeholder="Search in your history..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
                         </div>
                         
-                        <div className="lg:col-span-5">
-                            <div className="relative">
-                                <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                                <select
+                        <div className="filter-group">
+                            <FaFilter className="filter-icon" />
+                            <select
                                     value={filterType}
                                     onChange={(e) => setFilterType(e.target.value)}
-                                    className="w-full pl-12 pr-10 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 appearance-none transition-all duration-300 shadow-sm text-lg cursor-pointer"
+                                    className="filter-select"
                                 >
                                     <option value="all">All Activities</option>
                                     <option value="view">Viewed Properties</option>
@@ -532,37 +530,7 @@ const UserHistory = () => {
                 </div>
             </div>
 
-            {/* Custom Animations */}
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes fadeInUp {
-                    from { 
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to { 
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                @keyframes scaleIn {
-                    from { 
-                        opacity: 0;
-                        transform: scale(0.9);
-                    }
-                    to { 
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
-                .animate-fadeInUp { animation: fadeInUp 0.5s ease-out; }
-                .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
-            `}</style>
-        </div>
+ 
     );
 };
 

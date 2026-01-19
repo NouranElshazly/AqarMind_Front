@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import withDarkMode from '../components/withDarkMode';
+import "./ShowAllPosts.css";
 
 import {
   FaHeart, FaRegHeart,
@@ -12,7 +13,7 @@ import {
   FaThumbtack,
   FaBookmark, FaRegBookmark,
   FaCommentDots, FaEye, FaCheckCircle, FaHistory,
-  FaExclamationTriangle
+  FaExclamationTriangle, FaStar, FaChartLine
 } from "react-icons/fa";
 
 // --- دوال المساعدة (بدون تغيير) ---
@@ -468,7 +469,7 @@ const ShowAllPosts = () => {
   const formatLocalDate = (dateString) => { try { const date = new Date(dateString); return isNaN(date.getTime()) ? "Invalid date" : date.toLocaleString(); } catch (error) { return "Invalid date"; } };
   const toPlainText = (v) => (Array.isArray(v) ? v.join(" ") : v ?? "");
 
-  // --- CommentItem Component (بدون تغيير) ---
+  // --- CommentItem Component ---
   function CommentItem({ comment, depth = 0 }) {
     const isOwner = String(comment.user_id) === String(userId);
     const isPostOwnerComment = selectedPost && String(selectedPost.userId) === String(comment.user_id);
@@ -491,227 +492,420 @@ const ShowAllPosts = () => {
     const handleCancelEdit = () => { setEditingComment(null); }; const handleReplyClick = () => { setReplyingToId(currentId => currentId === comment._id ? null : comment._id); setEditingComment(null); }; const handleEditClick = () => { setEditingComment(comment); setReplyingToId(null); };
 
     return (
-      <div className={`rounded-2xl p-5 border ${comment.is_pinned ? 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-sm' : 'bg-white/80 backdrop-blur-sm border-gray-100 shadow-sm'} ${depth > 0 ? "ml-8 mt-3" : ""} transition-all duration-200 hover:shadow-md`}>
-        <div className="flex items-center justify-between mb-3"> <div className="flex items-center gap-2 flex-wrap"> <span className="flex items-center gap-2 font-semibold text-gray-800"><div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold"><FaUser className="text-xs" /></div>{comment.user_name || "Anonymous"}</span> {isOwner && (<span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-medium">You</span>)} {isPostOwnerComment && (<span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full flex items-center gap-1 font-medium"><FaUserTie className="text-xs" /> Owner</span>)} {comment.is_pinned && (<span className="text-xs text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full flex items-center gap-1 font-medium"><FaThumbtack className="text-xs" /> Pinned</span>)} </div> <span className="text-xs text-gray-400 whitespace-nowrap">{formatLocalDate(comment.created_at)}{comment.is_edited && " (edited)"}</span> </div>
-        {isEditing ? (<div className="mb-4"> <textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200" rows="3" autoFocus /> <div className="mt-3 space-y-2">{editImagePreview && (<div className="relative inline-block"><img src={editImagePreview} alt="Edit preview" className="h-24 rounded-xl border-2 border-gray-200 cursor-pointer transition-all duration-200 hover:border-indigo-300" onClick={() => window.open(editImagePreview, "_blank")} /><button type="button" onClick={removeEditImage} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors duration-200 shadow-lg" title="Remove image"><FaTimesCircle className="text-sm" /></button></div>)}<label className="flex items-center gap-2 text-sm text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors duration-200 w-fit px-3 py-2 bg-white border border-gray-200 rounded-lg hover:border-indigo-300"><FaImage />{originalImageUrl || editImagePreview ? 'Change Image' : 'Add Image'}<input type="file" ref={editFileInputRef} onChange={handleEditImageSelect} accept="image/*" className="hidden" /></label></div> <div className="flex gap-2 mt-4"><button onClick={handleSaveEdit} disabled={loadingAction === `editing-${comment._id}`} className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl text-sm hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200 font-medium shadow-sm">{loadingAction === `editing-${comment._id}` ? "Saving..." : "Save"}</button><button onClick={handleCancelEdit} className="px-4 py-2 bg-gray-500 text-white rounded-xl text-sm hover:bg-gray-600 transition-colors duration-200 font-medium">Cancel</button></div> </div>) : (<div className="mb-4">{comment.comment_description && <p className="text-gray-700 leading-relaxed">{toPlainText(comment.comment_description)}</p>}{originalImageUrl && (<div className="mt-3"><img src={originalImageUrl} alt="Comment attachment" className="max-w-full h-auto max-h-64 rounded-xl border-2 border-gray-200 cursor-pointer transition-all duration-200 hover:border-indigo-300" onClick={() => window.open(originalImageUrl, "_blank")} /></div>)}</div>)}
-        <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
-          <button onClick={() => handleLikeComment(comment._id)} className={`flex items-center gap-1.5 transition-colors duration-200 px-2 py-1 rounded-lg ${hasUserLiked ? 'text-red-500 bg-red-50 hover:bg-red-100' : 'hover:text-red-500 hover:bg-gray-50'}`}>{hasUserLiked ? <FaHeart /> : <FaRegHeart />}<span className="font-medium">{comment.likes_count > 0 ? comment.likes_count : ''}</span></button>
-          <button onClick={handleReplyClick} className="flex items-center gap-1 hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors duration-200"><FaReply /> Reply</button>
-          {comment.replies?.length > 0 && (<button onClick={() => toggleReplies(comment._id)} className="flex items-center gap-1 hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors duration-200"><FaChevronDown className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />{isOpen ? "Hide" : "Show"} replies<span className="text-xs bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full font-medium">{comment.replies.length}</span></button>)}
-          {isOwner && !isEditing && (<><button onClick={handleEditClick} className="flex items-center gap-1 hover:text-yellow-600 hover:bg-yellow-50 px-2 py-1 rounded-lg transition-colors duration-200"><FaEdit /> Edit</button><button onClick={() => handleDeleteComment(comment._id)} disabled={isProcessing} className="flex items-center gap-1 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors duration-200 disabled:opacity-50">{loadingAction === `deleting-${comment._id}` ? <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div> : <FaTrash />}Delete</button></>)}
+      <div className={`comment-item ${comment.is_pinned ? 'pinned' : ''}`} style={{ marginLeft: depth > 0 ? '2rem' : '0', marginTop: depth > 0 ? '1rem' : '0' }}>
+        <div className="comment-header">
+          <div className="comment-author">
+            <div className="comment-avatar">
+              <FaUser />
+            </div>
+            <div>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                {comment.user_name || "Anonymous"}
+              </span>
+              <div className="comment-badges">
+                {isOwner && (
+                  <span className="comment-badge you">You</span>
+                )}
+                {isPostOwnerComment && (
+                  <span className="comment-badge owner">
+                    <FaUserTie /> Owner
+                  </span>
+                )}
+                {comment.is_pinned && (
+                  <span className="comment-badge pinned">
+                    <FaThumbtack /> Pinned
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <span className="comment-date">
+            {formatLocalDate(comment.created_at)}
+            {comment.is_edited && " (edited)"}
+          </span>
+        </div>
+
+        {isEditing ? (
+          <div style={{ marginBottom: '1rem' }}>
+            <textarea 
+              value={editText} 
+              onChange={(e) => setEditText(e.target.value)} 
+              className="comment-textarea"
+              rows="3" 
+              autoFocus 
+            />
+            <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {editImagePreview && (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img 
+                    src={editImagePreview} 
+                    alt="Edit preview" 
+                    className="comment-image"
+                    style={{ height: '6rem', cursor: 'pointer' }}
+                    onClick={() => window.open(editImagePreview, "_blank")} 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={removeEditImage} 
+                    style={{
+                      position: 'absolute',
+                      top: '-0.5rem',
+                      right: '-0.5rem',
+                      background: '#ef4444',
+                      color: 'white',
+                      borderRadius: '50%',
+                      padding: '0.25rem',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <FaTimesCircle />
+                  </button>
+                </div>
+              )}
+              <label className="image-upload-btn">
+                <FaImage />
+                {originalImageUrl || editImagePreview ? 'Change Image' : 'Add Image'}
+                <input type="file" ref={editFileInputRef} onChange={handleEditImageSelect} accept="image/*" style={{ display: 'none' }} />
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <button 
+                onClick={handleSaveEdit} 
+                disabled={loadingAction === `editing-${comment._id}`} 
+                className="submit-comment-btn"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+              >
+                {loadingAction === `editing-${comment._id}` ? "Saving..." : "Save"}
+              </button>
+              <button 
+                onClick={handleCancelEdit} 
+                className="submit-comment-btn"
+                style={{ background: '#6b7280' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="comment-content">
+            {comment.comment_description && <p>{toPlainText(comment.comment_description)}</p>}
+            {originalImageUrl && (
+              <img 
+                src={originalImageUrl} 
+                alt="Comment attachment" 
+                className="comment-image"
+                onClick={() => window.open(originalImageUrl, "_blank")} 
+              />
+            )}
+          </div>
+        )}
+
+        <div className="comment-actions">
+          <button 
+            onClick={() => handleLikeComment(comment._id)} 
+            className={`comment-action-btn ${hasUserLiked ? 'liked' : ''}`}
+          >
+            {hasUserLiked ? <FaHeart /> : <FaRegHeart />}
+            <span>{comment.likes_count > 0 ? comment.likes_count : ''}</span>
+          </button>
+          
+          <button onClick={handleReplyClick} className="comment-action-btn">
+            <FaReply /> Reply
+          </button>
+          
+          {comment.replies?.length > 0 && (
+            <button onClick={() => toggleReplies(comment._id)} className="comment-action-btn">
+              <FaChevronDown style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: 'transform 0.2s' }} />
+              {isOpen ? "Hide" : "Show"} replies
+              <span style={{ 
+                background: 'rgba(30, 58, 138, 0.1)', 
+                color: 'var(--brand-secondary)', 
+                padding: '0.125rem 0.375rem', 
+                borderRadius: '1rem', 
+                fontSize: '0.75rem', 
+                fontWeight: 600 
+              }}>
+                {comment.replies.length}
+              </span>
+            </button>
+          )}
+          
+          {isOwner && !isEditing && (
+            <>
+              <button onClick={handleEditClick} className="comment-action-btn">
+                <FaEdit /> Edit
+              </button>
+              <button 
+                onClick={() => handleDeleteComment(comment._id)} 
+                disabled={isProcessing} 
+                className="comment-action-btn"
+                style={{ color: '#ef4444' }}
+              >
+                {loadingAction === `deleting-${comment._id}` ? (
+                  <div style={{ width: '0.75rem', height: '0.75rem', border: '2px solid #ef4444', borderTop: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                ) : (
+                  <FaTrash />
+                )}
+                Delete
+              </button>
+            </>
+          )}
+          
           {isCurrentUserPostOwner && !isEditing && (
-            <button onClick={() => handlePinComment(comment._id)} disabled={isProcessing} className={`flex items-center gap-1 transition-colors duration-200 px-2 py-1 rounded-lg disabled:opacity-50 ${comment.is_pinned ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' : 'hover:text-indigo-600 hover:bg-indigo-50'}`}>
-              {loadingAction === `pinning-${comment._id}` ? <div className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div> : <FaThumbtack />}
+            <button 
+              onClick={() => handlePinComment(comment._id)} 
+              disabled={isProcessing} 
+              className="comment-action-btn"
+              style={{ color: comment.is_pinned ? 'var(--brand-secondary)' : 'var(--text-secondary)' }}
+            >
+              {loadingAction === `pinning-${comment._id}` ? (
+                <div style={{ width: '0.75rem', height: '0.75rem', border: '2px solid var(--brand-secondary)', borderTop: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              ) : (
+                <FaThumbtack />
+              )}
               {comment.is_pinned ? 'Unpin' : 'Pin'}
             </button>
           )}
         </div>
-        {isReplying && (<InlineReplyBox
-          postId={selectedPost.postId}
-          parentId={comment._id}
-          postTitle={selectedPost?.title}
-          postPrice={selectedPost?.price}
-          postLocation={selectedPost?.location}
-          onSuccess={(newReply) => {
-            addReplyToState(comment._id, newReply);
-            updatePostCardCount(selectedPost.postId);
-            setReplyingToId(null);
-          }} onCancel={() => setReplyingToId(null)} />)}
-        {isOpen && comment.replies && (<div className="mt-4 pt-4 border-t border-gray-100">{comment.replies.map((reply) => (<CommentItem key={reply._id} comment={reply} depth={depth + 1} />))}</div>)}
+
+        {isReplying && (
+          <InlineReplyBox
+            postId={selectedPost.postId}
+            parentId={comment._id}
+            postTitle={selectedPost?.title}
+            postPrice={selectedPost?.price}
+            postLocation={selectedPost?.location}
+            onSuccess={(newReply) => {
+              addReplyToState(comment._id, newReply);
+              updatePostCardCount(selectedPost.postId);
+              setReplyingToId(null);
+            }} 
+            onCancel={() => setReplyingToId(null)} 
+          />
+        )}
+        
+        {isOpen && comment.replies && (
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-primary)' }}>
+            {comment.replies.map((reply) => (
+              <CommentItem key={reply._id} comment={reply} depth={depth + 1} />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
-  // --- JSX Rendering (Main Page) (بدون تغيير) ---
+  // --- JSX Rendering (Main Page) ---
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">Loading properties...</p>
+    <div className="show-all-posts">
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading properties...</p>
+        </div>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FaExclamationTriangle className="text-2xl text-red-600" />
+    <div className="show-all-posts">
+      <div className="error-container">
+        <div className="error-content">
+          <div className="error-icon">
+            <FaExclamationTriangle />
+          </div>
+          <h2 className="error-title">Error Loading Properties</h2>
+          <p className="error-message">{error}</p>
+          <button onClick={() => window.location.reload()} className="error-btn">
+            Try Again
+          </button>
         </div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Properties</h2>
-        <p className="text-gray-600 mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium">
-          Try Again
-        </button>
       </div>
     </div>
   );
 
   if (message && filteredPosts.length === 0 && !loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            Available Properties
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover your perfect home from our curated collection of properties
-          </p>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 mb-8 border border-white/20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
-            <div className="lg:col-span-4">
-              <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                <input
-                  type="text"
-                  placeholder="Search by title or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                />
+    <div className="show-all-posts">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Header with Search */}
+        <div className="posts-hero">
+          <div className="posts-hero-content">
+            <h1 className="posts-hero-title">Available Properties</h1>
+            <p className="posts-hero-subtitle">
+              Discover your perfect home from our curated collection of properties
+            </p>
+            <div className="posts-hero-stats">
+              <div className="hero-stat">
+                <div className="hero-stat-number">0</div>
+                <div className="hero-stat-label">Properties Found</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-number">∞</div>
+                <div className="hero-stat-label">Possibilities</div>
               </div>
             </div>
 
-            <div className="lg:col-span-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Price</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    min="0"
-                    className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Price</label>
-                  <input
-                    type="number"
-                    placeholder="∞"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    min="0"
-                    className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                  />
+            {/* Hero Search Section */}
+            <div className="hero-search-section">
+              <div className="hero-search-container">
+                <div className="hero-search-grid">
+                  <div className="hero-search-input-group">
+                    <FaSearch className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search by title or location..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                      className="hero-search-input"
+                    />
+                  </div>
+
+                  <div className="hero-price-inputs">
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Min Price</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        min="0"
+                        className="hero-price-input"
+                      />
+                    </div>
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Max Price</label>
+                      <input
+                        type="number"
+                        placeholder="∞"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        min="0"
+                        className="hero-price-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="hero-search-actions">
+                    <button onClick={handleSearch} className="hero-search-btn">
+                      <FaSearch />
+                      Search Properties
+                    </button>
+                    <button onClick={handleSearch} className="hero-filter-btn">
+                      <FaFilter />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="lg:col-span-2">
-              <button
-                onClick={handleSearch}
-                className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-3 shadow-lg"
-              >
-                <FaSearch className="text-lg" />
-                Search
-              </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-6 rounded-2xl shadow-sm">
-          <div className="flex items-center gap-3">
-            <FaExclamationTriangle className="text-amber-500 text-xl" />
-            <p className="text-amber-800 font-medium text-lg">{message}</p>
-          </div>
+        {/* No Results */}
+        <div className="no-results">
+          <FaExclamationTriangle className="no-results-icon" />
+          <h3 className="no-results-title">No Properties Found</h3>
+          <p className="no-results-message">{message}</p>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
-            Available Properties
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover your perfect home from our curated collection of properties
-          </p>
-        </div>
-
-        {/* Search and Filter Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 mb-12 border border-white/20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
-            <div className="lg:col-span-4">
-              <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                <input
-                  type="text"
-                  placeholder="Search by title or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full pl-12 pr-4 py-4 bg-white border-2 border-gray-200 rounded-2xl text-base focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                />
+    <div className="show-all-posts">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Header with Search */}
+        <div className="posts-hero">
+          <div className="posts-hero-content">
+            <h1 className="posts-hero-title">Available Properties</h1>
+            <p className="posts-hero-subtitle">
+              Discover your perfect home from our curated collection of properties
+            </p>
+            <div className="posts-hero-stats">
+              <div className="hero-stat">
+                <div className="hero-stat-number">{filteredPosts.length}</div>
+                <div className="hero-stat-label">Properties Available</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-number">{posts.length}</div>
+                <div className="hero-stat-label">Total Listings</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-number">
+                  {filteredPosts.reduce((sum, post) => sum + (post.likes_count || 0), 0)}
+                </div>
+                <div className="hero-stat-label">Total Likes</div>
               </div>
             </div>
 
-            <div className="lg:col-span-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Min Price</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    min="0"
-                    className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Max Price</label>
-                  <input
-                    type="number"
-                    placeholder="∞"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    min="0"
-                    className="w-full px-4 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all duration-300 shadow-sm"
-                  />
-                </div>
-              </div>
-            </div>
+            {/* Hero Search Section */}
+            <div className="hero-search-section">
+              <div className="hero-search-container">
+                <div className="hero-search-grid">
+                  <div className="hero-search-input-group">
+                    <FaSearch className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search by title or location..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                      className="hero-search-input"
+                    />
+                  </div>
 
-            <div className="lg:col-span-2">
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSearch}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-3 shadow-lg"
-                >
-                  <FaSearch className="text-lg" />
-                  Search
-                </button>
-                <button
-                  onClick={handleSearch}
-                  className="px-6 py-4 bg-white text-indigo-600 font-semibold rounded-2xl border-2 border-indigo-600 hover:bg-indigo-600 hover:text-white transition-all duration-300 flex items-center gap-2 shadow-sm"
-                >
-                  <FaFilter />
-                </button>
+                  <div className="hero-price-inputs">
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Min Price</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        min="0"
+                        className="hero-price-input"
+                      />
+                    </div>
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Max Price</label>
+                      <input
+                        type="number"
+                        placeholder="∞"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        min="0"
+                        className="hero-price-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="hero-search-actions">
+                    <button onClick={handleSearch} className="hero-search-btn">
+                      <FaSearch />
+                      Search Properties
+                    </button>
+                    <button onClick={handleSearch} className="hero-filter-btn">
+                      <FaFilter />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* No Results Message */}
         {message && filteredPosts.length === 0 && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-6 rounded-2xl shadow-sm mb-8">
-            <div className="flex items-center gap-3">
-              <FaExclamationTriangle className="text-amber-500 text-xl" />
-              <p className="text-amber-800 font-medium text-lg">{message}</p>
-            </div>
+          <div className="no-results">
+            <FaExclamationTriangle className="no-results-icon" />
+            <h3 className="no-results-title">No Properties Found</h3>
+            <p className="no-results-message">{message}</p>
           </div>
         )}
 
-        {/* Posts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Properties Grid */}
+        <div className="properties-grid">
           {filteredPosts.map((post) => {
             const postUserIdStr = String(userId);
             const hasUserLikedPost = Array.isArray(post.likes) && post.likes.includes(postUserIdStr);
@@ -721,83 +915,73 @@ const ShowAllPosts = () => {
               <div
                 key={post.postId}
                 onClick={(e) => handleCardClick(post, e)}
-                className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer group border border-gray-100 hover:border-indigo-100"
+                className="property-card"
               >
-                <div className="relative h-64 overflow-hidden">
+                <div className="property-image">
                   {post.fileBase64 ? (
                     <img
                       src={`data:image/png;base64,${post.fileBase64}`}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <FaHome className="text-6xl text-gray-400" />
+                    <div className="property-image-placeholder">
+                      <FaHome />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div className="property-overlay">
+                    <button className="quick-view-btn">
+                      <FaEye />
+                      Quick View
+                    </button>
+                  </div>
+                  
                   {userRole !== "Admin" && (
-                    <div className="absolute top-4 right-4">
-                      <button
-                        onClick={(e) => handleSavePost(post.postId, e)}
-                        className={`p-3 rounded-2xl text-lg backdrop-blur-sm transition-all duration-300 ${isPostSaved
-                            ? 'bg-blue-500 text-white shadow-lg'
-                            : 'bg-white/90 text-gray-600 hover:bg-white hover:text-blue-500 shadow-md'
-                          }`}
-                      >
-                        {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
-                      </button>
-                    </div>
+                    <button
+                      onClick={(e) => handleSavePost(post.postId, e)}
+                      className={`save-btn ${isPostSaved ? 'saved' : ''}`}
+                    >
+                      {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
+                    </button>
                   )}
-
                 </div>
 
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-indigo-600 line-clamp-2 transition-colors duration-200 leading-tight">
-                    {post.title}
-                  </h3>
+                <div className="property-content">
+                  <h3 className="property-title">{post.title}</h3>
 
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  <div className="property-price-location">
+                    <span className="property-price">
                       ${post.price.toLocaleString()}
                     </span>
-                    <span className="text-sm text-gray-500 flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full font-medium">
-                      <FaMapMarkerAlt className="text-indigo-500" />
-                      {post.location}
-                    </span>
+                    <div className="property-location">
+                      <FaMapMarkerAlt />
+                      <span>{post.location}</span>
+                    </div>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-6 line-clamp-3 leading-relaxed">
-                    {post.description}
-                  </p>
+                  <p className="property-description">{post.description}</p>
 
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                    <div className="text-sm text-gray-500 flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full font-medium">
-                      <FaClock className="text-indigo-500" />
+                  <div className="property-footer">
+                    <div className="property-date">
+                      <FaClock />
                       {new Date(post.datePost).toLocaleDateString()}
                     </div>
 
                     {userRole !== "Admin" ? (
-                      <div className="post-actions flex gap-2 items-center">
-
+                      <div className="property-actions">
                         {/* Like Button */}
                         <button
                           onClick={(e) => handleLikePost(post.postId, e)}
-                          className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200 font-medium ${hasUserLikedPost
-                              ? 'text-red-500 bg-red-50 hover:bg-red-100 shadow-sm'
-                              : 'text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-red-500'
-                            }`}
+                          className={`action-btn like-btn ${hasUserLikedPost ? 'liked' : ''}`}
                         >
                           {hasUserLikedPost ? <FaHeart /> : <FaRegHeart />}
-                          <span className="font-semibold">
-                            {post.likes_count > 0 ? post.likes_count : '0'}
-                          </span>
+                          <span>{post.likes_count > 0 ? post.likes_count : '0'}</span>
                         </button>
 
                         {/* Share Button */}
                         <button
                           onClick={(e) => handleSharePost(post, e)}
-                          className="p-2 bg-gray-50 text-gray-600 rounded-xl text-sm hover:bg-gray-100 hover:text-indigo-600 transition-all duration-200 shadow-sm"
+                          className="action-btn share-btn"
                         >
                           <FaShareAlt />
                         </button>
@@ -805,12 +989,11 @@ const ShowAllPosts = () => {
                         {/* Comment Button */}
                         <button
                           onClick={(e) => openCommentsModal(post, e)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-indigo-600 transition-all duration-200 font-medium shadow-sm"
+                          className="action-btn comment-btn"
                         >
                           <FaComment />
-                          <span className="font-semibold">{post.commentCount > 0 ? post.commentCount : '0'}</span>
+                          <span>{post.commentCount > 0 ? post.commentCount : '0'}</span>
                         </button>
-
                       </div>
                     ) : null}
                   </div>
@@ -822,77 +1005,92 @@ const ShowAllPosts = () => {
 
         {/* Comments Modal */}
         {showComments && selectedPost && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl border border-gray-100">
-              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-3xl">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white">
-                    <FaComment className="text-lg" />
+          <div className="comments-modal">
+            <div className="comments-modal-content">
+              <div className="comments-modal-header">
+                <h2 className="comments-modal-title">
+                  <div className="comments-modal-icon">
+                    <FaComment />
                   </div>
                   Comments ({commentCount})
                 </h2>
-                <button
-                  onClick={closeCommentsModal}
-                  className="w-10 h-10 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-all duration-200 flex items-center justify-center shadow-sm"
-                >
-                  <FaTimes className="text-xl" />
+                <button onClick={closeCommentsModal} className="comments-modal-close">
+                  <FaTimes />
                 </button>
               </div>
 
-              <div className="overflow-y-auto flex-1 p-6 bg-gray-50/50">
-                <div className="bg-white rounded-2xl p-5 mb-6 border border-gray-100 shadow-sm">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{selectedPost.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <span className="flex items-center gap-1 font-medium">
-                      <FaDollarSign className="text-green-500" />
+              <div className="comments-modal-body">
+                {/* Property Info */}
+                <div className="comment-form">
+                  <h3 className="property-title">{selectedPost.title}</h3>
+                  <div className="property-price-location">
+                    <span className="property-price">
                       ${selectedPost.price?.toLocaleString()}
                     </span>
-                    <span className="flex items-center gap-1 font-medium">
-                      <FaMapMarkerAlt className="text-indigo-500" />
+                    <div className="property-location">
+                      <FaMapMarkerAlt />
                       {selectedPost.location}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl text-sm text-blue-800 font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      <FaUser className="text-xs" />
                     </div>
-                    Commenting as: <span className="font-semibold">{userName}</span>
-                    {selectedPost && String(selectedPost.userId) === String(userId) && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-amber-600 bg-amber-100 px-3 py-1 rounded-full text-xs font-semibold">
-                        <FaUserTie className="text-xs" />Owner
-                      </span>
-                    )}
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmitComment} className="mb-8">
+                {/* User Info */}
+                <div className="comment-form" style={{background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(30, 58, 138, 0.1))'}}>
+                  <div className="comment-author">
+                    <div className="comment-avatar">
+                      <FaUser />
+                    </div>
+                    <div>
+                      <span style={{fontWeight: 600, color: 'var(--text-primary)'}}>
+                        Commenting as: {userName}
+                      </span>
+                      {selectedPost && String(selectedPost.userId) === String(userId) && (
+                        <div className="comment-badges">
+                          <span className="comment-badge owner">
+                            <FaUserTie /> Owner
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Comment Form */}
+                <form onSubmit={handleSubmitComment} className="comment-form">
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Write a new comment..."
-                    className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl resize-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 bg-white shadow-sm"
+                    className="comment-textarea"
                     rows="3"
                   />
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="comment-form-actions">
                     <div>
                       {!imagePreview ? (
-                        <label className="flex items-center gap-2 px-4 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl cursor-pointer hover:border-indigo-300 hover:text-indigo-600 transition-all duration-200 font-medium shadow-sm">
-                          <FaImage className="text-indigo-500" />
+                        <label className="image-upload-btn">
+                          <FaImage />
                           <span>Add Image</span>
-                          <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
+                          <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" style={{display: 'none'}} />
                         </label>
                       ) : (
-                        <div className="relative inline-block">
-                          <img src={imagePreview} alt="Preview" className="h-24 rounded-xl shadow-sm border-2 border-gray-200" />
+                        <div style={{position: 'relative', display: 'inline-block'}}>
+                          <img src={imagePreview} alt="Preview" style={{height: '6rem', borderRadius: '1rem', border: '2px solid var(--border-primary)'}} />
                           <button
                             type="button"
                             onClick={removeSelectedImage}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors duration-200 shadow-lg"
+                            style={{
+                              position: 'absolute',
+                              top: '-0.5rem',
+                              right: '-0.5rem',
+                              background: '#ef4444',
+                              color: 'white',
+                              borderRadius: '50%',
+                              padding: '0.25rem',
+                              border: 'none',
+                              cursor: 'pointer'
+                            }}
                           >
-                            <FaTimesCircle className="text-sm" />
+                            <FaTimesCircle />
                           </button>
                         </div>
                       )}
@@ -900,11 +1098,11 @@ const ShowAllPosts = () => {
                     <button
                       type="submit"
                       disabled={(!newComment.trim() && !selectedImage) || loadingAction === "submitting-comment" || isUploading}
-                      className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      className="submit-comment-btn"
                     >
                       {isUploading ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                          <div style={{width: '1rem', height: '1rem', border: '2px solid white', borderTop: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite'}}></div>
                           Uploading...
                         </div>
                       ) : (
@@ -914,17 +1112,24 @@ const ShowAllPosts = () => {
                   </div>
                 </form>
 
-                <div className="space-y-4">
+                {/* Comments List */}
+                <div style={{marginTop: '2rem'}}>
                   {loadingAction === "loading-comments" ? (
-                    <div className="text-center py-12">
-                      <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600 font-medium">Loading comments...</p>
+                    <div style={{textAlign: 'center', padding: '3rem 0'}}>
+                      <div className="loading-spinner" style={{width: '3rem', height: '3rem', margin: '0 auto 1rem'}}></div>
+                      <p style={{color: 'var(--text-secondary)', fontWeight: 600}}>Loading comments...</p>
                     </div>
                   ) : comments.length === 0 ? (
-                    <div className="text-center py-12 bg-white/50 rounded-2xl border-2 border-dashed border-gray-200">
-                      <FaCommentDots className="text-4xl text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-400 text-lg font-medium">No comments yet.</p>
-                      <p className="text-gray-400 text-sm mt-1">Be the first to comment!</p>
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '3rem',
+                      background: 'rgba(255, 255, 255, 0.5)',
+                      borderRadius: '1.5rem',
+                      border: '2px dashed var(--border-primary)'
+                    }}>
+                      <FaCommentDots style={{fontSize: '2.5rem', color: 'var(--text-muted)', marginBottom: '1rem'}} />
+                      <p style={{color: 'var(--text-muted)', fontSize: '1.125rem', fontWeight: 600}}>No comments yet.</p>
+                      <p style={{color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem'}}>Be the first to comment!</p>
                     </div>
                   ) : (
                     comments.map((comment) => (
