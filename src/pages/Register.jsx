@@ -372,7 +372,7 @@ if (formData.role=== "Landlord" && propertyDocument) {
               <div className="register-form-row">
                 <div className="register-field">
                   <label htmlFor="name" className="register-label">
-                    Full Name
+                    User Name
                   </label>
                   <div className="register-input-wrapper">
                     <svg className="register-input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

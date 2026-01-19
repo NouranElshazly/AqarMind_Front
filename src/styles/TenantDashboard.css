@@ -166,6 +166,7 @@
   align-items: center;
   gap: 2rem;
   animation: fadeInRight 1s ease-out 0.8s both;
+ 
 }
 
 .hero-avatar {
@@ -173,6 +174,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+ 
 }
 
 .avatar-ring {
@@ -182,6 +184,7 @@
   border: 3px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   animation: rotate 20s linear infinite;
+  margin-bottom: 30px;
 }
 
 .avatar-ring::before {
@@ -377,6 +380,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 40px;
 }
 
 .tenant-profile-avatar {
@@ -1138,12 +1142,14 @@
   font-size: 1rem;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
+  
 }
 
 .action-description {
   font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.4;
+  padding-left: 10px;
 }
 
 /* Recent Activity */
@@ -1481,6 +1487,7 @@
 
   .hero-badges {
     flex-direction: column;
+    
   }
 
   .dashboard-container {
@@ -1535,12 +1542,14 @@
   .avatar-ring {
     width: 6rem;
     height: 6rem;
+    
   }
 
   .avatar-content {
-    width: 4rem;
-    height: 4rem;
+    width: 3rem;
+    height: 3rem;
     font-size: 1.5rem;
+    
   }
 
   .dashboard-title {
