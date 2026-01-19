@@ -21,7 +21,7 @@ import {
 } from "react-icons/fa";
 import { IoMdSend, IoMdClose, IoMdArrowDown } from "react-icons/io";
 import { BiArrowBack } from "react-icons/bi";
-import './Messages.css';
+import '../styles/Messages.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE_FLASK || "http://localhost:5000";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";

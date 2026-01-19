@@ -4,7 +4,7 @@ import { FaCalendarAlt, FaTrashAlt, FaEnvelope, FaFilePdf, FaClock, FaCheckCircl
 import { RingLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../services/ApiConfig";
-import './UserProperties.css';
+import '../styles/UserProperties.css';
 
 const getUserId = () => localStorage.getItem("userId");
 const getToken = () => localStorage.getItem("token");

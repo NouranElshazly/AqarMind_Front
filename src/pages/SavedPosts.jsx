@@ -7,7 +7,7 @@ import {
   FaBed, FaBath, FaRulerCombined, FaBookmark,
   FaExclamationTriangle, FaTimes, FaCheck
 } from "react-icons/fa";
-import './SavedPosts.css';
+import '../styles/SavedPosts.css';
 
 const getTenantRole = () => {
   return localStorage.getItem("role");

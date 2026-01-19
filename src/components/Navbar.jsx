@@ -2,8 +2,7 @@ import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import { useDarkMode } from "../App";
-// import logo2 from "../assets/AqarMindLogo-removebg-preview.png";
-import "./Navbar.css";
+import "../styles/Navbar.css";
 
 // SVG Icons Components
 const HomeIcon = ({ className = "icon" }) => (

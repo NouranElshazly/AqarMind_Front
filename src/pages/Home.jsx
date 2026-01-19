@@ -28,7 +28,7 @@ import {
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
 import Navbar from "../components/Navbar";
-import "./Home.css";
+import "../styles/Home.css";
 
 // Animated Counter Component
 const AnimatedCounter = ({ end, duration = 2000 }) => {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import io from "socket.io-client"; 
 import API_BASE_URL from "../services/ApiConfig";
-import "./Login.css";
+import "../styles/Login.css";
 
 // --- Face Login Modal Component ---
 const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {

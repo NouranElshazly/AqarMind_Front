@@ -7,7 +7,7 @@ import {
     FaUserTie, FaMapMarkerAlt, FaDollarSign,
     FaExclamationTriangle, FaImage, FaClock, FaCalendarAlt
 } from 'react-icons/fa';
-import './UserHistory.css';
+import '../styles/UserHistory.css';
 
 // --- دوال المساعدة ---
 const decodeJWT = (token) => { 

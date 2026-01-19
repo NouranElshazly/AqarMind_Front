@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import "./Footer.css";
+import "../styles/Footer.css";
 
 const Footer = () => {
   const footerRef = useRef(null);

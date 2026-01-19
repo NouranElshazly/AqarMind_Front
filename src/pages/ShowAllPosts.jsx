@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import withDarkMode from '../components/withDarkMode';
-import "./ShowAllPosts.css";
+import "../styles/ShowAllPosts.css";
 
 import {
   FaHeart, FaRegHeart,

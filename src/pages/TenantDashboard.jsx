@@ -24,7 +24,7 @@ import {
   FaArrowRight
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
-import "./TenantDashboard.css";
+import "../styles/TenantDashboard.css";
 
 // Helper functions
 const getUserId = () => localStorage.getItem("userId");
