@@ -26,7 +26,7 @@ import UserProperties from "./pages/UserProperties";
 import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
 import ShowAnalytics from "./pages/showAnalytics";
-import SplashScreen from "./pages/SplashScreen";
+
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
 
@@ -131,10 +131,6 @@ function App() {
         <div className="app min-h-screen transition-all duration-300">
           {!hideNavbarFooter && <Navbar />}
 
-          <div className="App">
-            {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
-          </div>
-          
           <main className={`main-content ${showSplash ? 'hidden' : 'block'} min-h-screen`}>
             <Routes>
               <Route path="/" element={<Home />} />

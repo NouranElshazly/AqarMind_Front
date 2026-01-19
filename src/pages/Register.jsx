@@ -4,7 +4,7 @@ import axios from "axios";
 import io from "socket.io-client";
 import API_BASE_URL from "../services/ApiConfig";
 import AuthContext from "../context/AuthContext";
-import "../styles/Messages.css";
+import "../styles/Register.css";
 
 // --- Face ID Modal Component ---
 const FaceScanModal = ({ userData, onClose, onComplete }) => {
