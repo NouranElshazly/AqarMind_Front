@@ -26,6 +26,7 @@ import UserProperties from "./pages/UserProperties";
 import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
 import ShowAnalytics from "./pages/showAnalytics";
+import AdminPendingApprovals from "./pages/AdminPendingApprovals";
 
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
@@ -37,35 +38,38 @@ const DarkModeContext = createContext();
 
 export const DarkModeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
+    const saved = localStorage.getItem("darkMode");
     if (saved !== null) {
       return JSON.parse(saved);
     }
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    ) {
       return true;
     }
     return false; // Default to light mode
   });
 
   useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+
     // Apply dark mode to entire page
     if (darkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark-mode');
-      document.body.style.backgroundColor = '#0f172a';
-      document.body.style.color = '#f1f5f9';
+      document.documentElement.classList.add("dark");
+      document.body.classList.add("dark-mode");
+      document.body.style.backgroundColor = "#0f172a";
+      document.body.style.color = "#f1f5f9";
     } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark-mode');
-      document.body.style.backgroundColor = '#ffffff';
-      document.body.style.color = '#1e293b';
+      document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark-mode");
+      document.body.style.backgroundColor = "#ffffff";
+      document.body.style.color = "#1e293b";
     }
   }, [darkMode]);
 
   const toggleDarkMode = () => {
-    setDarkMode(prev => !prev);
+    setDarkMode((prev) => !prev);
   };
 
   return (
@@ -78,7 +82,7 @@ export const DarkModeProvider = ({ children }) => {
 export const useDarkMode = () => {
   const context = useContext(DarkModeContext);
   if (!context) {
-    throw new Error('useDarkMode must be used within a DarkModeProvider');
+    throw new Error("useDarkMode must be used within a DarkModeProvider");
   }
   return context;
 };
@@ -116,7 +120,7 @@ function App() {
 
   // Check if splash screen should be shown
   useEffect(() => {
-    const hasSeenSplash = localStorage.getItem('hasSeenSplash');
+    const hasSeenSplash = localStorage.getItem("hasSeenSplash");
     if (hasSeenSplash) {
       setShowSplash(false);
     }
@@ -124,7 +128,7 @@ function App() {
 
   const handleSplashFinish = () => {
     setShowSplash(false);
-    localStorage.setItem('hasSeenSplash', 'true');
+    localStorage.setItem("hasSeenSplash", "true");
   };
 
   return (
@@ -133,7 +137,11 @@ function App() {
         <div className="app min-h-screen transition-all duration-300">
           {!hideNavbarFooter && <Navbar />}
 
-          <main className={`main-content ${showSplash ? 'hidden' : 'block'} min-h-screen`}>
+          <main
+            className={`main-content ${
+              showSplash ? "hidden" : "block"
+            } min-h-screen`}
+          >
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
@@ -143,7 +151,6 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/show-all-post" element={<ShowAllPost />} />
               <Route path="/UserHistory" element={<UserHistory />} />
-
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route
@@ -151,45 +158,60 @@ function App() {
                 element={<PendingApprovals />}
               />
               <Route
+                path="/admin/pending-approvals"
+                element={<AdminPendingApprovals />}
+              />{" "}
+              {/* ← هنا */}
+              <Route
                 path="/admin/landlord-applications"
                 element={<LandlordApplicationDetail />}
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
               <Route path="/admin/showAnalytics" element={<ShowAnalytics />} />
-              <Route path="/admin/AdminChatDashboard" element={<AdminChatDashboard />} />
-
+              <Route
+                path="/admin/AdminChatDashboard"
+                element={<AdminChatDashboard />}
+              />
               {/* Landlord Routes */}
-              <Route path="/landlord/dashboard" element={<LandlordDashboard />} />
-              <Route path="/landlord/properties" element={<ManageProperties />} />
-              <Route path="/landlord/properties/new" element={<AddProperty />} />
+              <Route
+                path="/landlord/dashboard"
+                element={<LandlordDashboard />}
+              />
+              <Route
+                path="/landlord/properties"
+                element={<ManageProperties />}
+              />
+              <Route path="/landlord/add-property" element={<AddProperty />} />
               <Route
                 path="/landlord/properties/:id/edit"
                 element={<EditProperty />}
               />
-              <Route path="/landlord/proposals" element={<PropertyProposals />} />
-
+              <Route
+                path="/landlord/proposals"
+                element={<PropertyProposals />}
+              />
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />
               <Route path="/saved-posts" element={<SavedPosts />} />
               <Route path="/UserProperties" element={<UserProperties />} />
-
               {/* Messages Routes */}
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:receiverId" element={<Messages />} />
-
               {/* Profile Routes */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/change-password" element={<ChangePassword />} />
-
               {/* 404 Route */}
-              <Route path="*" element={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-6xl font-bold mb-4">404</h1>
-                    <p className="text-xl">Page Not Found</p>
+              <Route
+                path="*"
+                element={
+                  <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-center">
+                      <h1 className="text-6xl font-bold mb-4">404</h1>
+                      <p className="text-xl">Page Not Found</p>
+                    </div>
                   </div>
-                </div>
-              } />
+                }
+              />
             </Routes>
           </main>
 

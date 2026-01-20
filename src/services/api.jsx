@@ -2,7 +2,7 @@ import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5174/api",
+  baseURL: import.meta.env.VITE_API_URL || "https://localhost:44357/api",
   timeout: 10000,
 });
 
@@ -332,8 +332,8 @@ export default API;
 // ======================= Profile API Functions =====================
 /* get current user complete profile (private )
  * Returns: fullName, email, phone, address, profilePhotoPath, nidPath, ownershipDocumentPath
-*/
-export const getMyProfile = (userId) => 
+ */
+export const getMyProfile = (userId) =>
   API.get(`${API_BASE_URL}/api/Profile/me/${userId}`);
 
 /**
@@ -341,7 +341,7 @@ export const getMyProfile = (userId) =>
  * Returns: fullName, profilePhotoPath, rate (for landlords only)
  * @param {number} userId - The ID of the user to view
  */
-export const getUserProfile = (userId) => 
+export const getUserProfile = (userId) =>
   API.get(`${API_BASE_URL}/api/Profile/${userId}`);
 
 /**
@@ -358,17 +358,18 @@ export const getUserProfile = (userId) =>
  */
 export const updateMyProfile = (userId, profileData) => {
   const formData = new FormData();
-  
-  if (profileData.username) formData.append('username', profileData.username);
-  if (profileData.email) formData.append('email', profileData.email);
-  if (profileData.phone) formData.append('phone', profileData.phone);
-  if (profileData.address) formData.append('address', profileData.address);
-  if (profileData.profilePhoto) formData.append('profilePhoto', profileData.profilePhoto);
-  if (profileData.nidFile) formData.append('nidFile', profileData.nidFile);
-  
+
+  if (profileData.username) formData.append("username", profileData.username);
+  if (profileData.email) formData.append("email", profileData.email);
+  if (profileData.phone) formData.append("phone", profileData.phone);
+  if (profileData.address) formData.append("address", profileData.address);
+  if (profileData.profilePhoto)
+    formData.append("profilePhoto", profileData.profilePhoto);
+  if (profileData.nidFile) formData.append("nidFile", profileData.nidFile);
+
   return API.put(`${API_BASE_URL}/api/Profile/me/${userId}`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 };
@@ -384,13 +385,17 @@ export const updateMyProfile = (userId, profileData) => {
  */
 export const updatePassword = (userId, passwordData) => {
   const formData = new FormData();
-  formData.append('oldPassword', passwordData.oldPassword);
-  formData.append('newPassword', passwordData.newPassword);
-  formData.append('confirmPassword', passwordData.confirmPassword);
-  
-  return API.put(`${API_BASE_URL}/api/Profile/me/${userId}/password`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-}
+  formData.append("oldPassword", passwordData.oldPassword);
+  formData.append("newPassword", passwordData.newPassword);
+  formData.append("confirmPassword", passwordData.confirmPassword);
+
+  return API.put(
+    `${API_BASE_URL}/api/Profile/me/${userId}/password`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
