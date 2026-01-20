@@ -13,7 +13,10 @@ import {
   FaSave, 
   FaTimes,
   FaIdCard,
-  FaCheck
+  FaCheck,
+  FaLock,
+  FaEye,
+  FaEyeSlash
 } from 'react-icons/fa';
 
 const Profile = () => {
@@ -33,6 +36,22 @@ const Profile = () => {
     profilePhoto: null,
     nidFile: null
   });
+
+  // Password change state
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const [previewImage, setPreviewImage] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
@@ -57,12 +76,9 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      console.log('Fetching profile for userId:', userId);
-      console.log('API_BASE_URL:', API_BASE_URL);
-      console.log('Full URL will be:', `${API_BASE_URL}/api/Profile/me/${userId}`);
+   
       const response = await getMyProfile(userId);
-      console.log('Profile response:', response);
-      console.log('Profile photo path from server:', response.data.profilePhotoPath);
+
       
       setProfile(response.data);
       setFormData({
@@ -78,12 +94,11 @@ const Profile = () => {
       const serverImagePath = response.data.profilePhotoPath;
       const savedUserImage = localStorage.getItem(`user_profile_image_${userId}`);
       
-      console.log('Server returned profilePhotoPath:', serverImagePath);
-      console.log('Saved user image exists:', !!savedUserImage);
+     
       
       if (savedUserImage) {
         // Always use the user's uploaded image if it exists (never delete it)
-        console.log('Using saved user image');
+       
         setPreviewImage(savedUserImage);
         setIsTemporaryImage(false);
       } else if (serverImagePath) {
@@ -94,17 +109,17 @@ const Profile = () => {
           imageUrl = `${API_BASE_URL}${serverImagePath.startsWith('/') ? '' : '/'}${serverImagePath}`;
         }
         
-        console.log('Using server image:', imageUrl);
+       
         setPreviewImage(imageUrl);
         setIsTemporaryImage(false);
       } else {
-        console.log('No image available');
+     
         setPreviewImage(null);
         setIsTemporaryImage(false);
       }
     } catch (err) {
       setError('Failed to load profile');
-      console.error('Profile fetch error:', err);
+     
     } finally {
       setLoading(false);
     }
@@ -116,6 +131,93 @@ const Profile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    setPasswordError('');
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setSavingPassword(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All password fields are required');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New password and confirm password do not match');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      setPasswordError('New password must be different from old password');
+      setSavingPassword(false);
+      return;
+    }
+
+    try {
+      await updatePassword(userId, passwordData);
+      setPasswordSuccess('Password updated successfully!');
+      
+      // Reset password form
+      setPasswordData({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      // Close password change section after 2 seconds
+      setTimeout(() => {
+        setIsChangingPassword(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (err) {
+      // Display server error message or fallback message
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          err.response?.data || 
+                          'Failed to update password';
+      setPasswordError(errorMessage);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPasswordData({
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setPasswordError('');
+    setPasswordSuccess('');
   };
 
   const handleFileChange = (e) => {
@@ -150,16 +252,14 @@ const Profile = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const imageDataUrl = reader.result;
-          console.log('=== IMAGE UPLOAD DEBUG ===');
-          console.log('File selected:', file.name, file.size, file.type);
-          console.log('Image data URL length:', imageDataUrl.length);
+   
           
           setPreviewImage(imageDataUrl);
           
           // Save the image permanently in localStorage (won't be deleted automatically)
           const userImageKey = `user_profile_image_${userId}`;
           localStorage.setItem(userImageKey, imageDataUrl);
-          console.log('Saved user image permanently to localStorage');
+
           
           setImageUploading(false);
           setIsTemporaryImage(false); // It's now a permanent user image
@@ -196,10 +296,7 @@ const Profile = () => {
       const currentPreviewImage = previewImage;
       const hasUploadedImage = !!formData.profilePhoto;
 
-      console.log('=== PROFILE UPDATE DEBUG ===');
-      console.log('Update data:', updateData);
-      console.log('Has uploaded image:', hasUploadedImage);
-      console.log('Current preview image:', currentPreviewImage);
+     
 
       await updateMyProfile(userId, updateData);
       setSuccess('Profile updated successfully!');
@@ -207,8 +304,7 @@ const Profile = () => {
       
       // Refresh profile data
       const response = await getMyProfile(userId);
-      console.log('Server response after update:', response.data);
-      console.log('Server profilePhotoPath:', response.data.profilePhotoPath);
+  
       
       setProfile(response.data);
       
@@ -227,12 +323,12 @@ const Profile = () => {
       
       if (savedUserImage) {
         // Always keep the user's uploaded image
-        console.log('Keeping user uploaded image after save');
+       
         setPreviewImage(savedUserImage);
         setIsTemporaryImage(false);
       } else if (hasUploadedImage && currentPreviewImage) {
         // Keep the newly uploaded image preview
-        console.log('Keeping newly uploaded image preview after save');
+       
         setPreviewImage(currentPreviewImage);
         setIsTemporaryImage(false);
       } else if (response.data.profilePhotoPath) {
@@ -243,11 +339,11 @@ const Profile = () => {
           imageUrl = `${API_BASE_URL}${serverImagePath.startsWith('/') ? '' : '/'}${serverImagePath}`;
         }
         setPreviewImage(imageUrl);
-        console.log('Using server image after save:', imageUrl);
+        
         setIsTemporaryImage(false);
       } else {
         setPreviewImage(null);
-        console.log('No image available after save');
+        
         setIsTemporaryImage(false);
       }
       
@@ -293,7 +389,7 @@ const Profile = () => {
         ...prev,
         profilePhoto: null
       }));
-      console.log('User removed profile image');
+      
     }
   };
 
@@ -322,23 +418,23 @@ const Profile = () => {
                   alt="Profile" 
                   className="private-profile-avatar"
                   onError={(e) => {
-                    console.error('Image failed to load:', e.target.src);
+                    
                     // Try to use temporary image if available
                     const tempImage = localStorage.getItem(`temp_profile_image_${userId}`);
                     if (tempImage && e.target.src !== tempImage) {
-                      console.log('Trying temporary image as fallback');
+                     
                       e.target.src = tempImage;
                       setIsTemporaryImage(true);
                     } else {
                       // Hide the broken image and show default avatar
-                      console.log('Hiding broken image, showing default avatar');
+                      
                       e.target.style.display = 'none';
                       setPreviewImage(null);
                       setIsTemporaryImage(false);
                     }
                   }}
                   onLoad={(e) => {
-                    console.log('Image loaded successfully:', e.target.src);
+                   
                     e.target.style.display = 'block';
                   }}
                 />
@@ -371,7 +467,7 @@ const Profile = () => {
                       type="button"
                       className="remove-image-btn"
                       onClick={handleRemoveImage}
-                      title="حذف الصورة"
+                      title="Remove Profile Image"
                     >
                       <FaTimes />
                     </button>
@@ -402,43 +498,7 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Debug Info (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="debug-info" style={{ 
-            background: 'var(--bg-secondary)', 
-            padding: '1rem', 
-            borderRadius: '0.5rem', 
-            marginBottom: '1rem',
-            fontSize: '0.875rem',
-            fontFamily: 'monospace'
-          }}>
-            <strong>Debug Info:</strong><br/>
-            User ID: {userId}<br/>
-            API Base URL: {API_BASE_URL}<br/>
-            Profile Photo Path: {profile?.profilePhotoPath || 'null'}<br/>
-            Preview Image: {previewImage ? 'Set' : 'null'}<br/>
-            Is Temporary: {isTemporaryImage ? 'Yes' : 'No'}<br/>
-            Temp Image in Storage: {localStorage.getItem(`temp_profile_image_${userId}`) ? 'Yes' : 'No'}<br/>
-            <button 
-              onClick={() => {
-                console.log('=== MANUAL API TEST ===');
-                fetchProfile();
-              }}
-              style={{ 
-                marginTop: '0.5rem', 
-                padding: '0.25rem 0.5rem', 
-                fontSize: '0.75rem',
-                background: 'var(--brand-primary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                cursor: 'pointer'
-              }}
-            >
-              Test API Call
-            </button>
-          </div>
-        )}
+       
 
         {/* Profile Form */}
         <form onSubmit={handleSubmit}>
@@ -512,7 +572,7 @@ const Profile = () => {
                     onChange={handleInputChange}
                     className="form-control"
                     disabled={!isEditing}
-                    placeholder="+1 (555) 000-1234"
+                    placeholder="Ex: +20 68 XXX XXXX"
                   />
                 </div>
 
@@ -529,7 +589,7 @@ const Profile = () => {
                     onChange={handleInputChange}
                     className="form-control"
                     disabled={!isEditing}
-                    placeholder="742 Evergreen Terrace, Springfield"
+                    placeholder="Ex: 6 October , Giza"
                   />
                 </div>
 
@@ -595,14 +655,160 @@ const Profile = () => {
           )}
         </form>
 
-        {/* Deactivate Account */}
-        {!isEditing && (
-          <div className="profile-danger-zone">
-            <button className="btn-deactivate">
-              <FaTimes /> Deactivate Account
-            </button>
+        {/* Security Settings Card */}
+        <div className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-card-title">
+              <FaLock className="card-icon" />
+              <h2>Security Settings</h2>
+            </div>
+            {!isChangingPassword && (
+              <button 
+                type="button" 
+                className="btn-edit"
+                onClick={() => setIsChangingPassword(true)}
+              >
+                <FaEdit /> Change Password
+              </button>
+            )}
           </div>
-        )}
+
+          {isChangingPassword && (
+            <div className="profile-card-body">
+              
+              {/* Password Alert Messages */}
+              {passwordError && (
+                <div className="alert alert-error">
+                  <FaTimes /> {passwordError}
+                </div>
+              )}
+              
+              {passwordSuccess && (
+                <div className="alert alert-success">
+                  <FaCheck /> {passwordSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="form-grid">
+                  
+                  {/* Old Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      Current Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.oldPassword ? "text" : "password"}
+                        name="oldPassword"
+                        value={passwordData.oldPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Enter current password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('oldPassword')}
+                      >
+                        {showPasswords.oldPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* New Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      New Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.newPassword ? "text" : "password"}
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Enter new password (min 6 characters)"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('newPassword')}
+                      >
+                        {showPasswords.newPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      Confirm New Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.confirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Re-enter new password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                      >
+                        {showPasswords.confirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Password Change Actions */}
+                <div className="profile-actions">
+                  <button 
+                    type="button" 
+                    className="btn-cancel"
+                    onClick={handleCancelPasswordChange}
+                    disabled={savingPassword}
+                  >
+                    <FaTimes /> Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-save"
+                    disabled={savingPassword}
+                  >
+                    {savingPassword ? (
+                      <>
+                        <div className="btn-spinner"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave /> Update Password
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {!isChangingPassword && (
+            <div className="profile-card-body">
+              <p className="security-info">
+                <FaLock className="info-icon" />
+                Keep your account secure by using a strong password and changing it regularly as recommended.
+              </p>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
