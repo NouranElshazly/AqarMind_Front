@@ -8,9 +8,9 @@ const API = axios.create({
 
 API.interceptors.request.use(
   (req) => {
-    const profile = localStorage.getItem("profile");
-    if (profile) {
-      req.headers.Authorization = `Bearer ${JSON.parse(profile).token}`;
+    const token = localStorage.getItem("token");
+    if (token) {
+      req.headers.Authorization = `Bearer ${token}`;
     }
     return req;
   },
@@ -329,7 +329,7 @@ export const fetchLandlordActivity = () =>
 
 export default API;
 
-// ======================= Tenant Profile =====================
+// ======================= Profile API Functions =====================
 /* get current user complete profile (private )
  * Returns: fullName, email, phone, address, profilePhotoPath, nidPath, ownershipDocumentPath
 */

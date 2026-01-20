@@ -29,6 +29,8 @@ import ShowAnalytics from "./pages/showAnalytics";
 
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
+import Profile from "./pages/Profile";
+import ChangePassword from "./pages/Changepassword";
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -174,6 +176,10 @@ function App() {
               {/* Messages Routes */}
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:receiverId" element={<Messages />} />
+
+              {/* Profile Routes */}
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/change-password" element={<ChangePassword />} />
 
               {/* 404 Route */}
               <Route path="*" element={
