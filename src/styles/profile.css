@@ -685,6 +685,9 @@
    ========================================== */
 
 /* Wrapper for password input with toggle button */
+.badge-verified{
+  margin-left: 10px;
+}
 .form-group .form-label{
   font-size: large;
 }

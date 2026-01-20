@@ -76,12 +76,9 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      console.log('Fetching profile for userId:', userId);
-      console.log('API_BASE_URL:', API_BASE_URL);
-      console.log('Full URL will be:', `${API_BASE_URL}/api/Profile/me/${userId}`);
+   
       const response = await getMyProfile(userId);
-      console.log('Profile response:', response);
-      console.log('Profile photo path from server:', response.data.profilePhotoPath);
+
       
       setProfile(response.data);
       setFormData({
@@ -97,12 +94,11 @@ const Profile = () => {
       const serverImagePath = response.data.profilePhotoPath;
       const savedUserImage = localStorage.getItem(`user_profile_image_${userId}`);
       
-      console.log('Server returned profilePhotoPath:', serverImagePath);
-      console.log('Saved user image exists:', !!savedUserImage);
+     
       
       if (savedUserImage) {
         // Always use the user's uploaded image if it exists (never delete it)
-        console.log('Using saved user image');
+       
         setPreviewImage(savedUserImage);
         setIsTemporaryImage(false);
       } else if (serverImagePath) {
@@ -113,17 +109,17 @@ const Profile = () => {
           imageUrl = `${API_BASE_URL}${serverImagePath.startsWith('/') ? '' : '/'}${serverImagePath}`;
         }
         
-        console.log('Using server image:', imageUrl);
+       
         setPreviewImage(imageUrl);
         setIsTemporaryImage(false);
       } else {
-        console.log('No image available');
+     
         setPreviewImage(null);
         setIsTemporaryImage(false);
       }
     } catch (err) {
       setError('Failed to load profile');
-      console.error('Profile fetch error:', err);
+     
     } finally {
       setLoading(false);
     }
@@ -208,7 +204,6 @@ const Profile = () => {
                           err.response?.data || 
                           'Failed to update password';
       setPasswordError(errorMessage);
-      console.error('Password update error:', err.response?.data);
     } finally {
       setSavingPassword(false);
     }
@@ -257,16 +252,14 @@ const Profile = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const imageDataUrl = reader.result;
-          console.log('=== IMAGE UPLOAD DEBUG ===');
-          console.log('File selected:', file.name, file.size, file.type);
-          console.log('Image data URL length:', imageDataUrl.length);
+   
           
           setPreviewImage(imageDataUrl);
           
           // Save the image permanently in localStorage (won't be deleted automatically)
           const userImageKey = `user_profile_image_${userId}`;
           localStorage.setItem(userImageKey, imageDataUrl);
-          console.log('Saved user image permanently to localStorage');
+
           
           setImageUploading(false);
           setIsTemporaryImage(false); // It's now a permanent user image
@@ -303,10 +296,7 @@ const Profile = () => {
       const currentPreviewImage = previewImage;
       const hasUploadedImage = !!formData.profilePhoto;
 
-      console.log('=== PROFILE UPDATE DEBUG ===');
-      console.log('Update data:', updateData);
-      console.log('Has uploaded image:', hasUploadedImage);
-      console.log('Current preview image:', currentPreviewImage);
+     
 
       await updateMyProfile(userId, updateData);
       setSuccess('Profile updated successfully!');
@@ -314,8 +304,7 @@ const Profile = () => {
       
       // Refresh profile data
       const response = await getMyProfile(userId);
-      console.log('Server response after update:', response.data);
-      console.log('Server profilePhotoPath:', response.data.profilePhotoPath);
+  
       
       setProfile(response.data);
       
@@ -334,12 +323,12 @@ const Profile = () => {
       
       if (savedUserImage) {
         // Always keep the user's uploaded image
-        console.log('Keeping user uploaded image after save');
+       
         setPreviewImage(savedUserImage);
         setIsTemporaryImage(false);
       } else if (hasUploadedImage && currentPreviewImage) {
         // Keep the newly uploaded image preview
-        console.log('Keeping newly uploaded image preview after save');
+       
         setPreviewImage(currentPreviewImage);
         setIsTemporaryImage(false);
       } else if (response.data.profilePhotoPath) {
@@ -350,11 +339,11 @@ const Profile = () => {
           imageUrl = `${API_BASE_URL}${serverImagePath.startsWith('/') ? '' : '/'}${serverImagePath}`;
         }
         setPreviewImage(imageUrl);
-        console.log('Using server image after save:', imageUrl);
+        
         setIsTemporaryImage(false);
       } else {
         setPreviewImage(null);
-        console.log('No image available after save');
+        
         setIsTemporaryImage(false);
       }
       
@@ -400,7 +389,7 @@ const Profile = () => {
         ...prev,
         profilePhoto: null
       }));
-      console.log('User removed profile image');
+      
     }
   };
 
@@ -429,23 +418,23 @@ const Profile = () => {
                   alt="Profile" 
                   className="private-profile-avatar"
                   onError={(e) => {
-                    console.error('Image failed to load:', e.target.src);
+                    
                     // Try to use temporary image if available
                     const tempImage = localStorage.getItem(`temp_profile_image_${userId}`);
                     if (tempImage && e.target.src !== tempImage) {
-                      console.log('Trying temporary image as fallback');
+                     
                       e.target.src = tempImage;
                       setIsTemporaryImage(true);
                     } else {
                       // Hide the broken image and show default avatar
-                      console.log('Hiding broken image, showing default avatar');
+                      
                       e.target.style.display = 'none';
                       setPreviewImage(null);
                       setIsTemporaryImage(false);
                     }
                   }}
                   onLoad={(e) => {
-                    console.log('Image loaded successfully:', e.target.src);
+                   
                     e.target.style.display = 'block';
                   }}
                 />
@@ -478,7 +467,7 @@ const Profile = () => {
                       type="button"
                       className="remove-image-btn"
                       onClick={handleRemoveImage}
-                      title="حذف الصورة"
+                      title="Remove Profile Image"
                     >
                       <FaTimes />
                     </button>
@@ -509,43 +498,7 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Debug Info (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="debug-info" style={{ 
-            background: 'var(--bg-secondary)', 
-            padding: '1rem', 
-            borderRadius: '0.5rem', 
-            marginBottom: '1rem',
-            fontSize: '0.875rem',
-            fontFamily: 'monospace'
-          }}>
-            <strong>Debug Info:</strong><br/>
-            User ID: {userId}<br/>
-            API Base URL: {API_BASE_URL}<br/>
-            Profile Photo Path: {profile?.profilePhotoPath || 'null'}<br/>
-            Preview Image: {previewImage ? 'Set' : 'null'}<br/>
-            Is Temporary: {isTemporaryImage ? 'Yes' : 'No'}<br/>
-            Temp Image in Storage: {localStorage.getItem(`temp_profile_image_${userId}`) ? 'Yes' : 'No'}<br/>
-            <button 
-              onClick={() => {
-                console.log('=== MANUAL API TEST ===');
-                fetchProfile();
-              }}
-              style={{ 
-                marginTop: '0.5rem', 
-                padding: '0.25rem 0.5rem', 
-                fontSize: '0.75rem',
-                background: 'var(--brand-primary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                cursor: 'pointer'
-              }}
-            >
-              Test API Call
-            </button>
-          </div>
-        )}
+       
 
         {/* Profile Form */}
         <form onSubmit={handleSubmit}>
@@ -619,7 +572,7 @@ const Profile = () => {
                     onChange={handleInputChange}
                     className="form-control"
                     disabled={!isEditing}
-                    placeholder="+1 (555) 000-1234"
+                    placeholder="Ex: +20 68 XXX XXXX"
                   />
                 </div>
 
@@ -636,7 +589,7 @@ const Profile = () => {
                     onChange={handleInputChange}
                     className="form-control"
                     disabled={!isEditing}
-                    placeholder="742 Evergreen Terrace, Springfield"
+                    placeholder="Ex: 6 October , Giza"
                   />
                 </div>
 
