@@ -13,7 +13,10 @@ import {
   FaSave, 
   FaTimes,
   FaIdCard,
-  FaCheck
+  FaCheck,
+  FaLock,
+  FaEye,
+  FaEyeSlash
 } from 'react-icons/fa';
 
 const Profile = () => {
@@ -33,6 +36,22 @@ const Profile = () => {
     profilePhoto: null,
     nidFile: null
   });
+
+  // Password change state
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   const [previewImage, setPreviewImage] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
@@ -116,6 +135,94 @@ const Profile = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    setPasswordError('');
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setSavingPassword(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All password fields are required');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New password and confirm password do not match');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long');
+      setSavingPassword(false);
+      return;
+    }
+
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      setPasswordError('New password must be different from old password');
+      setSavingPassword(false);
+      return;
+    }
+
+    try {
+      await updatePassword(userId, passwordData);
+      setPasswordSuccess('Password updated successfully!');
+      
+      // Reset password form
+      setPasswordData({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      // Close password change section after 2 seconds
+      setTimeout(() => {
+        setIsChangingPassword(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (err) {
+      // Display server error message or fallback message
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          err.response?.data || 
+                          'Failed to update password';
+      setPasswordError(errorMessage);
+      console.error('Password update error:', err.response?.data);
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPasswordData({
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setPasswordError('');
+    setPasswordSuccess('');
   };
 
   const handleFileChange = (e) => {
@@ -595,14 +702,160 @@ const Profile = () => {
           )}
         </form>
 
-        {/* Deactivate Account */}
-        {!isEditing && (
-          <div className="profile-danger-zone">
-            <button className="btn-deactivate">
-              <FaTimes /> Deactivate Account
-            </button>
+        {/* Security Settings Card */}
+        <div className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-card-title">
+              <FaLock className="card-icon" />
+              <h2>Security Settings</h2>
+            </div>
+            {!isChangingPassword && (
+              <button 
+                type="button" 
+                className="btn-edit"
+                onClick={() => setIsChangingPassword(true)}
+              >
+                <FaEdit /> Change Password
+              </button>
+            )}
           </div>
-        )}
+
+          {isChangingPassword && (
+            <div className="profile-card-body">
+              
+              {/* Password Alert Messages */}
+              {passwordError && (
+                <div className="alert alert-error">
+                  <FaTimes /> {passwordError}
+                </div>
+              )}
+              
+              {passwordSuccess && (
+                <div className="alert alert-success">
+                  <FaCheck /> {passwordSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handlePasswordSubmit}>
+                <div className="form-grid">
+                  
+                  {/* Old Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      Current Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.oldPassword ? "text" : "password"}
+                        name="oldPassword"
+                        value={passwordData.oldPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Enter current password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('oldPassword')}
+                      >
+                        {showPasswords.oldPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* New Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      New Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.newPassword ? "text" : "password"}
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Enter new password (min 6 characters)"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('newPassword')}
+                      >
+                        {showPasswords.newPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="form-group">
+                    <label className="form-label">
+                      <FaLock className="input-icon" />
+                      Confirm New Password
+                    </label>
+                    <div className="password-input-wrapper">
+                      <input 
+                        type={showPasswords.confirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handlePasswordChange}
+                        className="form-control"
+                        placeholder="Re-enter new password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                      >
+                        {showPasswords.confirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Password Change Actions */}
+                <div className="profile-actions">
+                  <button 
+                    type="button" 
+                    className="btn-cancel"
+                    onClick={handleCancelPasswordChange}
+                    disabled={savingPassword}
+                  >
+                    <FaTimes /> Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-save"
+                    disabled={savingPassword}
+                  >
+                    {savingPassword ? (
+                      <>
+                        <div className="btn-spinner"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave /> Update Password
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {!isChangingPassword && (
+            <div className="profile-card-body">
+              <p className="security-info">
+                <FaLock className="info-icon" />
+                Keep your account secure by using a strong password and changing it regularly as recommended.
+              </p>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

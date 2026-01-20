@@ -51,11 +51,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    // Clear both storages on logout
+    // Clear session storage
     try {
       sessionStorage.clear();
-      localStorage.clear();
     } catch (_) {}
+
+    // Remove specific auth items from localStorage instead of clearing everything
+    // This preserves user settings like profile images
+    const keysToRemove = [
+      "token", 
+      "profile", 
+      "userId", 
+      "role", 
+      "landlordId", 
+      "guestMode",
+      "userName",
+      "landlordStats",
+      "recentActivity"
+    ];
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
     setUser(null);
   };
 
