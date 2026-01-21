@@ -44,7 +44,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${API_BASE_URL}/api/admin/dashboard/stats`,
+        `${API_BASE_URL}/api/admin/dashboard/user-stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -52,17 +52,6 @@ const AdminDashboard = () => {
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching stats:", error);
-      // Mock data
-      setStats({
-        pendingLandlords: Math.floor(Math.random() * 20) + 5,
-        pendingProperties: Math.floor(Math.random() * 15) + 8,
-        totalLandlords: Math.floor(Math.random() * 100) + 50,
-        totalTenants: Math.floor(Math.random() * 300) + 150,
-        totalProperties: Math.floor(Math.random() * 200) + 80,
-        acceptedProperties: Math.floor(Math.random() * 150) + 60,
-        rejectedProperties: Math.floor(Math.random() * 30) + 10,
-        monthlyRevenue: Math.floor(Math.random() * 50000) + 10000,
-      });
     }
   };
 
@@ -188,14 +177,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="header-right">
-          <div className="search-box">
-            <Search size={20} />
-            <input type="text" placeholder="Search..." />
-          </div>
-          <button className="icon-btn">
-            <Bell size={20} />
-            <span className="notification-badge">3</span>
-          </button>
+          
           <button
             className="refresh-btn"
             onClick={handleRefresh}
@@ -208,14 +190,29 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Grid */}
+      
       <div className="stats-grid">
-        <div className="stat-card stat-pending">
+        <div className="stat-card stat-approved">
           <div className="stat-icon">
-            <Clock size={28} />
+            <CheckCircle size={28} />
           </div>
           <div className="stat-content">
-            <p className="stat-label">Pending Properties</p>
-            <h3 className="stat-value">{stats.pendingProperties}</h3>
+            <p className="stat-label">Admins</p>
+            <h3 className="stat-value">{stats.admins}</h3>
+            <span className="stat-trend positive">
+              <TrendingUp size={14} />
+              +15% from last month
+            </span>
+          </div>
+        </div>
+        
+        <div className="stat-card stat-pending">
+          <div className="stat-icon">
+            <Users size={28} />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">Tenants</p>
+            <h3 className="stat-value">{stats.tenants}</h3>
             <span className="stat-trend positive">
               <TrendingUp size={14} />
               +12% from last week
@@ -228,8 +225,8 @@ const AdminDashboard = () => {
             <Users size={28} />
           </div>
           <div className="stat-content">
-            <p className="stat-label">Pending Landlords</p>
-            <h3 className="stat-value">{stats.pendingLandlords}</h3>
+            <p className="stat-label">Landlords</p>
+            <h3 className="stat-value">{stats.owners}</h3>
             <span className="stat-trend positive">
               <TrendingUp size={14} />
               +8% from last week
@@ -237,19 +234,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-approved">
-          <div className="stat-icon">
-            <CheckCircle size={28} />
-          </div>
-          <div className="stat-content">
-            <p className="stat-label">Total Properties</p>
-            <h3 className="stat-value">{stats.totalProperties}</h3>
-            <span className="stat-trend positive">
-              <TrendingUp size={14} />
-              +15% from last month
-            </span>
-          </div>
-        </div>
+        
 
         <div className="stat-card stat-users">
           <div className="stat-icon">
@@ -258,7 +243,7 @@ const AdminDashboard = () => {
           <div className="stat-content">
             <p className="stat-label">Total Users</p>
             <h3 className="stat-value">
-              {stats.totalLandlords + stats.totalTenants}
+              {stats.totalUsers}
             </h3>
             <span className="stat-trend positive">
               <TrendingUp size={14} />
