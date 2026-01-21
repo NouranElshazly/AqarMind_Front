@@ -59,7 +59,8 @@ const AddProperty = () => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox" ? checked : name === "type" ? Number(value) : value,
     }));
   };
 
@@ -210,11 +211,11 @@ const AddProperty = () => {
       if (formData.totalUnitsInBuilding) {
         submitData.append(
           "TotalUnitsInBuilding",
-          formData.totalUnitsInBuilding
+          formData.totalUnitsInBuilding,
         );
         console.log(
           "🏢 Added TotalUnitsInBuilding:",
-          formData.totalUnitsInBuilding
+          formData.totalUnitsInBuilding,
         );
       }
       if (formData.floorNumber) {
@@ -242,7 +243,7 @@ const AddProperty = () => {
         "📄 Added Document:",
         formData.postDocFile.name,
         "Size:",
-        formData.postDocFile.size
+        formData.postDocFile.size,
       );
 
       // Images
@@ -253,7 +254,7 @@ const AddProperty = () => {
             `🖼️ Added Image ${index + 1}:`,
             img.name,
             "Size:",
-            img.size
+            img.size,
           );
         });
       }
@@ -291,7 +292,7 @@ const AddProperty = () => {
       setError(
         err.response?.data?.message ||
           err.message ||
-          "Failed to create property. Please try again."
+          "Failed to create property. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -431,6 +432,46 @@ const AddProperty = () => {
             </div>
           </div>
         </div>
+
+        {/* Rental Dates (Only for Rent) */}
+        {formData.type === 0 && (
+          <div className="form-section">
+            <div className="section-header">
+              <Calendar size={24} />
+              <h2>Rental Period</h2>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label">
+                  <Calendar size={18} />
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  name="startRentalDate"
+                  value={formData.startRentalDate}
+                  onChange={handleInputChange}
+                  className="form-control"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <Calendar size={18} />
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  name="endRentalDate"
+                  value={formData.endRentalDate}
+                  onChange={handleInputChange}
+                  className="form-control"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         <div className="form-section">
@@ -598,46 +639,6 @@ const AddProperty = () => {
             </div>
           </div>
         </div>
-
-        {/* Rental Dates (Only for Rent) */}
-        {formData.type === 0 && (
-          <div className="form-section">
-            <div className="section-header">
-              <Calendar size={24} />
-              <h2>Rental Period</h2>
-            </div>
-
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">
-                  <Calendar size={18} />
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  name="startRentalDate"
-                  value={formData.startRentalDate}
-                  onChange={handleInputChange}
-                  className="form-control"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  <Calendar size={18} />
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  name="endRentalDate"
-                  value={formData.endRentalDate}
-                  onChange={handleInputChange}
-                  className="form-control"
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Tags */}
         <div className="form-section">
