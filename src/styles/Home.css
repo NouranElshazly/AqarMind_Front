@@ -466,6 +466,45 @@
   height: 1rem;
 }
 
+.home-property-description {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.home-property-description svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.home-property-meta-small {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-primary);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.home-property-user,
+.home-property-date {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.home-property-user svg,
+.home-property-date svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--brand-primary);
+}
+
 .home-property-features {
   display: flex;
   gap: 1rem;

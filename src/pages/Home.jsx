@@ -27,6 +27,9 @@ import {
   FaMoneyCheckAlt,
   FaChevronLeft,
   FaChevronRight,
+  FaUser,
+  FaCalendarAlt,
+  FaAlignLeft,
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
 import Navbar from "../components/Navbar";
@@ -152,6 +155,8 @@ const Home = () => {
       bathrooms: 2,
       area: 180,
       type: "FOR SALE",
+      userName: "Michael Scott",
+      datePost: "2023-10-15T10:00:00Z",
       images: [
         "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
         "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
@@ -169,6 +174,8 @@ const Home = () => {
       bathrooms: 3,
       area: 320,
       type: "FOR RENT",
+      userName: "Pam Beesly",
+      datePost: "2023-10-12T14:30:00Z",
       images: [
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
         "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
@@ -186,6 +193,8 @@ const Home = () => {
       bathrooms: 2,
       area: 150,
       type: "NEW LISTING",
+      userName: "Jim Halpert",
+      datePost: "2023-10-18T09:15:00Z",
       images: [
         "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
@@ -402,7 +411,6 @@ const Home = () => {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            // Add favorite functionality here
                           }}
                         >
                           <FaHeart />
@@ -454,28 +462,30 @@ const Home = () => {
 
                       <div className="home-property-content">
                         <div className="home-property-price">
+                          <h3 className="home-property-title">
+                            {property.title}
+                          </h3>
+                          <div className="home-property-description">
+                            <i class="fa-solid fa-angle-right"></i>
+                            <span>{property.description}</span>
+                          </div>
                           ${property.price?.toLocaleString() || "N/A"}
                         </div>
-                        <h3 className="home-property-title">
-                          {property.title}
-                        </h3>
-                        <div className="home-property-location">
-                          <FaMapMarkerAlt />
-                          <span>{property.location}</span>
-                        </div>
 
-                        <div className="home-property-features">
-                          <div className="home-property-feature">
-                            <FaBed />
-                            <span>{property.bedrooms || 0} Beds</span>
+                        <div className="home-property-meta-small">
+                          <div className="home-property-user">
+                            <FaUser />
+                            <span>{property.userName || "Unknown"}</span>
                           </div>
-                          <div className="home-property-feature">
-                            <FaBath />
-                            <span>{property.bathrooms || 0} Baths</span>
-                          </div>
-                          <div className="home-property-feature">
-                            <FaRulerCombined />
-                            <span>{property.area || 0} sqft</span>
+                          <div className="home-property-date">
+                            <FaCalendarAlt />
+                            <span>
+                              {property.datePost
+                                ? new Date(
+                                    property.datePost,
+                                  ).toLocaleDateString()
+                                : "Just now"}
+                            </span>
                           </div>
                         </div>
                       </div>

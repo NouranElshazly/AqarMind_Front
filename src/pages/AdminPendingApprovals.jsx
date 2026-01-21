@@ -112,7 +112,7 @@ const AdminPendingApprovals = () => {
       <div className="pending-meta">
         <span className="pending-date">
           <Calendar size={14} />
-          {new Date(post.createdAt).toLocaleDateString()}
+          {new Date(post.datePost).toLocaleDateString()}
         </span>
         <span className={`pending-type ${post.type === 0 ? "rent" : "sale"}`}>
           {post.type === 0 ? "For Rent" : "For Sale"}
@@ -136,7 +136,7 @@ const AdminPendingApprovals = () => {
 
       <div className="pending-landlord">
         <User size={14} />
-        <span>By: {post.landlord?.user?.userName || "Unknown"}</span>
+        <span>By: {post.userName || "Unknown"}</span>
       </div>
     </div>
   );
@@ -274,6 +274,19 @@ const AdminPendingApprovals = () => {
             {post.hasGarage ? "✓ Yes" : "✗ No"}
           </span>
         </div>
+
+        <div className="detail-item">
+          <span className="detail-label">Auction</span>
+          <span className="detail-value">
+            {post.isAuction ? (
+              <span className="status-yes">
+                <Gavel size={16} /> Yes
+              </span>
+            ) : (
+              "✗ No"
+            )}
+          </span>
+        </div>
       </div>
 
       {/* Location */}
@@ -324,20 +337,7 @@ const AdminPendingApprovals = () => {
         </div>
       )}
 
-      {/* Tags */}
-      {post.tagsJson && (
-        <div className="details-section">
-          <h3>Tags</h3>
-          <div className="tags-list">
-            {JSON.parse(post.tagsJson).map((tag, idx) => (
-              <span key={idx} className="tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
+      
       {/* Landlord Info */}
       <div className="details-section landlord-section">
         <h3>
@@ -347,18 +347,12 @@ const AdminPendingApprovals = () => {
         <div className="landlord-info">
           <div className="landlord-detail">
             <User size={16} />
-            <span>{post.landlord?.user?.userName || "N/A"}</span>
+            <span>{post.userName || "N/A"}</span>
           </div>
           <div className="landlord-detail">
             <Mail size={16} />
-            <span>{post.landlord?.user?.email || "N/A"}</span>
+            <span>{post.email || "N/A"}</span>
           </div>
-          {post.landlord?.user?.phone && (
-            <div className="landlord-detail">
-              <Phone size={16} />
-              <span>{post.landlord.user.phone}</span>
-            </div>
-          )}
         </div>
       </div>
 

@@ -20,6 +20,7 @@ import {
   FileText,
   Image as ImageIcon,
   CheckCircle,
+  Gavel,
 } from "lucide-react";
 import "../styles/AddProperty.css";
 
@@ -203,6 +204,7 @@ const AddProperty = () => {
       submitData.append("Area", formData.area);
       submitData.append("IsFurnished", formData.isFurnished);
       submitData.append("HasGarage", formData.hasGarage);
+      submitData.append("IsAuction", formData.isAuction);
       submitData.append("Type", formData.type);
 
       console.log("📋 Basic fields added to FormData");
@@ -635,6 +637,20 @@ const AddProperty = () => {
               <label htmlFor="hasGarage" className="feature-label">
                 <Car size={20} />
                 <span>Has Garage</span>
+              </label>
+            </div>
+
+            <div className="feature-checkbox">
+              <input
+                type="checkbox"
+                id="isAuction"
+                name="isAuction"
+                checked={formData.isAuction}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="isAuction" className="feature-label">
+                <Gavel size={20} />
+                <span>Auction</span>
               </label>
             </div>
           </div>
