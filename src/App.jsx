@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
 import PropertyDetail from "./pages/PropertyDetail";
@@ -216,6 +217,9 @@ function App() {
           </main>
 
           {!hideNavbarFooter && <Footer />}
+          
+          {/* Global Scroll to Top Button */}
+          <ScrollToTop />
         </div>
       </AuthProvider>
     </DarkModeProvider>

@@ -37,7 +37,6 @@ import {
   FaBath,
   FaRulerCombined,
   FaStar,
-  FaChevronUp,
 } from "react-icons/fa";
 
 import "../styles/PropertyDetail.css";
@@ -302,7 +301,6 @@ const PropertyDetail = () => {
     user_has_liked: false,
   });
   const viewRecordedRef = useRef(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const userInfo = getUserInfoFromToken();
   const { userId, userName } = userInfo || {};
@@ -311,19 +309,6 @@ const PropertyDetail = () => {
   const isAdmin = tenantRole === "admin";
   const isLandlord = tenantRole === "landlord";
   const isTenant = tenantRole === "tenant";
-
-  // --- Scroll to Top Function ---
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // --- (جميع الدوال والـ useEffects بدون تغيير) ---
   const calculateTotalComments = (commentList) => {
@@ -396,6 +381,13 @@ const PropertyDetail = () => {
         );
         if (isMounted) {
           setPost(res.data);
+          console.log('Post data loaded:', res.data);
+          console.log('Available image fields:', {
+            fileBase64s: res.data.fileBase64s,
+            fileBase64: res.data.fileBase64,
+            images: res.data.images,
+            image: res.data.image
+          });
           if (userId && !viewRecordedRef.current && res.data?.title) {
             recordHistoryEvent(userId, "view", {
               post_id: postId,
@@ -594,17 +586,19 @@ const PropertyDetail = () => {
   };
   const goToPrevImage = (e) => {
     e.stopPropagation();
-    if (post.fileBase64s && post.fileBase64s.length > 0) {
+    const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+    if (images && images.length > 0) {
       setCurrentImageIndex((prevIndex) =>
-        prevIndex === 0 ? post.fileBase64s.length - 1 : prevIndex - 1,
+        prevIndex === 0 ? images.length - 1 : prevIndex - 1,
       );
     }
   };
   const goToNextImage = (e) => {
     e.stopPropagation();
-    if (post.fileBase64s && post.fileBase64s.length > 0) {
+    const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+    if (images && images.length > 0) {
       setCurrentImageIndex((prevIndex) =>
-        prevIndex === post.fileBase64s.length - 1 ? 0 : prevIndex + 1,
+        prevIndex === images.length - 1 ? 0 : prevIndex + 1,
       );
     }
   };
@@ -1306,194 +1300,23 @@ const PropertyDetail = () => {
 
   return (
     <div className="property-detail-page">
-      {/* Hero Section */}
-      <section className="property-hero">
-        <div className="property-hero-content">
-          <h1 className="property-title">{post.title}</h1>
-          <p className="property-subtitle">
-            <FaMapMarkerAlt className="inline mr-2" />
-            {post.location}
+      {/* Page Title */}
+      <div className="property-page-header">
+        <div className="property-page-header-content">
+          <h1 className="property-page-title">Property Details</h1>
+          <p className="property-page-subtitle">
+            Discover your perfect home with detailed information and stunning visuals
           </p>
-
-          <div className="property-meta">
-            <div className="property-price">
-              ${post.price?.toLocaleString()}
-            </div>
-            <div className="property-stats">
-              <div className="property-stat">
-                {/* <FaBed className="property-stat-icon" />
-                <span>{post.bedrooms || 0} Beds</span> */}
-              </div>
-              <div className="property-stat">
-                <FaBath className="property-stat-icon" />
-                <span>{post.bathrooms || 0} Baths</span>
-              </div>
-              <div className="property-stat">
-                <FaRulerCombined className="property-stat-icon" />
-                <span>{post.area || 0} sqft</span>
-              </div>
-            </div>
-
-            <div className="property-hero-actions">
-              {!isAdmin && !isLandlord && post.rentalStatus !== "Rental" && (
-                <button
-                  onClick={handleApplyClick}
-                  className="property-hero-btn property-hero-btn-primary"
-                >
-                  <FaPaperPlane className="mr-2" />
-                  Apply Now
-                </button>
-              )}
-              <button
-                onClick={handleMessageClick}
-                className="property-hero-btn property-hero-btn-secondary"
-              >
-                <FaEnvelope className="mr-2" />
-                Message Owner
-              </button>
-            </div>
-          </div>
         </div>
-      </section>
+      </div>
 
-      {/* Image Gallery */}
-      <section className="property-gallery">
-        <div
-          className="property-gallery-main"
-          onClick={() => openLightbox(currentImageIndex)}
-        >
-          {post.fileBase64s && post.fileBase64s.length > 0 ? (
-            <>
-              <img
-                src={`data:image/png;base64,${post.fileBase64s[currentImageIndex]}`}
-                alt={`Property ${currentImageIndex + 1}`}
-              />
-              <div className="property-gallery-overlay"></div>
-              <div className="property-gallery-counter">
-                {currentImageIndex + 1} / {post.fileBase64s.length}
-              </div>
-            </>
-          ) : post.fileBase64 ? (
-            <img
-              src={`data:image/png;base64,${post.fileBase64}`}
-              alt="Property"
-            />
-          ) : (
-            <div className="property-gallery-empty">
-              <FaHome className="property-gallery-empty-icon" />
-              <p className="property-gallery-empty-text">No images available</p>
-            </div>
-          )}
-        </div>
-
-        {post.fileBase64s && post.fileBase64s.length > 1 && (
-          <div className="property-gallery-thumbnails">
-            {post.fileBase64s.map((img, index) => (
-              <div
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`property-thumbnail ${index === currentImageIndex ? "active" : ""}`}
-              >
-                <img
-                  src={`data:image/png;base64,${img}`}
-                  alt={`Thumbnail ${index + 1}`}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Main Content */}
-      <div className="property-content">
-        <div className="property-grid">
-          {/* Left Column - Description & Details */}
-          <div className="space-y-8">
-            {/* Description Section */}
-            <section className="property-description-section">
-              <div className="property-description-header">
-                <div className="property-description-icon">
-                  <FaHome />
-                </div>
-                <h2 className="property-description-title">
-                  Property Description
-                </h2>
-              </div>
-              <div className="property-description-content">
-                {post.description ? (
-                  post.description.split("\n").map((paragraph, index) => (
-                    <p
-                      key={index}
-                      className={
-                        index === 0 ? "property-description-highlight" : ""
-                      }
-                    >
-                      {paragraph}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-gray-500 italic">
-                    No description available for this property.
-                  </p>
-                )}
-              </div>
-            </section>
-
-            {/* Features Section */}
-            <section className="property-features-section">
-              <h3 className="property-features-title">
-                <FaStar className="inline mr-2" />
-                Property Features
-              </h3>
-              <div className="property-features-grid">
-                <div className="property-feature-item">
-                  <FaBed className="property-feature-icon" />
-                  <div className="property-feature-text">
-                    {post.bedrooms || 0} Bedrooms
-                  </div>
-                </div>
-                <div className="property-feature-item">
-                  <FaBath className="property-feature-icon" />
-                  <div className="property-feature-text">
-                    {post.bathrooms || 0} Bathrooms
-                  </div>
-                </div>
-                <div className="property-feature-item">
-                  <FaRulerCombined className="property-feature-icon" />
-                  <div className="property-feature-text">
-                    {post.area || 0} sq ft
-                  </div>
-                </div>
-                <div className="property-feature-item">
-                  <FaHome className="property-feature-icon" />
-                  <div className="property-feature-text">Modern Design</div>
-                </div>
-              </div>
-            </section>
-
-            {/* Location Section */}
-            <section className="property-location-section">
-              <div className="property-location-header">
-                <div className="property-location-icon">
-                  <FaMapMarkerAlt />
-                </div>
-                <h3 className="property-location-title">Location</h3>
-              </div>
-              <p className="property-location-content">
-                {post.location || "Location information not available"}
-              </p>
-            </section>
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="property-sidebar">
-            <div className="property-sidebar-card property-sidebar-status">
-              <h3 className="property-sidebar-title">
-                <div className="property-sidebar-icon">
-                  <FaClock />
-                </div>
-                Rental Status
-              </h3>
+      {/* Main Property Card */}
+      <div className="property-main-container">
+        <div className="property-main-card">
+          {/* Left Side - Image Gallery */}
+          <div className="property-image-section">
+            {/* Status Badge for Mobile */}
+            <div className="property-status-wrapper">
               <div
                 className={`property-status-badge ${post.rentalStatus === "Rental" ? "status-rented" : "status-available"}`}
               >
@@ -1504,73 +1327,324 @@ const PropertyDetail = () => {
               </div>
             </div>
 
-            <div className="property-sidebar-card">
-              <div className="property-owner-info">
-                <div className="property-owner-avatar">
-                  <FaUser />
-                </div>
-                <div>
-                  <p className="property-owner-name">{post.userName}</p>
-                  <p className="property-owner-label">Property Owner</p>
-                </div>
-              </div>
+            <div
+              className="property-main-image"
+              onClick={() => openLightbox(currentImageIndex)}
+            >
+              {(() => {
+                // Handle images exactly like in Home.jsx
+                const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+                const hasImages = images && images.length > 0;
+                
+                if (hasImages) {
+                  const currentImage = images[currentImageIndex];
+                  let imageSrc;
+                  
+                  // Handle different image formats like in Home.jsx
+                  if (currentImage.startsWith("http")) {
+                    imageSrc = currentImage;
+                  } else if (currentImage.startsWith("data:")) {
+                    imageSrc = currentImage;
+                  } else {
+                    // If it's a path or base64 without data prefix
+                    imageSrc = currentImage.includes('/') 
+                      ? `${API_BASE_URL}/${currentImage}`
+                      : `data:image/png;base64,${currentImage}`;
+                  }
+                  
+                  return (
+                    <>
+                      <img
+                        src={imageSrc}
+                        alt={`${post.title} - Image ${currentImageIndex + 1}`}
+                        onError={(e) => {
+                          console.log('Image failed to load:', imageSrc);
+                          console.log('Original image data:', currentImage);
+                          console.log('Post data:', post);
+                          // Try different fallback approaches
+                          if (!e.target.dataset.retried) {
+                            e.target.dataset.retried = 'true';
+                            if (currentImage.includes('/')) {
+                              // Try as direct API path
+                              e.target.src = `${API_BASE_URL}/${currentImage}`;
+                            } else {
+                              // Try as base64 with different prefix
+                              e.target.src = `data:image/jpeg;base64,${currentImage}`;
+                            }
+                          } else {
+                            // Final fallback
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                          }
+                        }}
+                      />
+                      <div className="property-image-overlay"></div>
+                      <div className="property-image-counter">
+                        <FaImage className="mr-2" />
+                        {currentImageIndex + 1} / {images.length}
+                      </div>
+                      
+                      {/* Navigation arrows for multiple images */}
+                      {images.length > 1 && (
+                        <>
+                          <button
+                            className="property-image-nav property-image-nav-prev"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex(prev => 
+                                prev === 0 ? images.length - 1 : prev - 1
+                              );
+                            }}
+                          >
+                            <FaChevronLeft />
+                          </button>
+                          <button
+                            className="property-image-nav property-image-nav-next"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentImageIndex(prev => 
+                                prev === images.length - 1 ? 0 : prev + 1
+                              );
+                            }}
+                          >
+                            <FaChevronRight />
+                          </button>
+                        </>
+                      )}
+                    </>
+                  );
+                } else {
+                  // Fallback: try to show any available image data
+                  console.log('No images found, checking for fallback options');
+                  console.log('Post object keys:', Object.keys(post));
+                  
+                  return (
+                    <div className="property-image-empty">
+                      <FaHome className="property-image-empty-icon" />
+                      <p className="property-image-empty-text">No images available</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Debug: Check console for available image fields
+                      </p>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
 
-              <div className="property-owner-date">
-                <FaCalendarAlt className="inline mr-2" />
-                Posted on{" "}
-                {new Date(post.datePost).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+            {/* Thumbnails */}
+            {(() => {
+              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+              return images && images.length > 1 && (
+                <div className="property-thumbnails">
+                  {images.map((img, index) => {
+                    let imageSrc;
+                    
+                    // Handle different image formats like in Home.jsx
+                    if (img.startsWith("http")) {
+                      imageSrc = img;
+                    } else if (img.startsWith("data:")) {
+                      imageSrc = img;
+                    } else {
+                      // If it's a path or base64 without data prefix
+                      imageSrc = img.includes('/') 
+                        ? `${API_BASE_URL}/${img}`
+                        : `data:image/png;base64,${img}`;
+                    }
+                    
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`property-thumbnail ${index === currentImageIndex ? "active" : ""}`}
+                      >
+                        <img
+                          src={imageSrc}
+                          alt={`${post.title} - Thumbnail ${index + 1}`}
+                          onError={(e) => {
+                            console.log('Thumbnail failed to load:', imageSrc);
+                            e.target.src = '/placeholder.jpg';
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Right Side - Property Information */}
+          <div className="property-info-section">
+            {/* Property Header */}
+            <div className="property-header">
+              <h1 className="property-title">{post.title}</h1>
+              <div className="property-location">
+                <FaMapMarkerAlt className="property-location-icon" />
+                <span>{post.location}</span>
               </div>
             </div>
 
-            <div className="property-sidebar-card">
-              <h3 className="property-sidebar-title">
-                <div className="property-sidebar-icon">
+            {/* Price */}
+            <div className="property-price-section">
+              <div className="property-price">
+                ${post.price?.toLocaleString()}
+                <span className="property-price-period">/month</span>
+              </div>
+            </div>
+
+            {/* Property Features */}
+            <div className="property-features">
+              <div className="property-feature">
+                <div className="property-feature-icon">
+                  <FaBed />
+                </div>
+                <div className="property-feature-content">
+                  <span className="property-feature-value">{post.bedrooms || 0}</span>
+                  <span className="property-feature-label">Bedrooms</span>
+                </div>
+              </div>
+              <div className="property-feature">
+                <div className="property-feature-icon">
+                  <FaBath />
+                </div>
+                <div className="property-feature-content">
+                  <span className="property-feature-value">{post.bathrooms || 0}</span>
+                  <span className="property-feature-label">Bathrooms</span>
+                </div>
+              </div>
+              <div className="property-feature">
+                <div className="property-feature-icon">
+                  <FaRulerCombined />
+                </div>
+                <div className="property-feature-content">
+                  <span className="property-feature-value">{post.area || 0}</span>
+                  <span className="property-feature-label">sq ft</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Property Description */}
+            <div className="property-description">
+              <h3 className="property-description-title">
+                <FaHome className="mr-2" />
+                Description
+              </h3>
+              <div className="property-description-content">
+                {post.description ? (
+                  post.description.split("\n").map((paragraph, index) => (
+                    <p key={index}>
+                      {paragraph}
+                    </p>
+                  ))
+                ) : (
+                  <p className="property-description-empty">
+                    No description available for this property.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Owner Information */}
+            <div className="property-owner">
+              <div className="property-owner-avatar">
+                <FaUser />
+              </div>
+              <div className="property-owner-info">
+                <div className="property-owner-name">{post.userName}</div>
+                <div className="property-owner-label">Property Owner</div>
+                <div className="property-owner-date">
+                  <FaCalendarAlt className="mr-2" />
+                  Posted on{" "}
+                  {new Date(post.datePost).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="property-actions-main">
+              {!isAdmin && !isLandlord && post.rentalStatus !== "Rental" && (
+                <button
+                  onClick={handleApplyClick}
+                  className="property-btn property-btn-primary"
+                >
+                  <FaPaperPlane className="mr-2" />
+                  Apply Now
+                </button>
+              )}
+              <button
+                onClick={handleMessageClick}
+                className="property-btn property-btn-secondary"
+              >
+                <FaEnvelope className="mr-2" />
+                Message Owner
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Content Sections */}
+      <div className="property-content">
+        <div className="property-grid">
+          {/* Statistics and Analytics Section */}
+          <div className="property-stats-section">
+            <h2 className="property-section-title">
+              <FaEye className="mr-3" />
+              Property Statistics
+            </h2>
+            <div className="property-stats-grid">
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
                   <FaEye />
                 </div>
-                Property Stats
-              </h3>
-              <div className="property-stats-list">
-                <div className="property-stat-item">
-                  <div className="property-stat-label">
-                    <FaEye className="inline mr-2" />
-                    Views
-                  </div>
-                  <span className="property-stat-value">{viewCount}</span>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">{viewCount}</div>
+                  <div className="property-stat-label">Views</div>
                 </div>
-                <div className="property-stat-item">
-                  <div className="property-stat-label">
-                    <FaHeart className="inline mr-2" />
-                    Likes
-                  </div>
-                  <span className="property-stat-value">
-                    {likeStatus.likes_count || 0}
-                  </span>
+              </div>
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
+                  <FaHeart />
+                </div>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">{likeStatus.likes_count || 0}</div>
+                  <div className="property-stat-label">Likes</div>
+                </div>
+              </div>
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
+                  <FaComment />
+                </div>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">{commentCount}</div>
+                  <div className="property-stat-label">Comments</div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="property-sidebar-card property-sidebar-contact">
-              <h3 className="property-sidebar-title">
-                <div className="property-sidebar-icon">
-                  <FaPhone />
-                </div>
-                Contact Information
-              </h3>
-              <p className="property-contact-text">
-                Interested in this property? Get in touch with the owner or
-                agent.
-              </p>
-              <button
-                className="property-contact-btn"
-                onClick={handleMessageClick}
-              >
-                <FaEnvelope className="inline mr-2" />
-                Contact Now
-              </button>
+          {/* Additional Features Section */}
+          <div className="property-amenities-section">
+            <h2 className="property-section-title">
+              <FaStar className="mr-3" />
+              Property Amenities
+            </h2>
+            <div className="property-amenities-grid">
+              <div className="property-amenity-item">
+                <FaHome className="property-amenity-icon" />
+                <span className="property-amenity-text">Modern Design</span>
+              </div>
+              <div className="property-amenity-item">
+                <FaMapMarkerAlt className="property-amenity-icon" />
+                <span className="property-amenity-text">Prime Location</span>
+              </div>
+              <div className="property-amenity-item">
+                <FaUserTie className="property-amenity-icon" />
+                <span className="property-amenity-text">Professional Management</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1589,12 +1663,12 @@ const PropertyDetail = () => {
               ) : (
                 <FaRegHeart className="mr-2" />
               )}
-              Like ({likeStatus.likes_count})
+              <span>Like ({likeStatus.likes_count})</span>
             </button>
 
             <button onClick={handleSharePost} className="property-action-btn">
               <FaShareAlt className="mr-2" />
-              Share
+              <span>Share</span>
             </button>
 
             <button
@@ -1606,7 +1680,7 @@ const PropertyDetail = () => {
               ) : (
                 <FaRegBookmark className="mr-2" />
               )}
-              {saved ? "Saved" : "Save"}
+              <span>{saved ? "Saved" : "Save"}</span>
             </button>
 
             <button
@@ -1614,7 +1688,7 @@ const PropertyDetail = () => {
               className="property-action-btn btn-primary"
             >
               <FaComment className="mr-2" />
-              Comments ({commentCount > 0 ? commentCount : "0"})
+              <span>Comments ({commentCount > 0 ? commentCount : "0"})</span>
             </button>
           </>
         )}
@@ -1897,55 +1971,107 @@ const PropertyDetail = () => {
             className="relative flex items-center max-w-7xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={goToPrevImage}
-              className="absolute left-8 p-5 bg-black/50 text-white rounded-2xl hover:bg-black/70 transition-all duration-200 hover:scale-110 z-10"
-            >
-              <FaChevronLeft className="text-3xl" />
-            </button>
+            {(() => {
+              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+              
+              if (images.length > 1) {
+                return (
+                  <>
+                    <button
+                      onClick={goToPrevImage}
+                      className="absolute left-8 p-5 bg-black/50 text-white rounded-2xl hover:bg-black/70 transition-all duration-200 hover:scale-110 z-10"
+                    >
+                      <FaChevronLeft className="text-3xl" />
+                    </button>
+                    <button
+                      onClick={goToNextImage}
+                      className="absolute right-8 p-5 bg-black/50 text-white rounded-2xl hover:bg-black/70 transition-all duration-200 hover:scale-110 z-10"
+                    >
+                      <FaChevronRight className="text-3xl" />
+                    </button>
+                  </>
+                );
+              }
+              return null;
+            })()}
 
-            <img
-              src={`data:image/png;base64,${post.fileBase64s ? post.fileBase64s[currentImageIndex] : post.fileBase64}`}
-              alt="Enlarged view"
-              className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
-            />
-
-            <button
-              onClick={goToNextImage}
-              className="absolute right-8 p-5 bg-black/50 text-white rounded-2xl hover:bg-black/70 transition-all duration-200 hover:scale-110 z-10"
-            >
-              <FaChevronRight className="text-3xl" />
-            </button>
+            {(() => {
+              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+              if (images.length > 0) {
+                const currentImage = images[currentImageIndex];
+                let imageSrc;
+                
+                // Handle different image formats like in Home.jsx
+                if (currentImage.startsWith("http")) {
+                  imageSrc = currentImage;
+                } else if (currentImage.startsWith("data:")) {
+                  imageSrc = currentImage;
+                } else {
+                  // If it's a path or base64 without data prefix
+                  imageSrc = currentImage.includes('/') 
+                    ? `${API_BASE_URL}/${currentImage}`
+                    : `data:image/png;base64,${currentImage}`;
+                }
+                
+                return (
+                  <img
+                    src={imageSrc}
+                    alt={`${post.title} - Enlarged view`}
+                    className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
+                    onError={(e) => {
+                      console.log('Lightbox image failed to load:', imageSrc);
+                      e.target.src = '/placeholder.jpg';
+                    }}
+                  />
+                );
+              }
+              return null;
+            })()}
           </div>
 
-          {post.fileBase64s && post.fileBase64s.length > 1 && (
-            <div className="flex gap-4 mt-8 overflow-x-auto max-w-full p-4">
-              {post.fileBase64s.map((img, index) => (
-                <img
-                  key={index}
-                  src={`data:image/png;base64,${img}`}
-                  alt={`Thumb ${index + 1}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(index);
-                  }}
-                  className={`w-28 h-24 object-cover rounded-2xl cursor-pointer transition-all duration-300 shadow-lg ${index === currentImageIndex ? "opacity-100 ring-4 ring-white scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
-                />
-              ))}
-            </div>
-          )}
+          {(() => {
+            const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+            return images.length > 1 && (
+              <div className="flex gap-4 mt-8 overflow-x-auto max-w-full p-4">
+                {images.map((img, index) => {
+                  let imageSrc;
+                  
+                  // Handle different image formats like in Home.jsx
+                  if (img.startsWith("http")) {
+                    imageSrc = img;
+                  } else if (img.startsWith("data:")) {
+                    imageSrc = img;
+                  } else {
+                    // If it's a path or base64 without data prefix
+                    imageSrc = img.includes('/') 
+                      ? `${API_BASE_URL}/${img}`
+                      : `data:image/png;base64,${img}`;
+                  }
+                  
+                  return (
+                    <img
+                      key={index}
+                      src={imageSrc}
+                      alt={`${post.title} - Thumbnail ${index + 1}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(index);
+                      }}
+                      className={`w-28 h-24 object-cover rounded-2xl cursor-pointer transition-all duration-300 shadow-lg ${index === currentImageIndex ? "opacity-100 ring-4 ring-white scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
+                      onError={(e) => {
+                        console.log('Lightbox thumbnail failed to load:', imageSrc);
+                        e.target.src = '/placeholder.jpg';
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 
-      {/* Scroll to Top Button */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-50"
-        >
-          <FaChevronUp className="text-2xl" />
-        </button>
-      )}
+    
     </div>
   );
 };

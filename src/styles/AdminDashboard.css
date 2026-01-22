@@ -6,6 +6,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 2rem;
+  margin-top: 5rem;
 }
 
 /* Loading State */
@@ -330,7 +331,7 @@
 
 /* Quick Actions */
 .quick-actions-section {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 1.5rem;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);

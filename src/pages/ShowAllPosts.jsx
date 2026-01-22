@@ -49,7 +49,7 @@ const decodeJWT = (token) => {
         .map(function (c) {
           return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
         })
-        .join("")
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -102,13 +102,13 @@ const recordHistoryEvent = async (userId, activityType, details) => {
     await axios.post(
       `${API_HISTORY_URL}/${userId}`,
       { activity_type: activityType, details: details },
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
     console.log(`History recorded: ${activityType}`, details);
   } catch (error) {
     console.error(
       `Failed to record history event (${activityType}):`,
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
   }
 };
@@ -169,7 +169,7 @@ const InlineReplyBox = ({
       const response = await axios.post(
         `https://localhost:44357/api/comments/${userInfo.userId}/add-comment/${postId}`,
         commentData,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       if (response.data?._id) {
         // ✅ --- (تعديل) إضافة بيانات العرض للهيستوري ---
@@ -316,6 +316,69 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
     </div>
   );
 };
+const PropertyCardCarousel = ({ images, title }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="property-image-placeholder">
+        <FaHome />
+      </div>
+    );
+  }
+
+  // Helper to format image source
+  const getImgSrc = (img) => {
+    if (typeof img === "string") {
+      return img.startsWith("http") || img.startsWith("data:")
+        ? img
+        : `${API_BASE_URL}/${img}`;
+    }
+    return img?.url || img?.path || "";
+  };
+
+  return (
+    <div className="property-image">
+      <img
+        src={getImgSrc(images[currentIndex])}
+        alt={title}
+        className="carousel-img"
+      />
+
+      {images.length > 1 && (
+        <>
+          <div className="image-counter">
+            {currentIndex + 1} / {images.length}
+          </div>
+          <button className="carousel-arrow prev" onClick={prevImage}>
+            <FaChevronDown style={{ transform: "rotate(90deg)" }} />
+          </button>
+          <button className="carousel-arrow next" onClick={nextImage}>
+            <FaChevronDown style={{ transform: "rotate(-90deg)" }} />
+          </button>
+          <div className="carousel-dots">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className={`dot ${idx === currentIndex ? "active" : ""}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 // --- المكون الرئيسي ---
 const ShowAllPosts = () => {
@@ -380,7 +443,7 @@ const ShowAllPosts = () => {
       if (comment.replies && comment.replies.length > 0) {
         // نسخ الردود لضمان عدم تغيير الحالة الأصلية (Immutability)
         const sortedReplies = [...comment.replies].sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          (a, b) => new Date(a.created_at) - new Date(b.created_at),
         );
         return { ...comment, replies: sortedReplies };
       }
@@ -458,7 +521,7 @@ const ShowAllPosts = () => {
           list.map((p) =>
             String(p.postId) === String(postIdToUpdate)
               ? { ...p, commentCount: newCount }
-              : p
+              : p,
           );
         setPosts((prev) => updateList(prev));
         setFilteredPosts((prev) => updateList(prev));
@@ -466,7 +529,7 @@ const ShowAllPosts = () => {
       .catch((err) => {
         console.error(
           "Failed to re-fetch count, count on card might be stale.",
-          err
+          err,
         );
       });
   };
@@ -496,7 +559,7 @@ const ShowAllPosts = () => {
               try {
                 const likeRes = await axios.get(
                   `https://localhost:44357/api/posts/${post.postId}/like-status`,
-                  { headers: getAuthHeaders() }
+                  { headers: getAuthHeaders() },
                 ); // بورت 44357
                 likeData = {
                   likes_count: likeRes.data.likes_count,
@@ -505,22 +568,22 @@ const ShowAllPosts = () => {
               } catch (err) {
                 console.warn(
                   `Failed to fetch like status for post ${post.postId}:`,
-                  err.message
+                  err.message,
                 );
               }
             }
             try {
               const commentRes = await axios.get(
                 `https://localhost:44357/api/comments/post/${post.postId}`,
-                { headers: getAuthHeaders() }
+                { headers: getAuthHeaders() },
               ); // بورت 44357
               fetchedCommentCount = calculateTotalComments(
-                commentRes.data || []
+                commentRes.data || [],
               );
             } catch (err) {
               console.warn(
                 `Failed to fetch comments for post ${post.postId}:`,
-                err.message
+                err.message,
               );
             }
 
@@ -544,16 +607,16 @@ const ShowAllPosts = () => {
             await axios.post(
               "https://localhost:44357/api/posts/sync",
               postsToSync,
-              { headers: getAuthHeaders() }
+              { headers: getAuthHeaders() },
             ); // بورت 44357
             console.log(
-              "Successfully synced post owner data with comments service (Flask)."
+              "Successfully synced post owner data with comments service (Flask).",
             );
           }
         } catch (syncErr) {
           console.error(
             "Failed to sync posts with comments service (Flask):",
-            syncErr
+            syncErr,
           );
         }
 
@@ -581,7 +644,7 @@ const ShowAllPosts = () => {
       try {
         const res = await axios.get(
           `${API_BASE_URL}/api/Tenant/My-saved-posts/${tenantUserId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const savedIds = (res.data || []).map((p) => String(p.postId));
         setSavedPosts(savedIds);
@@ -686,10 +749,10 @@ const ShowAllPosts = () => {
     }
     const postIdStr = String(postId);
     const currentPostIndex = posts.findIndex(
-      (p) => String(p.postId) === postIdStr
+      (p) => String(p.postId) === postIdStr,
     );
     const currentFilteredPostIndex = filteredPosts.findIndex(
-      (p) => String(p.postId) === postIdStr
+      (p) => String(p.postId) === postIdStr,
     );
     if (currentPostIndex === -1) return;
     const originalPost = posts[currentPostIndex];
@@ -714,13 +777,13 @@ const ShowAllPosts = () => {
     };
     setPosts((prev) => updateOptimistic(prev, currentPostIndex));
     setFilteredPosts((prev) =>
-      updateOptimistic(prev, currentFilteredPostIndex)
+      updateOptimistic(prev, currentFilteredPostIndex),
     );
     try {
       const response = await axios.post(
         `https://localhost:44357/api/posts/${postIdStr}/like`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       const { likes_count, liked_by_users } = response.data;
       const finalUpdatedPost = {
@@ -759,7 +822,7 @@ const ShowAllPosts = () => {
       };
       setPosts((prev) => rollbackUpdate(prev, currentPostIndex));
       setFilteredPosts((prev) =>
-        rollbackUpdate(prev, currentFilteredPostIndex)
+        rollbackUpdate(prev, currentFilteredPostIndex),
       );
     }
   };
@@ -776,7 +839,7 @@ const ShowAllPosts = () => {
     });
     setFilteredPosts(filtered);
     setMessage(
-      filtered.length === 0 ? "No posts found matching your criteria." : ""
+      filtered.length === 0 ? "No posts found matching your criteria." : "",
     );
     if (searchQuery.trim() && userId) {
       await recordHistoryEvent(userId, "search", { query: searchQuery.trim() });
@@ -792,7 +855,7 @@ const ShowAllPosts = () => {
       setLoadingAction("loading-comments");
       const res = await axios.get(
         `https://localhost:44357/api/comments/post/${postId}`,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       const fetchedComments = res.data || [];
       // ✅ (تعديل) تمرير userId (المستخدم الحالي) للفرز
@@ -873,7 +936,7 @@ const ShowAllPosts = () => {
       const response = await axios.post(
         `http://localhost:5000/api/comments/${userId}/add-comment/${selectedPost.postId}`,
         commentData,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
 
       // ✅ --- (تعديل) إضافة بيانات العرض للهيستوري ---
@@ -895,7 +958,7 @@ const ShowAllPosts = () => {
       } else {
         // ✅ (تعديل) تمرير userId للفرز الفوري
         setComments((prev) =>
-          sortComments([response.data, ...prev], selectedPost.userId, userId)
+          sortComments([response.data, ...prev], selectedPost.userId, userId),
         );
       }
 
@@ -925,7 +988,7 @@ const ShowAllPosts = () => {
       const response = await axios.put(
         `http://localhost:5000/api/comments/${commentId}`,
         finalPayload,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       updateCommentInState(response.data);
       setEditingComment(null);
@@ -974,7 +1037,7 @@ const ShowAllPosts = () => {
       const response = await axios.post(
         `http://localhost:5000/api/comments/${commentId}/like`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       updateCommentInState(response.data.comment);
     } catch (err) {
@@ -991,7 +1054,7 @@ const ShowAllPosts = () => {
       await axios.post(
         `http://localhost:5000/api/comments/${commentId}/pin`,
         {},
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
 
       // (سيعيد الجلب باستخدام الفرز الجديد الذي يتضمن userId)
@@ -1013,7 +1076,7 @@ const ShowAllPosts = () => {
       return "Invalid date";
     }
   };
-  const toPlainText = (v) => (Array.isArray(v) ? v.join(" ") : v ?? "");
+  const toPlainText = (v) => (Array.isArray(v) ? v.join(" ") : (v ?? ""));
 
   // --- CommentItem Component ---
   function CommentItem({ comment, depth = 0 }) {
@@ -1030,7 +1093,7 @@ const ShowAllPosts = () => {
       loadingAction === `pinning-${comment._id}`;
     const isOpen = !!openReplies[comment._id];
     const [editText, setEditText] = useState(
-      toPlainText(comment.comment_description)
+      toPlainText(comment.comment_description),
     );
     const originalImageUrl = comment.image_data;
     const [editImageFile, setEditImageFile] = useState(null);
@@ -1082,7 +1145,7 @@ const ShowAllPosts = () => {
     };
     const handleReplyClick = () => {
       setReplyingToId((currentId) =>
-        currentId === comment._id ? null : comment._id
+        currentId === comment._id ? null : comment._id,
       );
       setEditingComment(null);
     };
@@ -1512,7 +1575,7 @@ const ShowAllPosts = () => {
                 <div className="hero-stat-number">
                   {filteredPosts.reduce(
                     (sum, post) => sum + (post.likes_count || 0),
-                    0
+                    0,
                   )}
                 </div>
                 <div className="hero-stat-label">Total Likes</div>
@@ -1591,6 +1654,51 @@ const ShowAllPosts = () => {
             const hasUserLikedPost =
               Array.isArray(post.likes) && post.likes.includes(postUserIdStr);
             const isPostSaved = savedPosts.includes(String(post.postId));
+            const images = Array.isArray(post.images)
+              ? post.images
+              : post.image
+                ? [post.image]
+                : [];
+            const hasMultipleImages =
+              Array.isArray(images) && images.length > 1;
+            const firstImage =
+              Array.isArray(images) && images.length > 0
+                ? images[0]
+                : post.image || null;
+
+            // Build imageSrc safely for string URLs, data URIs, or object shapes
+            let imageSrc = "";
+            if (firstImage) {
+              if (typeof firstImage === "string") {
+                imageSrc =
+                  firstImage.startsWith("http") ||
+                  firstImage.startsWith("data:")
+                    ? firstImage
+                    : `${API_BASE_URL}/${firstImage}`;
+              } else if (
+                typeof firstImage === "object" &&
+                firstImage !== null
+              ) {
+                const possible =
+                  firstImage.url ||
+                  firstImage.path ||
+                  firstImage.src ||
+                  firstImage.fileName ||
+                  firstImage.name ||
+                  "";
+                if (possible) {
+                  imageSrc =
+                    possible.startsWith("http") || possible.startsWith("data:")
+                      ? possible
+                      : `${API_BASE_URL}/${possible}`;
+                } else {
+                  // fallback to empty string to avoid runtime errors
+                  imageSrc = "";
+                }
+              } else {
+                imageSrc = "";
+              }
+            }
 
             return (
               <div
@@ -1598,46 +1706,34 @@ const ShowAllPosts = () => {
                 onClick={(e) => handleCardClick(post, e)}
                 className="property-card"
               >
-                <div className="property-image">
-                  {post.images && post.images.length > 0 ? (
-                    <img
-                      src={`${API_BASE_URL}/${post.images[0]}`}
-                      alt={post.title}
-                      onError={(e) => {
-                        console.log(
-                          "Image failed to load:",
-                          `${API_BASE_URL}${post.images[0]}`
-                        );
-                        e.target.src = "/placeholder.jpg";
-                      }}
-                    />
-                  ) : post.fileBase64 ? (
-                    <img
-                      src={`data:image/png;base64,${post.fileBase64}`}
-                      alt={post.title}
-                    />
-                  ) : (
-                    <div className="property-image-placeholder">
-                      <FaHome />
-                    </div>
-                  )}
+                {/* 1. The Carousel Base */}
+                <PropertyCardCarousel
+                  images={
+                    Array.isArray(post.images)
+                      ? post.images
+                      : post.image
+                        ? [post.image]
+                        : []
+                  }
+                  title={post.title}
+                />
 
-                  <div className="property-overlay">
-                    <button className="quick-view-btn">
-                      <FaEye />
-                      Quick View
-                    </button>
-                  </div>
-
-                  {userRole !== "Admin" && (
-                    <button
-                      onClick={(e) => handleSavePost(post.postId, e)}
-                      className={`save-btn ${isPostSaved ? "saved" : ""}`}
-                    >
-                      {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
-                    </button>
-                  )}
+                {/* 2. The Hover Overlay (Center) */}
+                <div className="property-overlay">
+                  <button className="quick-view-btn">
+                    <FaEye />
+                    Quick View
+                  </button>
                 </div>
+
+                {userRole !== "Admin" && (
+                  <button
+                    onClick={(e) => handleSavePost(post.postId, e)}
+                    className={`save-btn ${isPostSaved ? "saved" : ""}`}
+                  >
+                    {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
+                  </button>
+                )}
 
                 <div className="property-content">
                   <h3 className="property-title">{post.title}</h3>
