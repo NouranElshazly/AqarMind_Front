@@ -1,0 +1,275 @@
+/* ==========================================
+   CONTACT PAGE STYLES
+   Using variables from global.css
+   ========================================== */
+
+.contact-page {
+  font-family: 'Cairo', sans-serif; /* Assuming Cairo based on context or standard */
+  color: var(--text-primary, #333);
+  background-color: var(--bg-primary, #f9fafb);
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+/* ==========================================
+   HERO SECTION
+   ========================================== */
+
+.contact-hero {
+  height: 20rem; /* 80 * 0.25rem = 20rem */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.contact-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+  z-index: 1;
+}
+
+.contact-hero-content {
+  position: relative;
+  z-index: 2;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.contact-hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.contact-hero-subtitle {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+/* ==========================================
+   CONTACT CARDS
+   ========================================== */
+
+.contact-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.contact-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 2rem;
+  margin: 3rem 0;
+}
+
+@media (min-width: 768px) {
+  .contact-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.contact-card {
+  background-color: var(--bg-card, #fff);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-primary, #e5e7eb);
+}
+
+.contact-card:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+}
+
+.contact-card-icon {
+  font-size: 3rem;
+  color: var(--brand-primary, #3b82f6);
+  margin-bottom: 1rem;
+}
+
+/* ==========================================
+   MAP AND FORM LAYOUT
+   ========================================== */
+
+.contact-content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .contact-content-wrapper {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Map Container */
+.map-container {
+  height: 100%;
+  min-height: 400px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+}
+
+.map-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Form Container */
+.contact-form-card {
+  background-color: var(--bg-card, #fff);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--border-primary, #e5e7eb);
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary, #111827);
+  border-bottom: 2px solid var(--brand-primary, #3b82f6);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+/* Form Styles */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text-secondary, #4b5563);
+}
+
+.form-control {
+  padding: 0.75rem;
+  border: 1px solid var(--border-primary, #d1d5db);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn-submit {
+  background-color: var(--brand-primary, #3b82f6);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.btn-submit:hover {
+  background-color: var(--brand-primary-dark, #2563eb);
+}
+
+.btn-submit:disabled {
+  background-color: var(--text-disabled, #9ca3af);
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   SOCIAL MEDIA SECTION
+   ========================================== */
+
+.social-section {
+  text-align: center;
+  padding: 2rem 0;
+  border-top: 1px solid var(--border-primary, #e5e7eb);
+  margin-top: 2rem;
+}
+
+.social-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary, #111827);
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.social-icon {
+  font-size: 2rem;
+  color: var(--text-secondary, #6b7280);
+  transition: color 0.3s, transform 0.3s;
+}
+
+.social-icon:hover {
+  transform: scale(1.1);
+}
+
+.social-icon.facebook:hover { color: #1877f2; }
+.social-icon.twitter:hover { color: #1da1f2; }
+.social-icon.instagram:hover { color: #e1306c; }
+.social-icon.linkedin:hover { color: #0a66c2; }
+
+/* ==========================================
+   ALERTS
+   ========================================== */
+.alert {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  color: green;
+  border: 1px solid green;
+  background-color: #e8f5e9;
+}
+
+.alert-danger {
+  color: red;
+  border: 1px solid red;
+  background-color: #ffebee;
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

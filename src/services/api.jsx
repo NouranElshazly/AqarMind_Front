@@ -453,3 +453,25 @@ export const deleteCard = (userId, paymentCardId) => {
 export const setDefaultCard = (userId, paymentCardId) => {
   return API.put(`${API_BASE_URL}/api/payments/cards/${userId}/default/${paymentCardId}`);
 };
+
+// ======================= Complaints API Functions =====================
+/**
+ * Create a new complaint against a user
+ * @param {number} reporterUserId - The ID of the user reporting the complaint
+ * @param {Object} complaintData - Complaint details
+ * @param {string} complaintData.ReportedUserName - Username of the reported user
+ * @param {number} complaintData.Type - Type of complaint (0=spam, 1=harrasment, 2=fraud, 3=others)
+ * @param {string} complaintData.Content - Description of the complaint
+ * @param {File} [complaintData.Image] - Optional evidence image
+ */
+export const createComplaint = (reporterUserId, complaintData) => {
+  const formData = new FormData();
+  formData.append("ReportedUserName", complaintData.ReportedUserName);
+  formData.append("Type", complaintData.Type);
+  formData.append("Content", complaintData.Content);
+  if (complaintData.Image) {
+    formData.append("Image", complaintData.Image);
+  }
+
+  return API.post(`${API_BASE_URL}/api/Complaint/${reporterUserId}/create`, formData);
+};
