@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyProfile, updateMyProfile, updatePassword } from '../services/api';
+import { getMyProfile, updateMyProfile, updatePassword, tokenizeCard, getUserCards, deleteCard, setDefaultCard } from '../services/api';
 import API_BASE_URL from '../services/ApiConfig';
 import '../styles/profile.css';
 import { 
+  FaCreditCard,
+  FaTrash,
+  FaCheckCircle,
   FaUser, 
   FaEnvelope, 
   FaPhone, 
@@ -53,6 +56,21 @@ const Profile = () => {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Credit Card state
+  const [isAddingCard, setIsAddingCard] = useState(false);
+  const [cardData, setCardData] = useState({
+    CardNumber: '',
+    CardHolderName: '',
+    ExpiryMonth: '',
+    ExpiryYear: '',
+    CVV: ''
+  });
+  const [cardError, setCardError] = useState('');
+  const [cardSuccess, setCardSuccess] = useState('');
+  const [savingCard, setSavingCard] = useState(false);
+  const [savedCards, setSavedCards] = useState([]);
+  const [loadingCards, setLoadingCards] = useState(false);
+
   const [previewImage, setPreviewImage] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [isTemporaryImage, setIsTemporaryImage] = useState(false);
@@ -63,6 +81,7 @@ const Profile = () => {
   useEffect(() => {
     if (userId) {
       fetchProfile();
+      fetchUserCards();
     } else {
       setError('User not logged in');
       setLoading(false);
@@ -72,6 +91,96 @@ const Profile = () => {
       }, 2000);
     }
   }, [userId, navigate]);
+
+  const fetchUserCards = async () => {
+    setLoadingCards(true);
+    try {
+      const response = await getUserCards(userId);
+      setSavedCards(response.data);
+    } catch (err) {
+      console.error("Failed to fetch cards:", err);
+      // Don't set main error, just log it as it's a secondary feature
+    } finally {
+      setLoadingCards(false);
+    }
+  };
+
+  const handleDeleteCard = async (card) => {
+    // Try to find the ID from various common property names
+    const cardId = card.id || card.Id || card.paymentCardId || card.PaymentCardId || card.cardId || card.CardId;
+    
+    if (!cardId) {
+      console.error("Could not determine card ID from object:", card);
+      setCardError("Error: Could not determine card ID.");
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete this card ending in ${card.maskedCardNumber ? String(card.maskedCardNumber).slice(-4) : '****'}?`)) {
+      // Optimistic update: Remove card from UI immediately
+      const previousCards = [...savedCards];
+      setSavedCards(cards => cards.filter(c => 
+        (c.id || c.Id || c.paymentCardId || c.PaymentCardId || c.cardId || c.CardId) !== cardId
+      ));
+
+      try {
+        await deleteCard(userId, cardId);
+        setCardSuccess('Card deleted successfully');
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setCardSuccess('');
+        }, 3000);
+      } catch (err) {
+        console.error("Failed to delete card:", err);
+        // Revert optimistic update on error
+        setSavedCards(previousCards);
+
+        // Log detailed error for debugging
+        if (err.response) {
+             console.error("Error response:", err.response.status, err.response.data);
+             if (err.response.status === 404) {
+                  setCardError('Card not found or already deleted.');
+             } else {
+                  setCardError(`Failed to delete card: ${err.response.data?.message || 'Server error'}`);
+             }
+        } else {
+             setCardError('Failed to delete card. Please check your connection.');
+        }
+        
+        // Clear error message after 3 seconds
+        setTimeout(() => {
+          setCardError('');
+        }, 3000);
+      }
+    }
+  };
+
+  const handleSetDefaultCard = async (card) => {
+    const cardId = card.id || card.Id || card.paymentCardId || card.PaymentCardId || card.cardId || card.CardId;
+    
+    if (!cardId) return;
+    
+    // Don't do anything if it's already default
+    if (card.isDefault || card.IsDefault) return;
+
+    try {
+      // Optimistic UI update
+      const updatedCards = savedCards.map(c => ({
+        ...c,
+        isDefault: (c.id || c.Id || c.paymentCardId || c.PaymentCardId || c.cardId || c.CardId) === cardId
+      }));
+      setSavedCards(updatedCards);
+
+      await setDefaultCard(userId, cardId);
+      setCardSuccess('Default card updated successfully');
+      setTimeout(() => setCardSuccess(''), 3000);
+    } catch (err) {
+      console.error("Failed to set default card:", err);
+      setCardError("Failed to set default card.");
+      fetchUserCards(); // Revert to server state
+      setTimeout(() => setCardError(''), 3000);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -393,6 +502,48 @@ const Profile = () => {
     }
   };
 
+  const handleCardChange = (e) => {
+    const { name, value } = e.target;
+    setCardData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCardSubmit = async (e) => {
+    e.preventDefault();
+    setCardError('');
+    setCardSuccess('');
+    setSavingCard(true);
+
+    try {
+      await tokenizeCard(userId, {
+        ...cardData,
+        ExpiryMonth: parseInt(cardData.ExpiryMonth),
+        ExpiryYear: parseInt(cardData.ExpiryYear)
+      });
+      setCardSuccess('Credit card added successfully');
+      setCardData({
+        CardNumber: '',
+        CardHolderName: '',
+        ExpiryMonth: '',
+        ExpiryYear: '',
+        CVV: ''
+      });
+      setIsAddingCard(false);
+      // Clear success message after 3 seconds
+      setTimeout(() => setCardSuccess(''), 3000);
+      
+      // Refresh cards list
+      fetchUserCards();
+    } catch (err) {
+      console.error(err);
+      setCardError(err.response?.data?.error || 'Failed to add credit card');
+    } finally {
+      setSavingCard(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="profile-container">
@@ -654,6 +805,188 @@ const Profile = () => {
             </div>
           )}
         </form>
+
+        {/* Credit Card Section */}
+        <div className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-card-title">
+              <FaCreditCard className="card-icon" />
+              <h2>Credit Cards</h2>
+            </div>
+            {!isAddingCard && (
+              <button 
+                type="button" 
+                className="btn-edit"
+                onClick={() => setIsAddingCard(true)}
+              >
+                <FaEdit /> Add New Card
+              </button>
+            )}
+          </div>
+
+          {isAddingCard ? (
+            <div className="profile-card-body">
+              {cardError && (
+                <div className="alert alert-error">
+                  <FaTimes /> {cardError}
+                </div>
+              )}
+              {cardSuccess && (
+                <div className="alert alert-success">
+                  <FaCheck /> {cardSuccess}
+                </div>
+              )}
+              <form onSubmit={handleCardSubmit}>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">Card Number</label>
+                    <input 
+                      type="text"
+                      name="CardNumber"
+                      value={cardData.CardNumber}
+                      onChange={handleCardChange}
+                      className="form-control"
+                      placeholder="XXXX XXXX XXXX XXXX"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Card Holder Name</label>
+                    <input 
+                      type="text"
+                      name="CardHolderName"
+                      value={cardData.CardHolderName}
+                      onChange={handleCardChange}
+                      className="form-control"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div className="form-row-3">
+                    <div className="form-group">
+                      <label className="form-label">Expiry Month</label>
+                      <input 
+                        type="number"
+                        name="ExpiryMonth"
+                        value={cardData.ExpiryMonth}
+                        onChange={handleCardChange}
+                        className="form-control"
+                        placeholder="MM"
+                        min="1"
+                        max="12"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Expiry Year</label>
+                      <input 
+                        type="number"
+                        name="ExpiryYear"
+                        value={cardData.ExpiryYear}
+                        onChange={handleCardChange}
+                        className="form-control"
+                        placeholder="YYYY"
+                        min={new Date().getFullYear()}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">CVV</label>
+                      <input 
+                        type="text"
+                        name="CVV"
+                        value={cardData.CVV}
+                        onChange={handleCardChange}
+                        className="form-control"
+                        placeholder="XXX"
+                        maxLength="4"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="profile-actions">
+                  <button 
+                    type="button" 
+                    className="btn-cancel"
+                    onClick={() => setIsAddingCard(false)}
+                    disabled={savingCard}
+                  >
+                    <FaTimes /> Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn-save"
+                    disabled={savingCard}
+                  >
+                    {savingCard ? 'Saving...' : <><FaSave /> Save Card</>}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : (
+             <div className="profile-card-body">
+               {cardSuccess && (
+                 <div className="alert alert-success">
+                   <FaCheck /> {cardSuccess}
+                 </div>
+               )}
+               
+               {/* Display Saved Cards */}
+               <div className="saved-cards-list">
+                 {loadingCards ? (
+                   <div className="cards-loading">Loading cards...</div>
+                 ) : savedCards.length > 0 ? (
+                   <div className="cards-grid">
+                     {savedCards.map((card, index) => {
+                      const isDefault = card.isDefault || card.IsDefault;
+                      return (
+                        <div 
+                          key={index} 
+                          className={`saved-card-item ${isDefault ? 'default-card' : ''}`}
+                          onClick={() => handleSetDefaultCard(card)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {isDefault && (
+                            <div className="default-badge">
+                              <FaCheckCircle /> Default
+                            </div>
+                          )}
+                          <button 
+                            className="delete-card-btn" 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCard(card);
+                            }}
+                            title="Delete Card"
+                          >
+                            <FaTrash />
+                          </button>
+                          <div className="card-icon-display">
+                            <FaCreditCard />
+                          </div>
+                          <div className="card-details">
+                           <div className="card-number">•••• •••• •••• { card.maskedCardNumber.slice(-4) }</div>
+                           <div className="card-expiry">Expires: {card.expiryMonth || card.ExpiryMonth}/{card.expiryYear || card.ExpiryYear}</div>
+                            
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                   <p className="no-cards-message">No saved cards found.</p>
+                 )}
+               </div>
+
+               <p className="security-info">
+                 <FaLock className="info-icon" />
+                 Manage your payment methods securely.
+               </p>
+            </div>
+          )}
+        </div>
 
         {/* Security Settings Card */}
         <div className="profile-card">

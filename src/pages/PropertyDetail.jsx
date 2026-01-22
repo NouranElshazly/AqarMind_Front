@@ -729,12 +729,12 @@ const PropertyDetail = () => {
     }
     const headers = { Authorization: `Bearer ${token}` };
     const saveUrl = `${API_BASE_URL}/api/Tenant/${currentTenantId}/save-post/${postId}`;
+    const cancelSaveUrl = `${API_BASE_URL}/api/Tenant/${currentTenantId}/cancel-save/${postId}`;
     const wasSaved = saved;
     if (wasSaved) {
-      alert("You've already saved this post.");
       setSaved(false);
       try {
-        await axios.delete(saveUrl, { headers: headers });
+        await axios.delete(cancelSaveUrl, { headers: headers });
       } catch (error) {
         console.error("Failed to unsave post:", error);
         setSaved(true);

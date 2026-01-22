@@ -140,7 +140,7 @@ export const getPropertyStatusHistory = (id) => {
 //   status = 'available'
 // }) => {
 //   const params = new URLSearchParams();
-
+//
 //   if (minPrice) params.append('minPrice', minPrice);
 //   if (maxPrice) params.append('maxPrice', maxPrice);
 //   if (location) params.append('location', location);
@@ -153,7 +153,7 @@ export const getPropertyStatusHistory = (id) => {
 //   if (page) params.append('page', page);
 //   if (limit) params.append('limit', limit);
 //   if (status) params.append('status', status);
-
+//
 //   return API.get('/properties/search', { params });
 // };
 
@@ -398,4 +398,58 @@ export const updatePassword = (userId, passwordData) => {
       },
     }
   );
+};
+
+
+
+// ======================= CreditCards API Functions =====================
+/**
+ * Tokenize credit card information
+ * @param {number} userId - The ID of the user
+ * @param {Object} cardData - Card data to tokenize
+ * @param {string} cardData.CardNumber - Credit card number
+ * @param {string} cardData.CardHolderName - Name on card
+ * @param {number} cardData.ExpiryMonth - Expiry month
+ * @param {number} cardData.ExpiryYear - Expiry year
+ * @param {string} cardData.CVV - Card security code
+ */
+export const tokenizeCard = (userId, cardData) => {
+  const formData = new FormData();
+  formData.append("CardNumber", cardData.CardNumber);
+  formData.append("CardHolderName", cardData.CardHolderName);
+  formData.append("ExpiryMonth", cardData.ExpiryMonth);
+  formData.append("ExpiryYear", cardData.ExpiryYear);
+  formData.append("CVV", cardData.CVV);
+
+  return API.post(`${API_BASE_URL}/api/payments/cards/tokenize/${userId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+/**
+ * Get user's saved credit cards
+ * @param {number} userId - The ID of the user
+ */
+export const getUserCards = (userId) => {
+  return API.get(`${API_BASE_URL}/api/payments/cards/${userId}`);
+};
+
+/**
+ * Delete a saved credit card
+ * @param {number} userId - The ID of the user
+ * @param {number} paymentCardId - The ID of the card to delete
+ */
+export const deleteCard = (userId, paymentCardId) => {
+  return API.delete(`${API_BASE_URL}/api/payments/cards/${userId}/${paymentCardId}`);
+};
+
+/**
+ * Set a card as default
+ * @param {number} userId - The ID of the user
+ * @param {number} paymentCardId - The ID of the card to set as default
+ */
+export const setDefaultCard = (userId, paymentCardId) => {
+  return API.put(`${API_BASE_URL}/api/payments/cards/${userId}/default/${paymentCardId}`);
 };

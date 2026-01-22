@@ -497,61 +497,7 @@ const TenantDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Overview - Detailed Cards */}
-        <section className="stats-section">
-          <div className="stats-grid detailed">
-            {[
-              {
-                icon: FaBookmark,
-                label: "Saved Properties",
-                value: stats.savedCount,
-                description: "Properties you've saved",
-                color: "blue",
-                trend: "+12%"
-              },
-              {
-                icon: FaFileAlt,
-                label: "Applications",
-                value: stats.applicationsCount,
-                description: "Active applications",
-                color: "purple",
-                trend: "+5%"
-              },
-              {
-                icon: FaEye,
-                label: "Properties Viewed",
-                value: stats.viewsCount,
-                description: "Properties you've explored",
-                color: "green",
-                trend: "+23%"
-              }
-            ].map((stat, index) => (
-              <div 
-                key={index}
-                className="stat-card enhanced"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="stat-card-header">
-                  <div className={`stat-icon ${stat.color}`}>
-                    <stat.icon />
-                  </div>
-                  <div className="stat-trend">
-                    <span className="trend-value">{stat.trend}</span>
-                    <span className="trend-label">vs last month</span>
-                  </div>
-                </div>
-                <div className="stat-details">
-                  <p className="stat-label">{stat.label}</p>
-                  <p className="stat-value">{stat.value}</p>
-                  <p className="stat-description">{stat.description}</p>
-                </div>
-                <div className="stat-progress">
-                  <div className={`progress-bar ${stat.color}`}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+       
 
         {/* Featured Properties */}
         <section className="featured-section">

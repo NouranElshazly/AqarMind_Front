@@ -704,13 +704,13 @@ const ShowAllPosts = () => {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     };
     const saveUrl = `${API_BASE_URL}/api/Tenant/${tenantUserId}/save-post/${postIdStr}`;
+    const cancelSaveUrl = `${API_BASE_URL}/api/Tenant/${tenantUserId}/cancel-save/${postIdStr}`;
     const wasSaved = savedPosts.includes(postIdStr);
     const postToSave = posts.find((p) => String(p.postId) === postIdStr);
     if (wasSaved) {
-      alert("You've already saved this post.");
       setSavedPosts((prev) => prev.filter((id) => id !== postIdStr));
       try {
-        await axios.delete(saveUrl, { headers: headers });
+        await axios.delete(cancelSaveUrl, { headers: headers });
       } catch (error) {
         console.error("Failed to unsave post:", error);
         setSavedPosts((prev) => [...prev, postIdStr]);

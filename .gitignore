@@ -24,3 +24,6 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# Local Configuration
+src/services/ApiConfig.jsx
