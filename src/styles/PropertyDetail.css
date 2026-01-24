@@ -348,6 +348,17 @@ img {
   box-shadow: 0 0 8px var(--error);
 }
 
+.status-negotiation {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.status-negotiation .property-status-indicator {
+  background: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold);
+}
+
 .property-header {
   border-bottom: 2px solid var(--border-light);
   padding-bottom: 1.5rem;

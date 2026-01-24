@@ -5,7 +5,7 @@ import API_BASE_URL from "../services/ApiConfig";
 import { 
   FaTrash, FaSearch, FaHome, FaMapMarkerAlt, 
   FaBed, FaBath, FaRulerCombined, FaBookmark,
-  FaExclamationTriangle, FaTimes, FaCheck
+  FaExclamationTriangle, FaTimes, FaCheck, FaEye
 } from "react-icons/fa";
 import '../styles/SavedPosts.css';
 
@@ -24,42 +24,40 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message, isBulk
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-4 border border-gray-200">
-        <div className="p-8">
-          <div className="flex items-start">
-            <div className="flex-shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
-              <FaExclamationTriangle className="h-8 w-8 text-red-600" />
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-body">
+          <div className="modal-header-flex">
+            <div className="modal-icon-wrapper">
+              <FaExclamationTriangle className="modal-icon" />
             </div>
-            <div className="ml-6 text-left">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="modal-text-content">
+              <h3 className="modal-title">
                 {title || "Delete Confirmation"}
               </h3>
               <div className="mt-2">
-                <p className="text-lg text-gray-600">
+                <p className="modal-message">
                   {message || "Are you sure you want to delete this property?"}
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <div className="bg-gray-50 px-8 py-6 rounded-b-3xl border-t border-gray-200">
-          <div className="flex gap-4">
+        <div className="modal-footer">
             <button
               type="button"
-              className="flex-1 px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+              className="modal-btn modal-btn-cancel"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="button"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg"
+              className="modal-btn modal-btn-delete"
               onClick={onConfirm}
             >
               {isBulkDelete ? "Delete All" : "Delete"}
             </button>
-          </div>
         </div>
       </div>
     </div>
@@ -174,7 +172,7 @@ const SavedPosts = () => {
       <div className="loading-container">
         <div className="loading-content">
           <div className="loading-spinner">
-            <div className="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mx-auto"></div>
+            <div className="spinner"></div>
           </div>
           <p className="loading-text">Loading saved properties...</p>
         </div>
@@ -188,7 +186,7 @@ const SavedPosts = () => {
           <div className="empty-state">
             <div className="empty-state-card">
               <div className="empty-state-icon">
-                <FaTimes className="text-5xl text-red-500" />
+                <FaTimes className="text-5xl" style={{ color: '#ef4444' }} />
               </div>
               <h2 className="empty-state-title">Error Loading Properties</h2>
               <p className="empty-state-description">{error}</p>
@@ -210,7 +208,7 @@ const SavedPosts = () => {
         {/* Header Section */}
         <div className="saved-posts-header">
           <div className="saved-posts-icon">
-            <FaBookmark className="text-white text-3xl" />
+            <FaBookmark className="text-3xl" />
           </div>
           <h1 className="saved-posts-title">
             Your Saved Properties
@@ -274,14 +272,20 @@ const SavedPosts = () => {
               >
                 {/* Image Section */}
                 <div className="post-image-container">
-                  {property.fileBase64 ? (
+                  {property.images && property.images.length > 0 ? (
+                    <img
+                      src={`${API_BASE_URL}/${property.images[0]}`}
+                      alt={property.title || "property"}
+                      className="post-image"
+                    />
+                  ) : property.fileBase64 ? (
                     <img
                       src={`data:image/png;base64,${property.fileBase64}`}
                       alt={property.title || "property"}
                       className="post-image"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
                       <div className="text-center text-gray-400">
                         <FaHome className="text-6xl mx-auto mb-3" />
                         <p className="text-lg font-medium">No image available</p>
@@ -301,11 +305,6 @@ const SavedPosts = () => {
                   <h3 className="post-title">
                     {property.title}
                   </h3>
-
-                  <div className="post-location">
-                    <FaMapMarkerAlt className="post-location-icon" />
-                    {property.location}
-                  </div>
 
                   <p className="post-description">
                     {property.description?.length > 120
@@ -354,7 +353,7 @@ const SavedPosts = () => {
           <div className="empty-state">
             <div className="empty-state-card">
               <div className="empty-state-icon">
-                <FaBookmark className="text-5xl text-gray-400" />
+                <FaBookmark className="text-5xl" />
               </div>
               <h3 className="empty-state-title">No Saved Properties Yet</h3>
               <p className="empty-state-description">
@@ -362,7 +361,7 @@ const SavedPosts = () => {
                 Your saved properties will appear in this collection for easy access.
               </p>
               <button
-                onClick={() => navigate("/properties")}
+                onClick={() => navigate("/show-all-post")}
                 className="browse-btn"
               >
                 <FaSearch />

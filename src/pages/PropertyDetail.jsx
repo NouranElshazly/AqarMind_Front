@@ -37,6 +37,12 @@ import {
   FaBath,
   FaRulerCombined,
   FaStar,
+  FaCar,
+  FaCouch,
+  FaBuilding,
+  FaLayerGroup,
+  FaClipboardCheck,
+  FaTag,
 } from "react-icons/fa";
 
 import "../styles/PropertyDetail.css";
@@ -1317,14 +1323,28 @@ const PropertyDetail = () => {
           <div className="property-image-section">
             {/* Status Badge for Mobile */}
             <div className="property-status-wrapper">
-              <div
-                className={`property-status-badge ${post.rentalStatus === "Rental" ? "status-rented" : "status-available"}`}
-              >
-                <div className="property-status-indicator"></div>
-                {post.rentalStatus === "Rental"
-                  ? "Currently Rented"
-                  : "Available for Rent"}
-              </div>
+              {(() => {
+                let statusClass = "status-available";
+                let statusText = "Available";
+                
+                if (post.rentalStatus === -1) {
+                  statusClass = "status-rented";
+                  statusText = post.rentType === 1 ? "Sold" : "Rented";
+                } else if (post.rentalStatus === 0) {
+                  statusClass = "status-available";
+                  statusText = post.rentType === 1 ? "Available for Sale" : "Available for Rent";
+                } else if (post.rentalStatus === 1) {
+                  statusClass = "status-negotiation";
+                  statusText = "Under Negotiation";
+                }
+                
+                return (
+                  <div className={`property-status-badge ${statusClass}`}>
+                    <div className="property-status-indicator"></div>
+                    {statusText}
+                  </div>
+                );
+              })()}
             </div>
 
             <div
@@ -1480,6 +1500,16 @@ const PropertyDetail = () => {
               <div className="property-location">
                 <FaMapMarkerAlt className="property-location-icon" />
                 <span>{post.location}</span>
+                {post.locationPath && (
+                  <a
+                    href={post.locationPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-indigo-600 hover:text-indigo-800 underline text-sm font-medium"
+                  >
+                    View on Map
+                  </a>
+                )}
               </div>
             </div>
 
@@ -1492,13 +1522,13 @@ const PropertyDetail = () => {
             </div>
 
             {/* Property Features */}
-            <div className="property-features">
+            <div className="property-features" style={{ flexWrap: 'wrap', gap: '1rem' }}>
               <div className="property-feature">
                 <div className="property-feature-icon">
                   <FaBed />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.bedrooms || 0}</span>
+                  <span className="property-feature-value">{post.numOfRooms || 0}</span>
                   <span className="property-feature-label">Bedrooms</span>
                 </div>
               </div>
@@ -1507,7 +1537,7 @@ const PropertyDetail = () => {
                   <FaBath />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.bathrooms || 0}</span>
+                  <span className="property-feature-value">{post.numOfBathrooms || 0}</span>
                   <span className="property-feature-label">Bathrooms</span>
                 </div>
               </div>
@@ -1518,6 +1548,24 @@ const PropertyDetail = () => {
                 <div className="property-feature-content">
                   <span className="property-feature-value">{post.area || 0}</span>
                   <span className="property-feature-label">sq ft</span>
+                </div>
+              </div>
+              <div className="property-feature">
+                <div className="property-feature-icon">
+                  <FaLayerGroup />
+                </div>
+                <div className="property-feature-content">
+                  <span className="property-feature-value">{post.floorNumber || 0}</span>
+                  <span className="property-feature-label">Floor</span>
+                </div>
+              </div>
+              <div className="property-feature">
+                <div className="property-feature-icon">
+                  <FaBuilding />
+                </div>
+                <div className="property-feature-content">
+                  <span className="property-feature-value">{post.totalUnitsInBuilding || 0}</span>
+                  <span className="property-feature-label">Total Units</span>
                 </div>
               </div>
             </div>
@@ -1565,7 +1613,7 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin && !isLandlord && post.rentalStatus !== "Rental" && (
+              {!isAdmin && !isLandlord && post.rentalStatus === 0 && (
                 <button
                   onClick={handleApplyClick}
                   className="property-btn property-btn-primary"
@@ -1630,20 +1678,30 @@ const PropertyDetail = () => {
           <div className="property-amenities-section">
             <h2 className="property-section-title">
               <FaStar className="mr-3" />
-              Property Amenities
+              Property Details & Amenities
             </h2>
             <div className="property-amenities-grid">
-              <div className="property-amenity-item">
-                <FaHome className="property-amenity-icon" />
-                <span className="property-amenity-text">Modern Design</span>
-              </div>
+              {post.isFurnished && (
+                <div className="property-amenity-item">
+                  <FaCouch className="property-amenity-icon" />
+                  <span className="property-amenity-text">Furnished</span>
+                </div>
+              )}
+              {post.hasGarage && (
+                <div className="property-amenity-item">
+                  <FaCar className="property-amenity-icon" />
+                  <span className="property-amenity-text">Garage Available</span>
+                </div>
+              )}
+              {post.rentType !== undefined && (
+                <div className="property-amenity-item">
+                  <FaTag className="property-amenity-icon" />
+                  <span className="property-amenity-text">Type: {post.rentType === 1 ? 'Sale' : 'Rent'}</span>
+                </div>
+              )}
               <div className="property-amenity-item">
                 <FaMapMarkerAlt className="property-amenity-icon" />
                 <span className="property-amenity-text">Prime Location</span>
-              </div>
-              <div className="property-amenity-item">
-                <FaUserTie className="property-amenity-icon" />
-                <span className="property-amenity-text">Professional Management</span>
               </div>
             </div>
           </div>
