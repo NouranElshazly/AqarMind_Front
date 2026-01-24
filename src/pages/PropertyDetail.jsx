@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API_BASE_URL from "../services/ApiConfig";
+// import { submitRentalProposal } from "../services/api";
 import axios from "axios";
 import {
   FaHeart,
@@ -283,6 +284,7 @@ const PropertyDetail = () => {
     startRentalDate: "",
     endRentalDate: "",
     file: null,
+    offeredPrice: "",
   });
   const [error, setError] = useState(null);
   const [pageError, setPageError] = useState(null);
@@ -387,12 +389,12 @@ const PropertyDetail = () => {
         );
         if (isMounted) {
           setPost(res.data);
-          console.log('Post data loaded:', res.data);
-          console.log('Available image fields:', {
+          console.log("Post data loaded:", res.data);
+          console.log("Available image fields:", {
             fileBase64s: res.data.fileBase64s,
             fileBase64: res.data.fileBase64,
             images: res.data.images,
-            image: res.data.image
+            image: res.data.image,
           });
           if (userId && !viewRecordedRef.current && res.data?.title) {
             recordHistoryEvent(userId, "view", {
@@ -592,7 +594,10 @@ const PropertyDetail = () => {
   };
   const goToPrevImage = (e) => {
     e.stopPropagation();
-    const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+    const images =
+      post.fileBase64s ||
+      post.images ||
+      (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
     if (images && images.length > 0) {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === 0 ? images.length - 1 : prevIndex - 1,
@@ -601,7 +606,10 @@ const PropertyDetail = () => {
   };
   const goToNextImage = (e) => {
     e.stopPropagation();
-    const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+    const images =
+      post.fileBase64s ||
+      post.images ||
+      (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
     if (images && images.length > 0) {
       setCurrentImageIndex((prevIndex) =>
         prevIndex === images.length - 1 ? 0 : prevIndex + 1,
@@ -640,56 +648,120 @@ const PropertyDetail = () => {
   const handleSubmitApplication = async (e) => {
     e.preventDefault();
     setError(null);
+
+    console.log("=== 🚀 Starting Application Submission ===");
+    console.log("Post ID:", postId);
+    console.log("Tenant ID:", tenantId);
+    console.log("Form Data:", formData);
+
     if (!post) {
+      console.error("❌ Post data not loaded");
       setError("Post data not loaded yet.");
       return;
     }
+    console.log("✅ Post data loaded:", post);
+
     if (!tenantId) {
+      console.error("❌ Tenant ID not found");
       setError("User ID not found.");
       return;
     }
+    console.log("✅ Tenant ID found:", tenantId);
+
     if (!formData.phone) {
+      console.error("❌ Phone number missing");
       setError("Phone number is required.");
       return;
     }
+    console.log("✅ Phone:", formData.phone);
+
     if (!formData.startRentalDate) {
+      console.error("❌ Start rental date missing");
       setError("Start rental date is required.");
       return;
     }
+    console.log("✅ Start Date:", formData.startRentalDate);
+
     if (!formData.endRentalDate) {
+      console.error("❌ End rental date missing");
       setError("End rental date is required.");
       return;
     }
+    console.log("✅ End Date:", formData.endRentalDate);
+
     if (!formData.file) {
+      console.error("❌ File missing");
       setError("Document upload is required.");
       return;
     }
+    if (!formData.offeredPrice || parseFloat(formData.offeredPrice) <= 0) {
+      console.error("❌ Offered price invalid:", formData.offeredPrice);
+      setError("Offered price must be greater than zero.");
+      return;
+    }
+    console.log("✅ Offered Price:", formData.offeredPrice);
+    console.log("✅ File:", {
+      name: formData.file.name,
+      size: formData.file.size,
+      type: formData.file.type,
+    });
 
-    const toISOStringSafe = (value) => {
-      try {
-        return new Date(value).toISOString();
-      } catch {
-        return "";
-      }
-    };
-    const data = new FormData();
-    data.append("TenantId", tenantId);
-    data.append("Phone", formData.phone);
-    data.append("StartRentalDate", toISOStringSafe(formData.startRentalDate));
-    data.append("EndRentalDate", toISOStringSafe(formData.endRentalDate));
-    data.append("File", formData.file);
     try {
-      await axios.post(
-        `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`,
-        data,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
+      // إنشاء FormData
+      const data = new FormData();
+      data.append("Phone", formData.phone);
+
+      const startISO = new Date(formData.startRentalDate).toISOString();
+      const endISO = new Date(formData.endRentalDate).toISOString();
+
+      console.log("📅 Start Date ISO:", startISO);
+      console.log("📅 End Date ISO:", endISO);
+
+      data.append("StartRentalDate", startISO);
+      data.append("EndRentalDate", endISO);
+      data.append("File", formData.file);
+      data.append("Offeredprice", parseFloat(formData.offeredPrice));
+
+      // طباعة FormData
+      console.log("📦 FormData contents:");
+      for (let pair of data.entries()) {
+        if (pair[0] === "File") {
+          console.log(`  ${pair[0]}:`, pair[1].name, `(${pair[1].size} bytes)`);
+        } else {
+          console.log(`  ${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      // const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`;
+      const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}/${tenantId}`;
+      const token = localStorage.getItem("token");
+
+      console.log("🔍 Checking URL parameters:");
+      console.log("  - postId:", postId);
+      console.log("  - tenantId:", tenantId);
+      console.log(
+        "  - Expected URL:",
+        `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}/${tenantId}`,
       );
+      console.log("  - Current URL:", apiUrl);
+      const headers = {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      };
+
+      console.log("📤 Request Headers:", headers);
+      console.log("⏳ Sending request...");
+
+      // استدعاء الـ API
+      const response = await axios.post(apiUrl, data, { headers });
+
+      console.log("✅ Success! Response:", response);
+      console.log("✅ Response Data:", response.data);
+      console.log("✅ Response Status:", response.status);
+
       alert("Application submitted successfully!");
+
+      console.log("📝 Recording history event...");
       await recordHistoryEvent(userId, "apply", {
         post_id: postId,
         post_title: post.title || "N/A",
@@ -701,30 +773,44 @@ const PropertyDetail = () => {
             ? post.fileBase64s[0]
             : null),
       });
+      console.log("✅ History recorded");
+
       setShowForm(false);
       setFormData({
         phone: "",
         startRentalDate: "",
         endRentalDate: "",
         file: null,
+        offeredPrice: "",
       });
+      console.log("✅ Form reset and closed");
+      console.log("=== ✅ Application Submission Complete ===");
     } catch (err) {
-      console.error(
-        "Application submission error:",
-        err.response?.data || err.message,
-      );
+      console.error("=== ❌ Application Submission Failed ===");
+      console.error("Error object:", err);
+      console.error("Error message:", err.message);
+      console.error("Error response:", err.response);
+      console.error("Response status:", err.response?.status);
+      console.error("Response data:", err.response?.data);
+      console.error("Response headers:", err.response?.headers);
+
       if (err.response?.data?.errors) {
+        console.error("Validation errors:", err.response.data.errors);
         const errorMessages = Object.values(err.response.data.errors)
           .flat()
           .join("\n");
+        console.error("Error messages joined:", errorMessages);
         setError(errorMessages || "Validation failed.");
       } else {
-        setError(
+        const errorMsg =
           err.response?.data?.title ||
-            err.response?.data ||
-            "Failed to submit.",
-        );
+          err.response?.data?.message ||
+          err.response?.data ||
+          "Failed to submit.";
+        console.error("Final error message:", errorMsg);
+        setError(errorMsg);
       }
+      console.error("=== ❌ End of Error Handling ===");
     }
   };
   const handleSave = async () => {
@@ -1311,7 +1397,8 @@ const PropertyDetail = () => {
         <div className="property-page-header-content">
           <h1 className="property-page-title">Property Details</h1>
           <p className="property-page-subtitle">
-            Discover your perfect home with detailed information and stunning visuals
+            Discover your perfect home with detailed information and stunning
+            visuals
           </p>
         </div>
       </div>
@@ -1326,18 +1413,21 @@ const PropertyDetail = () => {
               {(() => {
                 let statusClass = "status-available";
                 let statusText = "Available";
-                
+
                 if (post.rentalStatus === -1) {
                   statusClass = "status-rented";
                   statusText = post.rentType === 1 ? "Sold" : "Rented";
                 } else if (post.rentalStatus === 0) {
                   statusClass = "status-available";
-                  statusText = post.rentType === 1 ? "Available for Sale" : "Available for Rent";
+                  statusText =
+                    post.rentType === 1
+                      ? "Available for Sale"
+                      : "Available for Rent";
                 } else if (post.rentalStatus === 1) {
                   statusClass = "status-negotiation";
                   statusText = "Under Negotiation";
                 }
-                
+
                 return (
                   <div className={`property-status-badge ${statusClass}`}>
                     <div className="property-status-indicator"></div>
@@ -1353,13 +1443,20 @@ const PropertyDetail = () => {
             >
               {(() => {
                 // Handle images exactly like in Home.jsx
-                const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+                const images =
+                  post.fileBase64s ||
+                  post.images ||
+                  (post.fileBase64
+                    ? [post.fileBase64]
+                    : post.image
+                      ? [post.image]
+                      : []);
                 const hasImages = images && images.length > 0;
-                
+
                 if (hasImages) {
                   const currentImage = images[currentImageIndex];
                   let imageSrc;
-                  
+
                   // Handle different image formats like in Home.jsx
                   if (currentImage.startsWith("http")) {
                     imageSrc = currentImage;
@@ -1367,24 +1464,24 @@ const PropertyDetail = () => {
                     imageSrc = currentImage;
                   } else {
                     // If it's a path or base64 without data prefix
-                    imageSrc = currentImage.includes('/') 
+                    imageSrc = currentImage.includes("/")
                       ? `${API_BASE_URL}/${currentImage}`
                       : `data:image/png;base64,${currentImage}`;
                   }
-                  
+
                   return (
                     <>
                       <img
                         src={imageSrc}
                         alt={`${post.title} - Image ${currentImageIndex + 1}`}
                         onError={(e) => {
-                          console.log('Image failed to load:', imageSrc);
-                          console.log('Original image data:', currentImage);
-                          console.log('Post data:', post);
+                          console.log("Image failed to load:", imageSrc);
+                          console.log("Original image data:", currentImage);
+                          console.log("Post data:", post);
                           // Try different fallback approaches
                           if (!e.target.dataset.retried) {
-                            e.target.dataset.retried = 'true';
-                            if (currentImage.includes('/')) {
+                            e.target.dataset.retried = "true";
+                            if (currentImage.includes("/")) {
                               // Try as direct API path
                               e.target.src = `${API_BASE_URL}/${currentImage}`;
                             } else {
@@ -1393,7 +1490,8 @@ const PropertyDetail = () => {
                             }
                           } else {
                             // Final fallback
-                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                            e.target.src =
+                              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==";
                           }
                         }}
                       />
@@ -1402,7 +1500,7 @@ const PropertyDetail = () => {
                         <FaImage className="mr-2" />
                         {currentImageIndex + 1} / {images.length}
                       </div>
-                      
+
                       {/* Navigation arrows for multiple images */}
                       {images.length > 1 && (
                         <>
@@ -1410,8 +1508,8 @@ const PropertyDetail = () => {
                             className="property-image-nav property-image-nav-prev"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setCurrentImageIndex(prev => 
-                                prev === 0 ? images.length - 1 : prev - 1
+                              setCurrentImageIndex((prev) =>
+                                prev === 0 ? images.length - 1 : prev - 1,
                               );
                             }}
                           >
@@ -1421,8 +1519,8 @@ const PropertyDetail = () => {
                             className="property-image-nav property-image-nav-next"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setCurrentImageIndex(prev => 
-                                prev === images.length - 1 ? 0 : prev + 1
+                              setCurrentImageIndex((prev) =>
+                                prev === images.length - 1 ? 0 : prev + 1,
                               );
                             }}
                           >
@@ -1434,13 +1532,15 @@ const PropertyDetail = () => {
                   );
                 } else {
                   // Fallback: try to show any available image data
-                  console.log('No images found, checking for fallback options');
-                  console.log('Post object keys:', Object.keys(post));
-                  
+                  console.log("No images found, checking for fallback options");
+                  console.log("Post object keys:", Object.keys(post));
+
                   return (
                     <div className="property-image-empty">
                       <FaHome className="property-image-empty-icon" />
-                      <p className="property-image-empty-text">No images available</p>
+                      <p className="property-image-empty-text">
+                        No images available
+                      </p>
                       <p className="text-sm text-gray-400 mt-2">
                         Debug: Check console for available image fields
                       </p>
@@ -1452,42 +1552,55 @@ const PropertyDetail = () => {
 
             {/* Thumbnails */}
             {(() => {
-              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
-              return images && images.length > 1 && (
-                <div className="property-thumbnails">
-                  {images.map((img, index) => {
-                    let imageSrc;
-                    
-                    // Handle different image formats like in Home.jsx
-                    if (img.startsWith("http")) {
-                      imageSrc = img;
-                    } else if (img.startsWith("data:")) {
-                      imageSrc = img;
-                    } else {
-                      // If it's a path or base64 without data prefix
-                      imageSrc = img.includes('/') 
-                        ? `${API_BASE_URL}/${img}`
-                        : `data:image/png;base64,${img}`;
-                    }
-                    
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`property-thumbnail ${index === currentImageIndex ? "active" : ""}`}
-                      >
-                        <img
-                          src={imageSrc}
-                          alt={`${post.title} - Thumbnail ${index + 1}`}
-                          onError={(e) => {
-                            console.log('Thumbnail failed to load:', imageSrc);
-                            e.target.src = '/placeholder.jpg';
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+              const images =
+                post.fileBase64s ||
+                post.images ||
+                (post.fileBase64
+                  ? [post.fileBase64]
+                  : post.image
+                    ? [post.image]
+                    : []);
+              return (
+                images &&
+                images.length > 1 && (
+                  <div className="property-thumbnails">
+                    {images.map((img, index) => {
+                      let imageSrc;
+
+                      // Handle different image formats like in Home.jsx
+                      if (img.startsWith("http")) {
+                        imageSrc = img;
+                      } else if (img.startsWith("data:")) {
+                        imageSrc = img;
+                      } else {
+                        // If it's a path or base64 without data prefix
+                        imageSrc = img.includes("/")
+                          ? `${API_BASE_URL}/${img}`
+                          : `data:image/png;base64,${img}`;
+                      }
+
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`property-thumbnail ${index === currentImageIndex ? "active" : ""}`}
+                        >
+                          <img
+                            src={imageSrc}
+                            alt={`${post.title} - Thumbnail ${index + 1}`}
+                            onError={(e) => {
+                              console.log(
+                                "Thumbnail failed to load:",
+                                imageSrc,
+                              );
+                              e.target.src = "/placeholder.jpg";
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               );
             })()}
           </div>
@@ -1522,13 +1635,18 @@ const PropertyDetail = () => {
             </div>
 
             {/* Property Features */}
-            <div className="property-features" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+            <div
+              className="property-features"
+              style={{ flexWrap: "wrap", gap: "1rem" }}
+            >
               <div className="property-feature">
                 <div className="property-feature-icon">
                   <FaBed />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.numOfRooms || 0}</span>
+                  <span className="property-feature-value">
+                    {post.numOfRooms || 0}
+                  </span>
                   <span className="property-feature-label">Bedrooms</span>
                 </div>
               </div>
@@ -1537,7 +1655,9 @@ const PropertyDetail = () => {
                   <FaBath />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.numOfBathrooms || 0}</span>
+                  <span className="property-feature-value">
+                    {post.numOfBathrooms || 0}
+                  </span>
                   <span className="property-feature-label">Bathrooms</span>
                 </div>
               </div>
@@ -1546,7 +1666,9 @@ const PropertyDetail = () => {
                   <FaRulerCombined />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.area || 0}</span>
+                  <span className="property-feature-value">
+                    {post.area || 0}
+                  </span>
                   <span className="property-feature-label">sq ft</span>
                 </div>
               </div>
@@ -1555,7 +1677,9 @@ const PropertyDetail = () => {
                   <FaLayerGroup />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.floorNumber || 0}</span>
+                  <span className="property-feature-value">
+                    {post.floorNumber || 0}
+                  </span>
                   <span className="property-feature-label">Floor</span>
                 </div>
               </div>
@@ -1564,7 +1688,9 @@ const PropertyDetail = () => {
                   <FaBuilding />
                 </div>
                 <div className="property-feature-content">
-                  <span className="property-feature-value">{post.totalUnitsInBuilding || 0}</span>
+                  <span className="property-feature-value">
+                    {post.totalUnitsInBuilding || 0}
+                  </span>
                   <span className="property-feature-label">Total Units</span>
                 </div>
               </div>
@@ -1578,11 +1704,9 @@ const PropertyDetail = () => {
               </h3>
               <div className="property-description-content">
                 {post.description ? (
-                  post.description.split("\n").map((paragraph, index) => (
-                    <p key={index}>
-                      {paragraph}
-                    </p>
-                  ))
+                  post.description
+                    .split("\n")
+                    .map((paragraph, index) => <p key={index}>{paragraph}</p>)
                 ) : (
                   <p className="property-description-empty">
                     No description available for this property.
@@ -1658,7 +1782,9 @@ const PropertyDetail = () => {
                   <FaHeart />
                 </div>
                 <div className="property-stat-content">
-                  <div className="property-stat-value">{likeStatus.likes_count || 0}</div>
+                  <div className="property-stat-value">
+                    {likeStatus.likes_count || 0}
+                  </div>
                   <div className="property-stat-label">Likes</div>
                 </div>
               </div>
@@ -1690,13 +1816,17 @@ const PropertyDetail = () => {
               {post.hasGarage && (
                 <div className="property-amenity-item">
                   <FaCar className="property-amenity-icon" />
-                  <span className="property-amenity-text">Garage Available</span>
+                  <span className="property-amenity-text">
+                    Garage Available
+                  </span>
                 </div>
               )}
               {post.rentType !== undefined && (
                 <div className="property-amenity-item">
                   <FaTag className="property-amenity-icon" />
-                  <span className="property-amenity-text">Type: {post.rentType === 1 ? 'Sale' : 'Rent'}</span>
+                  <span className="property-amenity-text">
+                    Type: {post.rentType === 1 ? "Sale" : "Rent"}
+                  </span>
                 </div>
               )}
               <div className="property-amenity-item">
@@ -1752,23 +1882,32 @@ const PropertyDetail = () => {
         )}
       </div>
 
-      {/* Application Form Modal */}
+      {/* Application Form Modal - Modern Design */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
-            <div className="bg-gradient-to-r from-green-600 to-green-700 p-8 rounded-t-3xl">
-              <h2 className="flex items-center gap-4 text-3xl font-bold text-white">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <FaPaperPlane className="text-xl" />
-                </div>
-                Application Form
-              </h2>
+        <div
+          className="application-modal-overlay"
+          onClick={(e) => {
+            if (e.target.className === "application-modal-overlay") {
+              setShowForm(false);
+              setError(null);
+            }
+          }}
+        >
+          <div className="application-modal">
+            <div className="application-modal-header">
+              <div className="application-modal-header-icon">
+                <FaPaperPlane />
+              </div>
+              <h2 className="application-modal-title">Application Form</h2>
             </div>
 
-            <form onSubmit={handleSubmitApplication} className="p-8 space-y-6">
-              <div>
-                <label className="flex items-center gap-3 text-gray-700 font-semibold mb-3 text-lg">
-                  <FaPhone className="text-green-600 text-xl" />
+            <form
+              onSubmit={handleSubmitApplication}
+              className="application-modal-body"
+            >
+              <div className="application-form-group">
+                <label className="application-form-label">
+                  <FaPhone />
                   Phone Number
                 </label>
                 <input
@@ -1778,13 +1917,13 @@ const PropertyDetail = () => {
                   required
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 focus:outline-none transition-all duration-300 text-lg"
+                  className="application-form-input"
                 />
               </div>
 
-              <div>
-                <label className="flex items-center gap-3 text-gray-700 font-semibold mb-3 text-lg">
-                  <FaCalendarAlt className="text-green-600 text-xl" />
+              <div className="application-form-group">
+                <label className="application-form-label">
+                  <FaCalendarAlt />
                   Start Rental Date
                 </label>
                 <input
@@ -1793,13 +1932,13 @@ const PropertyDetail = () => {
                   required
                   value={formData.startRentalDate}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 focus:outline-none transition-all duration-300 text-lg"
+                  className="application-form-input"
                 />
               </div>
 
-              <div>
-                <label className="flex items-center gap-3 text-gray-700 font-semibold mb-3 text-lg">
-                  <FaCalendarAlt className="text-green-600 text-xl" />
+              <div className="application-form-group">
+                <label className="application-form-label">
+                  <FaCalendarAlt />
                   End Rental Date
                 </label>
                 <input
@@ -1808,13 +1947,13 @@ const PropertyDetail = () => {
                   required
                   value={formData.endRentalDate}
                   onChange={handleInputChange}
-                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 focus:outline-none transition-all duration-300 text-lg"
+                  className="application-form-input"
                 />
               </div>
 
-              <div>
-                <label className="flex items-center gap-3 text-gray-700 font-semibold mb-3 text-lg">
-                  <FaFileUpload className="text-green-600 text-xl" />
+              <div className="application-form-group">
+                <label className="application-form-label">
+                  <FaFileUpload />
                   Upload Documents (PDF/Image)
                 </label>
                 <input
@@ -1823,30 +1962,56 @@ const PropertyDetail = () => {
                   accept="image/*,application/pdf"
                   required
                   onChange={handleInputChange}
-                  className="w-full px-5 py-4 border-2 border-dashed border-gray-300 rounded-xl focus:border-green-500 focus:outline-none transition-all duration-300 text-lg file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:bg-green-50 file:text-green-700 file:font-semibold hover:file:bg-green-100"
+                  className="application-form-input"
                 />
+              </div>
+              <div className="application-form-group">
+                <label className="application-form-label">
+                  <FaDollarSign />
+                  Offered Price
+                </label>
+                <input
+                  type="number"
+                  name="offeredPrice"
+                  placeholder={`Suggested: $${post?.price?.toLocaleString() || "0"}`}
+                  required
+                  min="1"
+                  step="0.01"
+                  value={formData.offeredPrice || ""}
+                  onChange={handleInputChange}
+                  className="application-form-input"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Property price: ${post?.price?.toLocaleString() || "0"}
+                </p>
               </div>
 
               {error && (
-                <div className="text-red-600 bg-red-100 p-4 rounded-xl text-lg border border-red-200">
+                <div className="application-form-error">
                   {typeof error === "object" ? JSON.stringify(error) : error}
                 </div>
               )}
 
-              <div className="flex gap-4 pt-6">
+              <div className="application-modal-actions">
                 <button
                   type="button"
                   onClick={() => {
                     setShowForm(false);
                     setError(null);
                   }}
-                  className="flex-1 px-6 py-4 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all duration-300 text-lg"
+                  className="application-modal-btn application-modal-btn-cancel"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-lg text-lg"
+                  className="application-modal-btn application-modal-btn-submit"
+                  disabled={
+                    !formData.phone ||
+                    !formData.startRentalDate ||
+                    !formData.endRentalDate ||
+                    !formData.file
+                  }
                 >
                   Submit Application
                 </button>
@@ -2030,8 +2195,15 @@ const PropertyDetail = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {(() => {
-              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
-              
+              const images =
+                post.fileBase64s ||
+                post.images ||
+                (post.fileBase64
+                  ? [post.fileBase64]
+                  : post.image
+                    ? [post.image]
+                    : []);
+
               if (images.length > 1) {
                 return (
                   <>
@@ -2054,11 +2226,18 @@ const PropertyDetail = () => {
             })()}
 
             {(() => {
-              const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
+              const images =
+                post.fileBase64s ||
+                post.images ||
+                (post.fileBase64
+                  ? [post.fileBase64]
+                  : post.image
+                    ? [post.image]
+                    : []);
               if (images.length > 0) {
                 const currentImage = images[currentImageIndex];
                 let imageSrc;
-                
+
                 // Handle different image formats like in Home.jsx
                 if (currentImage.startsWith("http")) {
                   imageSrc = currentImage;
@@ -2066,19 +2245,19 @@ const PropertyDetail = () => {
                   imageSrc = currentImage;
                 } else {
                   // If it's a path or base64 without data prefix
-                  imageSrc = currentImage.includes('/') 
+                  imageSrc = currentImage.includes("/")
                     ? `${API_BASE_URL}/${currentImage}`
                     : `data:image/png;base64,${currentImage}`;
                 }
-                
+
                 return (
                   <img
                     src={imageSrc}
                     alt={`${post.title} - Enlarged view`}
                     className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
                     onError={(e) => {
-                      console.log('Lightbox image failed to load:', imageSrc);
-                      e.target.src = '/placeholder.jpg';
+                      console.log("Lightbox image failed to load:", imageSrc);
+                      e.target.src = "/placeholder.jpg";
                     }}
                   />
                 );
@@ -2088,48 +2267,58 @@ const PropertyDetail = () => {
           </div>
 
           {(() => {
-            const images = post.fileBase64s || post.images || (post.fileBase64 ? [post.fileBase64] : post.image ? [post.image] : []);
-            return images.length > 1 && (
-              <div className="flex gap-4 mt-8 overflow-x-auto max-w-full p-4">
-                {images.map((img, index) => {
-                  let imageSrc;
-                  
-                  // Handle different image formats like in Home.jsx
-                  if (img.startsWith("http")) {
-                    imageSrc = img;
-                  } else if (img.startsWith("data:")) {
-                    imageSrc = img;
-                  } else {
-                    // If it's a path or base64 without data prefix
-                    imageSrc = img.includes('/') 
-                      ? `${API_BASE_URL}/${img}`
-                      : `data:image/png;base64,${img}`;
-                  }
-                  
-                  return (
-                    <img
-                      key={index}
-                      src={imageSrc}
-                      alt={`${post.title} - Thumbnail ${index + 1}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentImageIndex(index);
-                      }}
-                      className={`w-28 h-24 object-cover rounded-2xl cursor-pointer transition-all duration-300 shadow-lg ${index === currentImageIndex ? "opacity-100 ring-4 ring-white scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
-                      onError={(e) => {
-                        console.log('Lightbox thumbnail failed to load:', imageSrc);
-                        e.target.src = '/placeholder.jpg';
-                      }}
-                    />
-                  );
-                })}
-              </div>
+            const images =
+              post.fileBase64s ||
+              post.images ||
+              (post.fileBase64
+                ? [post.fileBase64]
+                : post.image
+                  ? [post.image]
+                  : []);
+            return (
+              images.length > 1 && (
+                <div className="flex gap-4 mt-8 overflow-x-auto max-w-full p-4">
+                  {images.map((img, index) => {
+                    let imageSrc;
+
+                    // Handle different image formats like in Home.jsx
+                    if (img.startsWith("http")) {
+                      imageSrc = img;
+                    } else if (img.startsWith("data:")) {
+                      imageSrc = img;
+                    } else {
+                      // If it's a path or base64 without data prefix
+                      imageSrc = img.includes("/")
+                        ? `${API_BASE_URL}/${img}`
+                        : `data:image/png;base64,${img}`;
+                    }
+
+                    return (
+                      <img
+                        key={index}
+                        src={imageSrc}
+                        alt={`${post.title} - Thumbnail ${index + 1}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImageIndex(index);
+                        }}
+                        className={`w-28 h-24 object-cover rounded-2xl cursor-pointer transition-all duration-300 shadow-lg ${index === currentImageIndex ? "opacity-100 ring-4 ring-white scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
+                        onError={(e) => {
+                          console.log(
+                            "Lightbox thumbnail failed to load:",
+                            imageSrc,
+                          );
+                          e.target.src = "/placeholder.jpg";
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )
             );
           })()}
         </div>
       )}
-
-    
     </div>
   );
 };

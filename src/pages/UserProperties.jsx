@@ -1,94 +1,250 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaCalendarAlt, FaTrashAlt, FaEnvelope, FaFilePdf, FaClock, FaCheckCircle, FaTimesCircle, FaExpand, FaDownload, FaEye } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaTrashAlt,
+  FaEnvelope,
+  FaFilePdf,
+  FaClock,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaExpand,
+  FaDownload,
+  FaEye,
+  FaHome,
+  FaUser,
+  FaPhone,
+  FaSearch,
+  FaFilter,
+  FaChevronRight,
+  FaDollarSign,
+  FaImage,
+} from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import API_BASE_URL from "../services/ApiConfig";
-import '../styles/UserProperties.css';
+import "../styles/UserProperties.css";
 
 const getUserId = () => localStorage.getItem("userId");
 const getToken = () => localStorage.getItem("token");
 
-// مودال عرض الملف
-const FileViewerModal = ({ isOpen, onClose, fileBase64, fileName, fileType }) => {
+// دالة للتحقق من وجود الملف
+const checkFileExists = async (filePath) => {
+  try {
+    const response = await fetch(`http://localhost:44357/${filePath}`, {
+      method: 'HEAD', // استخدام HEAD للتحقق فقط دون تحميل الملف
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('File check error:', error);
+    return false;
+  }
+};
+
+// File Viewer Modal Component
+const FileViewerModal = ({
+  isOpen,
+  onClose,
+  fileBase64,
+  fileName,
+  filePath,
+  isPath,
+  isPDF,
+}) => {
   if (!isOpen) return null;
 
+  // تحديد نوع الملف
+  const getFileType = (fileName, fileBase64, isPDF) => {
+    if (isPath) {
+      return isPDF ? 'pdf' : 'image';
+    }
+    
+    if (!fileBase64) return 'unknown';
+    
+    // التحقق من البداية المميزة لكل نوع ملف في base64
+    const base64Header = fileBase64.substring(0, 50);
+    
+    // PDF يبدأ بـ JVBERi (base64 for %PDF)
+    if (base64Header.startsWith('JVBERi') || fileName?.toLowerCase().endsWith('.pdf')) {
+      return 'pdf';
+    }
+    
+    // JPEG يبدأ بـ /9j/
+    if (base64Header.startsWith('/9j/') || fileName?.toLowerCase().match(/\.(jpg|jpeg)$/i)) {
+      return 'image';
+    }
+    
+    // PNG يبدأ بـ iVBORw
+    if (base64Header.startsWith('iVBORw') || fileName?.toLowerCase().endsWith('.png')) {
+      return 'image';
+    }
+    
+    // GIF يبدأ بـ R0lGOD
+    if (base64Header.startsWith('R0lGOD') || fileName?.toLowerCase().endsWith('.gif')) {
+      return 'image';
+    }
+    
+    // WebP يبدأ بـ UklGR
+    if (base64Header.startsWith('UklGR') || fileName?.toLowerCase().endsWith('.webp')) {
+      return 'image';
+    }
+    
+    // BMP يبدأ بـ Qk
+    if (base64Header.startsWith('Qk') || fileName?.toLowerCase().endsWith('.bmp')) {
+      return 'image';
+    }
+    
+    // إذا كان اسم الملف يحتوي على امتداد صورة
+    if (fileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)) {
+      return 'image';
+    }
+    
+    // افتراضي
+    return fileName?.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
+  };
+
+  const fileType = getFileType(fileName, fileBase64, isPDF);
+
   const handleDownload = () => {
-    if (fileBase64) {
-      const link = document.createElement('a');
-      link.href = `data:application/pdf;base64,${fileBase64}`;
-      link.download = fileName || 'document.pdf';
+    if (isPath && filePath) {
+      // تحميل من مسار
+      const link = document.createElement("a");
+      link.href = filePath;
+      link.download = fileName || `document.${fileType === 'pdf' ? 'pdf' : 'jpg'}`;
+      link.target = '_blank';
+      link.click();
+    } else if (fileBase64) {
+      // تحميل من base64
+      const link = document.createElement("a");
+      const mimeType = fileType === 'pdf' ? 'application/pdf' : 'image/*';
+      
+      link.href = `data:${mimeType};base64,${fileBase64}`;
+      link.download = fileName || `document.${fileType === 'pdf' ? 'pdf' : 'jpg'}`;
       link.click();
     }
   };
 
   const handleOpenInNewTab = () => {
-    if (fileBase64) {
+    if (isPath && filePath) {
+      // فتح من مسار
+      window.open(filePath, '_blank');
+    } else if (fileBase64) {
+      // فتح من base64
       const pdfWindow = window.open();
-      pdfWindow.document.write(`
-        <html>
-          <head><title>${fileName || 'Document'}</title></head>
-          <body style="margin: 0;">
-            <embed width="100%" height="100%" src="data:application/pdf;base64,${fileBase64}" type="application/pdf" />
-          </body>
-        </html>
-      `);
+      if (pdfWindow) {
+        const mimeType = fileType === 'pdf' ? 'application/pdf' : 'image/*';
+        
+        if (fileType === 'pdf') {
+          pdfWindow.document.write(`
+            <html>
+              <head><title>${fileName || "PDF Document"}</title></head>
+              <body style="margin: 0;">
+                <embed width="100%" height="100%" src="data:${mimeType};base64,${fileBase64}" type="${mimeType}" />
+              </body>
+            </html>
+          `);
+        } else {
+          pdfWindow.document.write(`
+            <html>
+              <head><title>${fileName || "Image"}</title></head>
+              <body style="margin: 0; display: flex; align-items: center; justify-content: center; background: #f0f0f0; min-height: 100vh;">
+                <img src="data:${mimeType};base64,${fileBase64}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Document" />
+              </body>
+            </html>
+          `);
+        }
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl mx-4 h-[90vh] flex flex-col animate-scaleIn">
+    <div className="property-modal-overlay">
+      <div className="property-modal">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <FaFilePdf className="text-2xl text-red-500" />
-            <div>
-              <h3 className="text-xl font-semibold text-gray-800">
-                {fileName || 'Document Viewer'}
-              </h3>
-              <p className="text-sm text-gray-500">PDF Document</p>
-            </div>
+        <div className="property-modal-header">
+          <div className="property-modal-title">
+            {fileType === 'pdf' ? <FaFilePdf /> : <FaEye />}
+            {fileType === 'pdf' ? 'PDF Document' : 'Image Document'}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="property-modal-actions">
             <button
               onClick={handleDownload}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200"
+              className="property-modal-btn property-modal-btn-secondary"
             >
               <FaDownload />
               Download
             </button>
             <button
               onClick={handleOpenInNewTab}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors duration-200"
+              className="property-modal-btn property-modal-btn-primary"
             >
               <FaExpand />
               Open Full
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              className="property-modal-close"
             >
-              <FaTimesCircle className="text-2xl" />
+              <FaTimesCircle />
             </button>
           </div>
         </div>
 
-        {/* PDF Content */}
-        <div className="flex-1 p-4 bg-gray-100 overflow-auto">
-          {fileBase64 ? (
-            <div className="w-full h-full bg-white rounded-2xl shadow-inner overflow-hidden">
-              <embed
-                src={`data:application/pdf;base64,${fileBase64}`}
-                type="application/pdf"
-                className="w-full h-full min-h-[500px]"
-              />
+        {/* File Content */}
+        <div className="property-modal-body">
+          {(fileBase64 || filePath) ? (
+            <div className="property-file-viewer">
+              {fileType === 'pdf' ? (
+                <embed
+                  src={isPath ? filePath : `data:application/pdf;base64,${fileBase64}`}
+                  type="application/pdf"
+                  className="property-pdf-embed"
+                  onLoad={() => {
+                    console.log("✅ PDF loaded in modal");
+                  }}
+                  onError={() => {
+                    console.error("❌ PDF load error in modal");
+                  }}
+                />
+              ) : (
+                <div className="property-image-viewer">
+                  <img
+                    src={isPath ? filePath : `data:image/*;base64,${fileBase64}`}
+                    alt="Document"
+                    className="property-image-embed"
+                    onLoad={() => {
+                      console.log("✅ Modal image loaded successfully");
+                    }}
+                    onError={(e) => {
+                      console.error("❌ Modal image load error:", {
+                        fileName: fileName,
+                        isPath: isPath,
+                        filePath: filePath,
+                        fileBase64Length: fileBase64?.length,
+                        fileType: fileType
+                      });
+                      
+                      e.target.parentElement.innerHTML = `
+                        <div class="property-file-error">
+                          <div class="property-file-error-icon">⚠️</div>
+                          <h3>Unable to display this file</h3>
+                          <p>File type: ${fileType}</p>
+                          <p>Source: ${isPath ? 'File path' : 'Base64 data'}</p>
+                          <p>The file may be corrupted or in an unsupported format</p>
+                        </div>
+                      `;
+                    }}
+                  />
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <FaFilePdf className="text-8xl mb-4" />
-              <p className="text-2xl font-medium">No document available</p>
-              <p className="text-lg mt-2">The PDF file could not be loaded</p>
+            <div className="property-pdf-empty">
+              <div className="property-pdf-empty-icon">
+                <FaFilePdf />
+              </div>
+              <h3 className="property-pdf-empty-title">No document available</h3>
+              <p className="property-pdf-empty-text">The file could not be loaded</p>
             </div>
           )}
         </div>
@@ -103,12 +259,19 @@ const MyProperties = () => {
   const [error, setError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const navigate = useNavigate();
   const tenantId = getUserId();
   const token = getToken();
 
   useEffect(() => {
     const fetchMyProperties = async () => {
+      setLoading(true);
+      setError(null);
+
+      console.log("🔍 Fetching proposals for tenant:", tenantId);
+
       try {
         const response = await axios.get(
           `${API_BASE_URL}/api/Tenant/my-proposals/${tenantId}`,
@@ -116,20 +279,67 @@ const MyProperties = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
-        setMyProperties(response.data);
+
+        console.log("✅ Proposals fetched successfully:", response.data);
+        console.log("📊 Total proposals:", response.data?.length || 0);
+        
+        // طباعة البيانات الخام كما هي
+        console.log("🔍 Raw API Response:", JSON.stringify(response.data, null, 2));
+        
+        // طباعة تفاصيل كل proposal لفهم البيانات المتاحة
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          console.log("📋 First proposal details:", response.data[0]);
+          console.log("📋 Available fields:", Object.keys(response.data[0]));
+          
+          // فحص الحقول المهمة
+          response.data.forEach((proposal, index) => {
+            console.log(`📄 Proposal ${index + 1} - All fields:`, proposal);
+            console.log(`📄 Proposal ${index + 1} - Key analysis:`, {
+              proposalId: proposal.proposalId,
+              fileBase64: proposal.fileBase64 ? `✅ Available (${proposal.fileBase64.length} chars)` : "❌ Missing",
+              fileName: proposal.fileName || "❌ Missing",
+              offeredPrice: proposal.offeredPrice || "❌ Missing",
+              Offeredprice: proposal.Offeredprice || "❌ Missing", // تحقق من الاسم بحرف كبير
+              phone: proposal.phone || "❌ Missing",
+              rentalStatus: proposal.rentalStatus || "❌ Missing",
+              startRentalDate: proposal.startRentalDate || "❌ Missing",
+              endRentalDate: proposal.endRentalDate || "❌ Missing",
+              landlordName: proposal.landlordName || "❌ Missing",
+              landlordId: proposal.landlordId || "❌ Missing"
+            });
+          });
+        }
+
+        // تأكد من أن الـ response array
+        if (Array.isArray(response.data)) {
+          setMyProperties(response.data);
+        } else {
+          console.error("❌ Unexpected response format:", response.data);
+          setMyProperties([]);
+        }
       } catch (err) {
-        console.error("Error fetching user properties:", err);
-        setError("Failed to load properties. Please try again later.");
+        console.error("❌ Error fetching proposals:", err);
+        console.error("Response:", err.response?.data);
+        console.error("Status:", err.response?.status);
+        setError(
+          err.response?.data?.message ||
+            "Failed to load applications. Please try again later.",
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMyProperties();
+    if (tenantId && token) {
+      fetchMyProperties();
+    } else {
+      console.error("❌ Missing tenantId or token");
+      setError("You need to login first");
+      setLoading(false);
+    }
   }, [tenantId, token]);
-
   const deleteProperty = async (proposalId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
       try {
@@ -139,10 +349,10 @@ const MyProperties = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         setMyProperties(
-          myProperties.filter((property) => property.proposalId !== proposalId)
+          myProperties.filter((property) => property.proposalId !== proposalId),
         );
       } catch (err) {
         console.error("Error deleting property:", err);
@@ -152,267 +362,483 @@ const MyProperties = () => {
   };
 
   const openFileModal = (property) => {
-    setSelectedFile({
-      fileBase64: property.fileBase64,
-      fileName: property.fileName,
-      fileType: property.fileName?.endsWith(".pdf") ? "pdf" : "unknown"
-    });
-    setIsFileModalOpen(true);
+    const fileBase64 = property.fileBase64 || property.file_base64;
+    const fileName = property.fileName || property.file_name;
+    const filePath = property.filePath;
+    const imagePath = property.imagePath;
+    
+    if (fileBase64) {
+      // استخدام base64
+      setSelectedFile({
+        fileBase64: fileBase64,
+        fileName: fileName,
+        isPath: false
+      });
+      setIsFileModalOpen(true);
+    } else if (filePath || imagePath) {
+      // استخدام مسار الملف
+      const path = filePath || imagePath;
+      const name = fileName || path.split('/').pop();
+      
+      setSelectedFile({
+        filePath: `http://localhost:44357/${path}`,
+        fileName: name,
+        isPath: true,
+        isPDF: !!filePath
+      });
+      setIsFileModalOpen(true);
+    }
   };
 
   const renderStatusBadge = (status) => {
     const statusConfig = {
       Pending: {
-        bg: "bg-yellow-100",
-        text: "text-yellow-800",
-        border: "border-yellow-300",
-        icon: <FaClock className="text-lg" />,
+        className: "property-status-pending",
+        icon: <FaClock />,
       },
       Approved: {
-        bg: "bg-green-100",
-        text: "text-green-800",
-        border: "border-green-300",
-        icon: <FaCheckCircle className="text-lg" />,
+        className: "property-status-approved", 
+        icon: <FaCheckCircle />,
       },
       Rejected: {
-        bg: "bg-red-100",
-        text: "text-red-800",
-        border: "border-red-300",
-        icon: <FaTimesCircle className="text-lg" />,
+        className: "property-status-rejected",
+        icon: <FaTimesCircle />,
       },
     };
 
     const config = statusConfig[status] || {
-      bg: "bg-gray-100",
-      text: "text-gray-800",
-      border: "border-gray-300",
+      className: "property-status-default",
       icon: null,
     };
 
     return (
-      <div
-        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wider border-2 ${config.bg} ${config.text} ${config.border}`}
-      >
+      <div className={`property-status-badge ${config.className}`}>
         {config.icon}
-        {status}
+        <span>{status}</span>
       </div>
     );
   };
 
-  const handleMessageClick = (userId, userName) => { // 1. أضفنا userName هنا
-    if (!localStorage.getItem("token")) {
-      alert("You need to login to send a message");
-      navigate("/login");
-      return;
-    } else {
-      // 2. قمنا بتعديل دالة navigate لتمرير الـ state
-      navigate(`/messages/${userId}`, {
-        state: {
-          receiverId: userId,
-          receiverName: userName
-        }
-      });
-    }
-  };
+  const handleMessageClick = (userId, userName) => {
+    if (!localStorage.getItem("token")) {
+      alert("You need to login to send a message");
+      navigate("/login");
+      return;
+    } else {
+      navigate(`/messages/${userId}`, {
+        state: {
+          receiverId: userId,
+          receiverName: userName,
+        },
+      });
+    }
+  };
+
+  // Filter properties based on search and status
+  const filteredProperties = myProperties.filter((property) => {
+    const matchesSearch = property.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.landlordName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (property.offeredPrice || property.Offeredprice || property.offered_price)?.toString().includes(searchTerm) ||
+                         property.proposalId?.toString().includes(searchTerm);
+    const matchesStatus = statusFilter === "All" || property.rentalStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) {
     return (
-      <div className="loading-state">
-        <div className="loading-content">
-          <div className="loading-spinner">
-            <RingLoader color="#dc2626" size={80} />
-          </div>
-          <p className="loading-text">
-            Loading your applications...
-          </p>
-        </div>
+      <div className="property-loading">
+        <div className="property-spinner"></div>
+        <p className="property-loading-text">Loading your applications...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="error-state">
-        <div className="error-card">
-          <div className="error-icon">
-            <FaTimesCircle className="text-3xl text-red-600" />
-          </div>
-          <h2 className="error-title">Error Loading Applications</h2>
-          <p className="error-description">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="retry-button"
-          >
-            Try Again
-          </button>
+      <div className="property-error">
+        <div className="property-error-icon">
+          <FaTimesCircle />
         </div>
+        <h2 className="property-error-title">Error Loading Applications</h2>
+        <p className="property-error-message">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="property-error-btn"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="user-properties-container">
+    <div className="user-properties-page">
       <FileViewerModal
         isOpen={isFileModalOpen}
         onClose={() => setIsFileModalOpen(false)}
         fileBase64={selectedFile?.fileBase64}
         fileName={selectedFile?.fileName}
-        fileType={selectedFile?.fileType}
+        filePath={selectedFile?.filePath}
+        isPath={selectedFile?.isPath}
+        isPDF={selectedFile?.isPDF}
       />
 
-      <div className="properties-wrapper">
-        {/* Header */}
-        <div className="properties-header">
-          <h1 className="properties-title">
-            My Applications
-          </h1>
-          <p className="properties-subtitle">
+      {/* Page Header */}
+      <div className="user-properties-header">
+        <div className="user-properties-header-content">
+          <h1 className="user-properties-title">My Applications</h1>
+          <p className="user-properties-subtitle">
             Track and manage all your property applications in one place
           </p>
         </div>
+      </div>
 
-        {myProperties.length > 0 ? (
-          <div className="properties-grid">
-            {myProperties.map((property, index) => (
+      {/* Main Content */}
+      <div className="user-properties-container">
+        {/* Search and Filter Bar */}
+        <div className="user-properties-controls">
+          <div className="user-properties-search">
+            <FaSearch className="user-properties-search-icon" />
+            <input
+              type="text"
+              placeholder="Search by phone, landlord, price, or application ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="user-properties-search-input"
+            />
+          </div>
+          <div className="user-properties-filter">
+            <FaFilter className="user-properties-filter-icon" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="user-properties-filter-select"
+            >
+              <option value="All">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Properties Grid */}
+        {filteredProperties.length > 0 ? (
+          <div className="user-properties-grid">
+            {filteredProperties.map((property, index) => (
               <div
                 key={property.postId}
-                className="property-card"
+                className="user-property-card"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* PDF Preview Section */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 min-h-[280px] border-b border-gray-200 flex flex-col items-center justify-center relative group">
-                  {property.fileBase64 && property.fileName?.endsWith(".pdf") ? (
-                    <>
-                      <div className="w-full h-48 bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-4">
-                        <embed
-                          src={`data:application/pdf;base64,${property.fileBase64}#toolbar=0&navpanes=0`}
-                          type="application/pdf"
-                          className="w-full h-full pointer-events-none"
-                        />
-                      </div>
-                      
-                      {/* Overlay with View Button */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-t-3xl flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <button
-                          onClick={() => openFileModal(property)}
-                          className="flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-sm text-gray-800 rounded-xl font-semibold hover:bg-white transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 shadow-2xl"
-                        >
-                          <FaEye className="text-lg" />
-                          View Full Document
-                        </button>
-                      </div>
-
-                      {/* File Info */}
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600 font-medium">
-                          {property.fileName || 'document.pdf'}
-                        </p>
-                        <button
-                          onClick={() => openFileModal(property)}
-                          className="mt-2 text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1 mx-auto"
-                        >
-                          <FaExpand className="text-xs" />
-                          Click to open
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-gray-400">
-                      <div className="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center mb-4">
-                        <FaFilePdf className="text-4xl" />
-                      </div>
-                      <p className="text-lg font-medium">No PDF File</p>
-                      <p className="text-sm text-gray-500 mt-1">Document not available</p>
+                {/* Card Header */}
+                <div className="user-property-header">
+                  <div className="user-property-header-info">
+                    <div className="user-property-icon">
+                      <FaHome />
                     </div>
-                  )}
+                    <div className="user-property-meta">
+                      <h3 className="user-property-id">Application #{property.proposalId}</h3>
+                      <p className="user-property-date">
+                        Applied on {new Date(property.startRentalDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  {renderStatusBadge(property.rentalStatus)}
                 </div>
 
-                {/* Property Info */}
-                <div className="p-6 space-y-6">
+                {/* File Preview Section */}
+                <div className="user-property-document">
+                  {(() => {
+                    // البحث عن مسارات الملفات
+                    const filePath = property.filePath;
+                    const imagePath = property.imagePath;
+                    const fileBase64 = property.fileBase64 || property.file_base64 || property.fileData;
+                    const fileName = property.fileName || property.file_name || property.filename;
+                    
+                    console.log(`🔍 File check for proposal ${property.proposalId}:`, {
+                      filePath: filePath,
+                      imagePath: imagePath,
+                      hasFileBase64: !!fileBase64,
+                      fileName: fileName,
+                      allKeys: Object.keys(property),
+                      fullPdfUrl: filePath ? `http://localhost:44357/${filePath}` : null,
+                      fullImageUrl: imagePath ? `http://localhost:44357/${imagePath}` : null
+                    });
+                    
+                    // إذا كان هناك filePath (PDF) أو imagePath (صورة)
+                    if (filePath || imagePath || fileBase64) {
+                      const isImage = !!imagePath;
+                      const isPDF = !!filePath;
+                      const displayPath = filePath || imagePath;
+                      const displayName = fileName || (displayPath ? displayPath.split('/').pop() : 'Unknown file');
+                      
+                      return (
+                        <div className="user-property-file-preview">
+                          <div className="user-property-file-container">
+                            {fileBase64 ? (
+                              // عرض من base64 (الطريقة القديمة)
+                              <>
+                                {isPDF || displayName.toLowerCase().endsWith('.pdf') ? (
+                                  <div className="user-property-pdf-wrapper">
+                                    <embed
+                                      src={`data:application/pdf;base64,${fileBase64}#toolbar=0&navpanes=0`}
+                                      type="application/pdf"
+                                      className="user-property-pdf-embed"
+                                    />
+                                    <div className="user-property-file-type-badge pdf">
+                                      <FaFilePdf />
+                                      PDF
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="user-property-image-wrapper">
+                                    <img
+                                      src={`data:image/*;base64,${fileBase64}`}
+                                      alt="Application document"
+                                      className="user-property-image-embed"
+                                      onLoad={() => {
+                                        console.log(`✅ Base64 image loaded for proposal ${property.proposalId}`);
+                                      }}
+                                      onError={(e) => {
+                                        console.error(`❌ Base64 image error for proposal ${property.proposalId}`);
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="user-property-file-type-badge image">
+                                      <FaEye />
+                                      IMAGE
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              // عرض من مسار الملف (الطريقة الجديدة)
+                              <>
+                                {isPDF ? (
+                                  <div className="user-property-pdf-wrapper">
+                                    <embed
+                                      src={`http://localhost:44357/${filePath}`}
+                                      type="application/pdf"
+                                      className="user-property-pdf-embed"
+                                      onLoad={() => {
+                                        console.log(`✅ PDF loaded from path for proposal ${property.proposalId}`);
+                                      }}
+                                      onError={() => {
+                                        console.error(`❌ PDF load error for proposal ${property.proposalId}:`, {
+                                          filePath: filePath,
+                                          fullUrl: `http://localhost:44357/${filePath}`
+                                        });
+                                      }}
+                                    />
+                                    <div className="user-property-file-type-badge pdf">
+                                      <FaFilePdf />
+                                      PDF
+                                    </div>
+                                  </div>
+                                ) : isImage ? (
+                                  <div className="user-property-image-wrapper">
+                                    <img
+                                      src={`http://localhost:44357/${imagePath}`}
+                                      alt="Application document"
+                                      className="user-property-image-embed"
+                                      onLoad={() => {
+                                        console.log(`✅ Image loaded from path for proposal ${property.proposalId}`);
+                                      }}
+                                      onError={(e) => {
+                                        console.error(`❌ Image load error for proposal ${property.proposalId}:`, {
+                                          src: e.target.src,
+                                          imagePath: imagePath
+                                        });
+                                        
+                                        const errorDiv = document.createElement('div');
+                                        errorDiv.className = 'user-property-file-error';
+                                        errorDiv.innerHTML = `
+                                          <div class="user-property-file-error-icon">⚠️</div>
+                                          <p>Unable to load image</p>
+                                          <small>Path: ${imagePath}</small>
+                                        `;
+                                        e.target.parentElement.appendChild(errorDiv);
+                                        e.target.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="user-property-file-type-badge image">
+                                      <FaEye />
+                                      IMAGE
+                                    </div>
+                                  </div>
+                                ) : null}
+                              </>
+                            )}
+                            
+                            <div className="user-property-file-overlay">
+                              <button
+                                onClick={() => {
+                                  if (fileBase64) {
+                                    // فتح من base64
+                                    openFileModal({
+                                      ...property,
+                                      fileBase64: fileBase64,
+                                      fileName: displayName
+                                    });
+                                  } else {
+                                    // فتح من مسار
+                                    const fileUrl = `http://localhost:44357/${displayPath}`;
+                                    window.open(fileUrl, '_blank');
+                                  }
+                                }}
+                                className="user-property-file-view-btn"
+                              >
+                                <FaEye />
+                                View {isPDF ? 'PDF' : 'Image'}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="user-property-file-info">
+                            {isPDF ? (
+                              <FaFilePdf className="user-property-file-icon pdf" />
+                            ) : (
+                              <FaEye className="user-property-file-icon image" />
+                            )}
+                            <span className="user-property-file-name">
+                              {displayName}
+                            </span>
+                            <span className="user-property-file-type">
+                              {isPDF ? 'PDF' : 'IMAGE'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="user-property-file-empty">
+                          <div className="user-property-file-empty-icon">
+                            <FaFilePdf />
+                          </div>
+                          <p className="user-property-file-empty-text">
+                            No document available
+                          </p>
+                          <small className="user-property-file-debug">
+                            Debug: filePath={filePath || 'null'}, imagePath={imagePath || 'null'}, fileBase64={fileBase64 ? 'exists' : 'null'}
+                          </small>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+
+                {/* Property Details */}
+                <div className="user-property-details">
                   {/* Contact Info */}
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-200">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <FaEnvelope className="text-xl text-blue-600" />
+                  <div className="user-property-detail-item">
+                    <div className="user-property-detail-icon">
+                      <FaPhone />
                     </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">
-                        Contact Number
-                      </p>
-                      <h3 className="text-lg font-bold text-gray-800">
-                        {property.phone}
-                      </h3>
+                    <div className="user-property-detail-content">
+                      <span className="user-property-detail-label">Contact Number</span>
+                      <span className="user-property-detail-value">{property.phone}</span>
                     </div>
                   </div>
+
+                  {/* Landlord Info */}
+                  {property.landlordName && (
+                    <div className="user-property-detail-item">
+                      <div className="user-property-detail-icon">
+                        <FaUser />
+                      </div>
+                      <div className="user-property-detail-content">
+                        <span className="user-property-detail-label">Landlord</span>
+                        <span className="user-property-detail-value">{property.landlordName}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Offered Price */}
+                  {(() => {
+                    const offeredPrice = property.offeredPrice || property.Offeredprice || property.offered_price || property.price;
+                    
+                    console.log(`💰 Price check for proposal ${property.proposalId}:`, {
+                      offeredPrice: property.offeredPrice,
+                      Offeredprice: property.Offeredprice,
+                      offered_price: property.offered_price,
+                      price: property.price,
+                      finalPrice: offeredPrice
+                    });
+                    
+                    if (offeredPrice) {
+                      return (
+                        <div className="user-property-detail-item">
+                          <div className="user-property-detail-icon">
+                            <FaDollarSign />
+                          </div>
+                          <div className="user-property-detail-content">
+                            <span className="user-property-detail-label">Offered Price</span>
+                            <span className="user-property-detail-value">
+                              ${parseFloat(offeredPrice).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {/* Rental Period */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-3 bg-green-50 rounded-xl border border-green-200">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <FaCalendarAlt className="text-green-600" />
+                  <div className="user-property-rental-period">
+                    <div className="user-property-date-item">
+                      <div className="user-property-date-icon start">
+                        <FaCalendarAlt />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-green-600 font-semibold uppercase tracking-wide">
-                          Start Date
-                        </p>
-                        <p className="font-semibold text-gray-800">
-                          {new Date(property.startRentalDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
+                      <div className="user-property-date-content">
+                        <span className="user-property-date-label">Start Date</span>
+                        <span className="user-property-date-value">
+                          {new Date(property.startRentalDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
                           })}
-                        </p>
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 p-3 bg-red-50 rounded-xl border border-red-200">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <FaCalendarAlt className="text-red-600" />
+                    <div className="user-property-date-arrow">
+                      <FaChevronRight />
+                    </div>
+
+                    <div className="user-property-date-item">
+                      <div className="user-property-date-icon end">
+                        <FaCalendarAlt />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-red-600 font-semibold uppercase tracking-wide">
-                          End Date
-                        </p>
-                        <p className="font-semibold text-gray-800">
-                          {new Date(property.endRentalDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
+                      <div className="user-property-date-content">
+                        <span className="user-property-date-label">End Date</span>
+                        <span className="user-property-date-value">
+                          {new Date(property.endRentalDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
                           })}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Status */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <p className="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-3">
-                      Application Status
-                    </p>
-                    <div className="flex justify-center">
-                      {renderStatusBadge(property.rentalStatus)}
-                    </div>
-                  </div>
-
-                  {/* Message Button for Approved */}
-                {property.rentalStatus === "Approved" && (
-                    <button
-                        // 1. قمنا بتمرير الاسم هنا (تأكد من اسم الحقل)
-                      onClick={() => handleMessageClick(property.landlordId, property.landlordName)}
-                      className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      <FaEnvelope className="text-xl" />
-                      Message Landlord
-                    </button>
-                  )}
                 </div>
 
                 {/* Actions */}
-                <div className="p-6 bg-gray-50 border-t border-gray-200">
+                <div className="user-property-actions">
+                  {property.rentalStatus === "Approved" && (
+                    <button
+                      onClick={() => handleMessageClick(property.landlordId, property.landlordName)}
+                      className="user-property-btn user-property-btn-primary"
+                    >
+                      <FaEnvelope />
+                      Message Landlord
+                    </button>
+                  )}
                   <button
                     onClick={() => deleteProperty(property.proposalId)}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-2xl hover:from-red-700 hover:to-red-800 transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="user-property-btn user-property-btn-danger"
                   >
-                    <FaTrashAlt className="text-lg" />
+                    <FaTrashAlt />
                     Delete Application
                   </button>
                 </div>
@@ -420,65 +846,33 @@ const MyProperties = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 text-center max-w-md border border-white/20">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                <FaFilePdf className="text-5xl text-gray-400" />
+          <div className="user-properties-empty">
+            <div className="user-properties-empty-content">
+              <div className="user-properties-empty-icon">
+                <FaHome />
               </div>
-              <h3 className="text-3xl font-bold text-gray-800 mb-4">
-                No Applications Yet
+              <h3 className="user-properties-empty-title">
+                {myProperties.length === 0 ? "No Applications Yet" : "No matching applications"}
               </h3>
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                You haven't applied to any properties yet. Start exploring and apply to find your perfect home!
+              <p className="user-properties-empty-text">
+                {myProperties.length === 0 
+                  ? "You haven't applied to any properties yet. Start exploring and apply to find your perfect home!"
+                  : "Try adjusting your search or filter criteria to find what you're looking for."
+                }
               </p>
-              <button
-                onClick={() => navigate("/properties")}
-                className="px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105 flex items-center justify-center gap-3"
-              >
-                <FaEnvelope className="text-xl" />
-                Browse Properties
-              </button>
+              {myProperties.length === 0 && (
+                <button
+                  onClick={() => navigate("/properties")}
+                  className="user-properties-empty-btn"
+                >
+                  <FaSearch />
+                  Browse Properties
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
-
-      {/* Custom Animations */}
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out forwards;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        .animate-scaleIn {
-          animation: scaleIn 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

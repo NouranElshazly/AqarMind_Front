@@ -16,7 +16,7 @@ API.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 API.interceptors.response.use(
@@ -32,7 +32,7 @@ API.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 // ==================== Authentication ====================
@@ -76,7 +76,7 @@ export const createProperty = (propertyData) => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 };
 
@@ -396,11 +396,9 @@ export const updatePassword = (userId, passwordData) => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
+    },
   );
 };
-
-
 
 // ======================= CreditCards API Functions =====================
 /**
@@ -421,11 +419,15 @@ export const tokenizeCard = (userId, cardData) => {
   formData.append("ExpiryYear", cardData.ExpiryYear);
   formData.append("CVV", cardData.CVV);
 
-  return API.post(`${API_BASE_URL}/api/payments/cards/tokenize/${userId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
+  return API.post(
+    `${API_BASE_URL}/api/payments/cards/tokenize/${userId}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
-  });
+  );
 };
 
 /**
@@ -442,7 +444,9 @@ export const getUserCards = (userId) => {
  * @param {number} paymentCardId - The ID of the card to delete
  */
 export const deleteCard = (userId, paymentCardId) => {
-  return API.delete(`${API_BASE_URL}/api/payments/cards/${userId}/${paymentCardId}`);
+  return API.delete(
+    `${API_BASE_URL}/api/payments/cards/${userId}/${paymentCardId}`,
+  );
 };
 
 /**
@@ -451,7 +455,9 @@ export const deleteCard = (userId, paymentCardId) => {
  * @param {number} paymentCardId - The ID of the card to set as default
  */
 export const setDefaultCard = (userId, paymentCardId) => {
-  return API.put(`${API_BASE_URL}/api/payments/cards/${userId}/default/${paymentCardId}`);
+  return API.put(
+    `${API_BASE_URL}/api/payments/cards/${userId}/default/${paymentCardId}`,
+  );
 };
 
 // ======================= Complaints API Functions =====================
@@ -473,5 +479,46 @@ export const createComplaint = (reporterUserId, complaintData) => {
     formData.append("Image", complaintData.Image);
   }
 
-  return API.post(`${API_BASE_URL}/api/Complaint/${reporterUserId}/create`, formData);
+  return API.post(
+    `${API_BASE_URL}/api/Complaint/${reporterUserId}/create`,
+    formData,
+  );
+};
+
+// ======================= Proposal/Application API Functions =====================
+/**
+ * Submit rental proposal/application for a property
+ * @param {number} postId - The ID of the property post
+ * @param {number} tenantId - The ID of the tenant submitting
+ * @param {Object} proposalData - Application data
+ * @param {string} proposalData.Phone - Phone number
+ * @param {string} proposalData.StartRentalDate - Start date (ISO format)
+ * @param {string} proposalData.EndRentalDate - End date (ISO format)
+ * @param {File} proposalData.File - Document file (PDF/Image)
+ * @param {number} [proposalData.IsInstallment] - Payment installment option
+ * @param {number} [proposalData.Offeredprice] - Offered price if negotiating
+ */
+export const submitRentalProposal = (postId, proposalData) => {
+  const formData = new FormData();
+  formData.append("Phone", proposalData.phone);
+  formData.append("StartRentalDate", proposalData.startRentalDate);
+  formData.append("EndRentalDate", proposalData.endRentalDate);
+  formData.append("File", proposalData.file);
+
+  if (proposalData.isInstallment !== undefined) {
+    formData.append("IsInstallment", proposalData.isInstallment);
+  }
+  if (proposalData.offeredPrice) {
+    formData.append("Offeredprice", proposalData.offeredPrice);
+  }
+
+  return API.post(
+    `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
 };
