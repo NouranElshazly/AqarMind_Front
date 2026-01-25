@@ -18,6 +18,7 @@ import {
   Square,
   TrendingUp,
   AlertCircle,
+  User,
 } from "lucide-react";
 import "../styles/LandlordDashboard.css";
 
@@ -183,31 +184,31 @@ const LandlordDashboard = () => {
         </div>
 
         <div className="property-content">
-          <h3 className="property-title">{property.title}</h3>
-          <p className="property-location">
-            <MapPin size={16} />
-            {property.location}
-          </p>
-
-          <div className="property-features">
-            <div className="feature-item">
-              <Bed size={18} />
-              <span>{property.numberOfRooms} Beds</span>
+          <div className="property-meta-header">
+            <div className="property-meta-item">
+              <User size={14} />
+              <span>{property.userName || "Landlord"}</span>
             </div>
-            <div className="feature-item">
-              <Bath size={18} />
-              <span>{property.numberOfBathrooms} Baths</span>
-            </div>
-            <div className="feature-item">
-              <Square size={18} />
-              <span>{property.area} m²</span>
+            <div className="property-meta-item">
+              <Clock size={14} />
+              <span>
+                {property.datePost
+                  ? new Date(property.datePost).toLocaleDateString()
+                  : "N/A"}
+              </span>
             </div>
           </div>
+
+          <h3 className="property-title">{property.title}</h3>
+
+          <p className="property-description-text">
+            {property.description || "No description available"}
+          </p>
 
           <div className="property-footer">
             <div className="property-price">
               <DollarSign size={20} />
-              <span>${property.price.toLocaleString()}</span>
+              {property.price.toLocaleString()}
             </div>
 
             <div className="property-actions">
