@@ -10,7 +10,13 @@ build/
 *.log
 npm-debug.log*
 
- 
+# Environment & Configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+src/services/ApiConfig.jsx
 
 # IDE
 .vscode/
@@ -24,6 +30,3 @@ Thumbs.db
 
 # Vite
 .vite/
-
-# Local Configuration
-src/services/ApiConfig.jsx

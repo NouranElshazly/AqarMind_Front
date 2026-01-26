@@ -233,12 +233,6 @@
   cursor: pointer;
 }
 
-.property-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-2xl);
-  border-color: var(--brand-primary);
-}
-
 .property-image {
   position: relative;
   height: 220px;
@@ -252,7 +246,68 @@
   transition: transform 0.4s ease;
 }
 
-.property-card:hover .property-image img {
+/* Image Navigation */
+.property-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 3;
+  backdrop-filter: blur(10px);
+}
+
+.property-nav:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.property-nav-prev {
+  left: 0.75rem;
+}
+
+.property-nav-next {
+  right: 0.75rem;
+}
+
+/* Image Indicators */
+.property-indicators {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 3;
+}
+
+.property-indicator {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.property-indicator.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+.property-indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
   transform: scale(1.1);
 }
 
@@ -328,10 +383,75 @@
   color: var(--text-secondary);
 }
 
+.property-meta-left {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .property-meta-item {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+/* الأزرار في الهيدر */
+.property-actions-header {
+  display: flex;
+  gap: 0.5rem;
+  opacity: 1;
+  visibility: visible;
+}
+
+.property-actions-header .btn-view {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 58, 138, 0.1) 0%,
+    rgba(251, 191, 36, 0.1) 100%
+  );
+  color: var(--info);
+}
+
+.property-actions-header .btn-view:hover {
+  background: var(--info);
+  color: white;
+  transform: scale(1.1);
+}
+
+.property-actions-header .btn-edit {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.1) 0%,
+    rgba(245, 158, 11, 0.1) 100%
+  );
+  color: var(--warning);
+}
+
+.property-actions-header .btn-edit:hover {
+  background: var(--warning);
+  color: white;
+  transform: scale(1.1);
+}
+
+.property-actions-header .btn-delete {
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(220, 38, 38, 0.1) 100%
+  );
+  color: var(--error);
+}
+
+.property-actions-header .btn-delete:hover {
+  background: var(--error);
+  color: white;
+  transform: scale(1.1);
+}
+
+.btn-text {
+  position: absolute;
+  font-size: 12px;
+  pointer-events: none;
 }
 
 .property-description-text {
@@ -383,7 +503,7 @@
 
 .property-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -404,6 +524,8 @@
 .property-actions {
   display: flex;
   gap: 0.5rem;
+  opacity: 1;
+  visibility: visible;
 }
 
 .btn-icon {
@@ -416,6 +538,9 @@
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  opacity: 1;
+  visibility: visible;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-view {

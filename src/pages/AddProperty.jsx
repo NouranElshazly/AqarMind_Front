@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
-import API from "../services/api";
 import {
   Home,
   MapPin,
@@ -19,7 +19,6 @@ import {
   Tag,
   FileText,
   Image as ImageIcon,
-  CheckCircle,
   Gavel,
 } from "lucide-react";
 import "../styles/AddProperty.css";
@@ -27,7 +26,6 @@ import "../styles/AddProperty.css";
 const AddProperty = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
@@ -271,22 +269,26 @@ const AddProperty = () => {
         }
       }
 
+      // Call API using axios directly with full URL
       const apiUrl = `${API_BASE_URL}/api/Landlord/create-post/${userId}`;
       console.log("🚀 Sending POST request to:", apiUrl);
 
-      // Call API
-      const response = await API.post(apiUrl, submitData, {
+      const response = await axios.post(apiUrl, submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       console.log("✅ Success! Response:", response.data);
 
-      setSuccess(true);
-      setTimeout(() => {
-        navigate("/landlord/dashboard");
-      }, 2000);
+      // Navigate directly to dashboard without success screen
+      navigate("/landlord/dashboard", { 
+        state: { 
+          refresh: true, 
+          message: "Property added successfully!" 
+        } 
+      });
     } catch (err) {
       console.error("❌ Error:", err);
       console.error("❌ Error Response:", err.response?.data);
@@ -301,37 +303,27 @@ const AddProperty = () => {
     }
   };
 
-  if (success) {
+  if (loading) {
     return (
-      <div className="success-container">
-        <div className="success-card fade-in">
-          <div className="success-icon">
-            <CheckCircle size={80} />
-          </div>
-          <h2>🎉 Property Submitted Successfully!</h2>
-          <p className="success-main-text">
-            Your property has been created and is now pending admin approval.
-          </p>
-
-          <div className="success-info-box">
-            <Clock size={24} className="info-icon" />
-            <div className="info-content">
-              <h3>What happens next?</h3>
-              <p>An admin will review your property within 24-48 hours.</p>
-              <p>You'll be able to see the status in your dashboard.</p>
+      <div className="add-property-container">
+        <div className="add-property-header">
+          <div className="header-content">
+            <Home className="header-icon" size={40} />
+            <div>
+              <h1 className="header-title">Add New Property</h1>
+              <p className="header-subtitle">
+                Processing your request...
+              </p>
             </div>
           </div>
-
-          <p className="redirect-text">
-            Redirecting to dashboard in 2 seconds...
-          </p>
-
-          <button
-            onClick={() => navigate("/landlord/dashboard")}
-            className="btn btn-primary"
-          >
-            Go to Dashboard Now
-          </button>
+        </div>
+        <div className="loading-container">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">
+              Submitting property details...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -669,7 +661,7 @@ const AddProperty = () => {
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) =>
+                onKeyDown={(e) =>
                   e.key === "Enter" && (e.preventDefault(), addTag())
                 }
                 className="form-control"

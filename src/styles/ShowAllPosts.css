@@ -828,11 +828,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-.comment-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
 .comment-item.pinned {
   background: linear-gradient(
     135deg,
@@ -912,10 +907,6 @@
   height: auto;
   cursor: pointer;
   transition: transform 0.3s ease;
-}
-
-.comment-image:hover {
-  transform: scale(1.02);
 }
 
 .comment-actions {

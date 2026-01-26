@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
 import {
@@ -9,16 +9,13 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Edit,
+  Settings,
   Trash2,
-  MapPin,
   DollarSign,
-  Bed,
-  Bath,
-  Square,
-  TrendingUp,
   AlertCircle,
   User,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import "../styles/LandlordDashboard.css";
 
@@ -26,6 +23,7 @@ const LandlordDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all"); // all, pending, accepted, rejected
+  const [currentImageIndexes, setCurrentImageIndexes] = useState({});
   const [properties, setProperties] = useState({
     all: [],
     pending: [],
@@ -71,6 +69,20 @@ const LandlordDashboard = () => {
     fetchProperties();
   }, []);
 
+  // إعادة تحميل البيانات لما الصفحة ترجع تكون active
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Dashboard focused - refreshing data");
+      fetchProperties();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const fetchProperties = async () => {
     try {
       setLoading(true);
@@ -101,6 +113,13 @@ const LandlordDashboard = () => {
         accepted: acceptedPosts.length,
         rejected: rejectedPosts.length,
       });
+
+      // Initialize current image index for each property
+      const initialIndexes = {};
+      allPosts.forEach((property) => {
+        initialIndexes[property.postId] = 0;
+      });
+      setCurrentImageIndexes(initialIndexes);
     } catch (error) {
       console.error("Error fetching properties:", error);
     } finally {
@@ -108,14 +127,76 @@ const LandlordDashboard = () => {
     }
   };
 
+  // Image navigation functions
+  const nextImage = (propertyId, imagesLength, e) => {
+    e.stopPropagation();
+    setCurrentImageIndexes((prev) => ({
+      ...prev,
+      [propertyId]: (prev[propertyId] + 1) % imagesLength,
+    }));
+  };
+
+  const prevImage = (propertyId, imagesLength, e) => {
+    e.stopPropagation();
+    setCurrentImageIndexes((prev) => ({
+      ...prev,
+      [propertyId]:
+        prev[propertyId] === 0 ? imagesLength - 1 : prev[propertyId] - 1,
+    }));
+  };
+
+  const goToImage = (propertyId, index, e) => {
+    e.stopPropagation();
+    setCurrentImageIndexes((prev) => ({
+      ...prev,
+      [propertyId]: index,
+    }));
+  };
+
   const handleDelete = async (postId) => {
     if (window.confirm("Are you sure you want to delete this property?")) {
       try {
+        // Find which category the property belongs to
+        const propertyToDelete = properties.all.find(p => p.postId === postId);
+        if (!propertyToDelete) {
+          alert("Property not found");
+          return;
+        }
+
+        // Update state immediately - remove from all categories
+        setProperties(prevProperties => ({
+          all: prevProperties.all.filter(p => p.postId !== postId),
+          pending: prevProperties.pending.filter(p => p.postId !== postId),
+          accepted: prevProperties.accepted.filter(p => p.postId !== postId),
+          rejected: prevProperties.rejected.filter(p => p.postId !== postId),
+        }));
+        
+        // Update stats based on the property's status
+        setStats(prevStats => {
+          const newStats = { ...prevStats };
+          newStats.total = Math.max(0, newStats.total - 1);
+          
+          if (propertyToDelete.pendingStatus === 0) {
+            newStats.pending = Math.max(0, newStats.pending - 1);
+          } else if (propertyToDelete.pendingStatus === 1) {
+            newStats.accepted = Math.max(0, newStats.accepted - 1);
+          } else if (propertyToDelete.pendingStatus === -1) {
+            newStats.rejected = Math.max(0, newStats.rejected - 1);
+          }
+          
+          return newStats;
+        });
+
+        // Make API call
         await API.delete(`${API_BASE_URL}/api/Landlord/delete-post/${postId}`);
-        fetchProperties(); // Refresh list
+        
+        console.log("Property deleted successfully");
       } catch (error) {
         console.error("Error deleting property:", error);
         alert("Failed to delete property");
+        
+        // Revert state on error by refetching
+        fetchProperties();
       }
     }
   };
@@ -139,63 +220,179 @@ const LandlordDashboard = () => {
   };
 
   const PropertyCard = ({ property }) => {
-    // Handle image path properly
-    let imageSrc = "/placeholder.jpg";
-
+    const currentIndex = currentImageIndexes[property.postId] || 0;
+    
+    // Get all images from the property
+    let allImages = [];
+    
+    // Check if property has postImages array (like in LandlordDashboard)
     if (property.postImages && property.postImages.length > 0) {
-      const firstImage = property.postImages[0].imagePath;
-
-      // Check if path already includes full URL or API_BASE_URL
-      if (firstImage.startsWith("http")) {
-        imageSrc = firstImage;
-      } else if (firstImage.startsWith("/")) {
-        // Path starts with / - remove duplicate slash
-        imageSrc = `${API_BASE_URL}${firstImage}`;
+      allImages = property.postImages.map(img => {
+        const imagePath = img.imagePath;
+        if (imagePath.startsWith("http")) {
+          return imagePath;
+        } else if (imagePath.startsWith("data:")) {
+          return imagePath;
+        } else {
+          return imagePath.startsWith("/") 
+            ? `${API_BASE_URL}${imagePath}` 
+            : `${API_BASE_URL}/${imagePath}`;
+        }
+      });
+    }
+    // Check if property has images array (like in Home.jsx)
+    else if (property.images && property.images.length > 0) {
+      allImages = property.images.map(img => {
+        if (img.startsWith("http")) {
+          return img;
+        } else if (img.startsWith("data:")) {
+          return img;
+        } else {
+          return img.startsWith("/") 
+            ? `${API_BASE_URL}${img}` 
+            : `${API_BASE_URL}/${img}`;
+        }
+      });
+    }
+    // Check if property has single image property
+    else if (property.image) {
+      const singleImage = property.image;
+      if (singleImage.startsWith("http")) {
+        allImages = [singleImage];
+      } else if (singleImage.startsWith("data:")) {
+        allImages = [singleImage];
       } else {
-        // Path doesn't start with / - add it
-        imageSrc = `${API_BASE_URL}/${firstImage}`;
+        allImages = [singleImage.startsWith("/") 
+          ? `${API_BASE_URL}${singleImage}` 
+          : `${API_BASE_URL}/${singleImage}`];
       }
     }
+    // Check for fileBase64 (base64 encoded image)
+    else if (property.fileBase64) {
+      allImages = [`data:image/png;base64,${property.fileBase64}`];
+    }
 
-    console.log("🖼️ Property Image:", {
+    // Fallback to placeholder if no images
+    if (allImages.length === 0) {
+      allImages = ["https://via.placeholder.com/400x300?text=No+Image"];
+    }
+
+    const currentImageSrc = allImages[currentIndex] || allImages[0];
+    const hasMultipleImages = allImages.length > 1;
+
+    console.log("🖼️ Property Images:", {
       propertyId: property.postId,
-      imagePath: property.postImages?.[0]?.imagePath,
-      finalSrc: imageSrc,
+      totalImages: allImages.length,
+      currentIndex: currentIndex,
+      currentImageSrc: currentImageSrc,
+      hasMultipleImages: hasMultipleImages,
     });
 
     return (
       <div className="property-card fade-in">
         <div className="property-image">
           <img
-            src={imageSrc}
-            alt={property.title}
+            src={currentImageSrc}
+            alt={property.title || "Property"}
             onError={(e) => {
-              console.error("❌ Image failed to load:", imageSrc);
-              e.target.src =
-                "https://via.placeholder.com/400x300?text=No+Image";
+              console.error("❌ Image failed to load:", currentImageSrc);
+              e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
             }}
           />
+          
           <div className="property-status-overlay">
             {getStatusBadge(property.pendingStatus)}
           </div>
+          
           <div className="property-type-badge">
             {property.type === 0 ? "For Rent" : "For Sale"}
           </div>
+
+          {/* Image Navigation Arrows */}
+          {hasMultipleImages && (
+            <>
+              <button
+                className="property-nav property-nav-prev"
+                onClick={(e) => prevImage(property.postId, allImages.length, e)}
+                title="Previous Image"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                className="property-nav property-nav-next"
+                onClick={(e) => nextImage(property.postId, allImages.length, e)}
+                title="Next Image"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </>
+          )}
+
+          {/* Image Indicators */}
+          {hasMultipleImages && (
+            <div className="property-indicators">
+              {allImages.map((_, index) => (
+                <button
+                  key={index}
+                  className={`property-indicator ${index === currentIndex ? "active" : ""}`}
+                  onClick={(e) => goToImage(property.postId, index, e)}
+                  title={`Image ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="property-content">
           <div className="property-meta-header">
-            <div className="property-meta-item">
-              <User size={14} />
-              <span>{property.userName || "Landlord"}</span>
+            <div className="property-meta-left">
+              <div className="property-meta-item">
+                <User size={14} />
+                <span>{property.userName || "Landlord"}</span>
+              </div>
+              <div className="property-meta-item">
+                <Clock size={14} />
+                <span>
+                  {property.datePost
+                    ? new Date(property.datePost).toLocaleDateString()
+                    : "N/A"}
+                </span>
+              </div>
             </div>
-            <div className="property-meta-item">
-              <Clock size={14} />
-              <span>
-                {property.datePost
-                  ? new Date(property.datePost).toLocaleDateString()
-                  : "N/A"}
-              </span>
+            
+            {/* نقل الأزرار هنا في الهيدر */}
+            <div className="property-actions-header">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/property/${property.postId}`);
+                }}
+                className="btn-icon btn-view"
+                title="View Details"
+              >
+                <Eye size={16} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/landlord/properties/${property.postId}/edit`);
+                }}
+                className="btn-icon btn-edit"
+                title="Edit"
+              >
+                <Settings size={16} />
+                <span className="btn-text">✏️</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(property.postId);
+                }}
+                className="btn-icon btn-delete"
+                title="Delete"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           </div>
 
@@ -208,33 +405,7 @@ const LandlordDashboard = () => {
           <div className="property-footer">
             <div className="property-price">
               <DollarSign size={20} />
-              {property.price.toLocaleString()}
-            </div>
-
-            <div className="property-actions">
-              <button
-                onClick={() => navigate(`/property/${property.postId}`)}
-                className="btn-icon btn-view"
-                title="View Details"
-              >
-                <Eye size={18} />
-              </button>
-              <button
-                onClick={() =>
-                  navigate(`/landlord/edit-property/${property.postId}`)
-                }
-                className="btn-icon btn-edit"
-                title="Edit"
-              >
-                <Edit size={18} />
-              </button>
-              <button
-                onClick={() => handleDelete(property.postId)}
-                className="btn-icon btn-delete"
-                title="Delete"
-              >
-                <Trash2 size={18} />
-              </button>
+              {property.price?.toLocaleString() || "N/A"}
             </div>
           </div>
         </div>
