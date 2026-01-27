@@ -79,10 +79,12 @@ const ContactPage = () => {
         image: null,
         message: "",
       });
-    } catch (error) {
-     
-        setErrorMessage(error.response.data.error);
       
+      // Reset file input
+      const fileInput = document.getElementById("image");
+      if (fileInput) fileInput.value = "";
+    } catch (error) {
+        setErrorMessage(error.response.data.error);
     } finally {
       setLoading(false);
     }

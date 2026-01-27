@@ -160,12 +160,9 @@ const AddProperty = () => {
       }
 
       
-
       if (!userId) {
         throw new Error("User not authenticated. Please login again.");
       }
-
-
 
       if (
         !formData.title ||
@@ -184,7 +181,50 @@ const AddProperty = () => {
         throw new Error("Property document is required");
       }
 
-      
+      // Validate Rental Dates
+      if (formData.type === 0) {
+        if (!formData.startRentalDate) {
+          throw new Error("Start rental date is required");
+        }
+        if (!formData.endRentalDate) {
+          throw new Error("End rental date is required");
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const parseDate = (dateStr) => {
+          const [year, month, day] = dateStr.split("-").map(Number);
+          return new Date(year, month - 1, day);
+        };
+
+        if (formData.startRentalDate) {
+          const startDate = parseDate(formData.startRentalDate);
+          if (startDate < today) {
+            throw new Error("Start rental date cannot be in the past");
+          }
+        }
+
+        if (formData.endRentalDate) {
+          const endDate = parseDate(formData.endRentalDate);
+          if (endDate < today) {
+            throw new Error("End rental date cannot be in the past");
+          }
+        }
+
+        if (formData.startRentalDate && formData.endRentalDate) {
+          const startDate = parseDate(formData.startRentalDate);
+          const endDate = parseDate(formData.endRentalDate);
+
+          if (endDate < startDate) {
+            throw new Error("End rental date cannot be before start rental date");
+          }
+          if (endDate.getTime() === startDate.getTime()) {
+            throw new Error("End rental date cannot be the same as start rental date");
+          }
+        }
+      }
+
 
       // Create FormData
       const submitData = new FormData();
@@ -204,7 +244,6 @@ const AddProperty = () => {
       submitData.append("Type", formData.type);
 
       
-
       // Optional fields
       if (formData.totalUnitsInBuilding) {
         submitData.append(
@@ -228,7 +267,6 @@ const AddProperty = () => {
       // Tags
       if (formData.tags && formData.tags.length > 0) {
         formData.tags.forEach((tag) => submitData.append("Tags", tag));
-        
       }
 
       // Document file (Required)
@@ -268,6 +306,7 @@ const AddProperty = () => {
           err.message ||
           "Failed to create property. Please try again.",
       );
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }

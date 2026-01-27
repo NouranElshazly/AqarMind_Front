@@ -77,8 +77,6 @@ const LandlordDashboard = () => {
       if (isDeletingRef.current) {
         return;
       }
-      
-      console.log("Dashboard focused - refreshing data");
       fetchProperties();
     };
 

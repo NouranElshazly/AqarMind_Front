@@ -5,9 +5,6 @@ import API_BASE_URL from "../services/ApiConfig";
 import {
   Home,
   MapPin,
-  DollarSign,
-  Upload,
-  X,
   FileText,
   Image as ImageIcon,
   Save,
@@ -27,7 +24,6 @@ const EditProperty = () => {
     location: "",
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [message, setMessage] = useState("");
