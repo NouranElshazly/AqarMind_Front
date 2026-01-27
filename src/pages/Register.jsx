@@ -227,8 +227,8 @@ const Register = () => {
       newErrors.name = "Name must be at least 3 characters long";
     }
     if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email))
-      newErrors.email = "Email is invalid";
+    else if (!/^\S+@\S+\.com$/.test(formData.email))
+      newErrors.email = "Email must be a valid .com address";
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 

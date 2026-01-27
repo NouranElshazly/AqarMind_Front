@@ -40,6 +40,7 @@ const AddProperty = () => {
     totalUnitsInBuilding: "",
     isFurnished: false,
     hasGarage: false,
+    isAuction: false,
     floorNumber: "",
     type: 0, // 0 = Rent, 1 = Sale
     startRentalDate: "",
@@ -122,7 +123,6 @@ const AddProperty = () => {
     try {
       // Get userId - try multiple methods
       const profile = localStorage.getItem("profile");
-      console.log("📦 Profile from localStorage:", profile);
 
       let userId = null;
 
@@ -130,22 +130,22 @@ const AddProperty = () => {
       if (profile) {
         try {
           const parsedProfile = JSON.parse(profile);
-          console.log("📋 Parsed Profile:", parsedProfile);
+          
 
           // Try user._id first (your structure)
           if (parsedProfile.user && parsedProfile.user._id) {
             userId = parsedProfile.user._id;
-            console.log("✅ Found userId in user._id:", userId);
+           
           }
           // Try direct userId
           else if (parsedProfile.userId) {
             userId = parsedProfile.userId;
-            console.log("✅ Found userId directly:", userId);
+           
           }
           // Try user.id
           else if (parsedProfile.user && parsedProfile.user.id) {
             userId = parsedProfile.user.id;
-            console.log("✅ Found userId in user.id:", userId);
+           
           }
         } catch (e) {
           console.error("❌ Error parsing profile:", e);
@@ -159,15 +159,13 @@ const AddProperty = () => {
           console.log("✅ Found userId directly in localStorage:", userId);
       }
 
-      console.log("👤 Final User ID:", userId);
+      
 
       if (!userId) {
         throw new Error("User not authenticated. Please login again.");
       }
 
-      // Validation
-      console.log("✅ Starting Validation...");
-      console.log("Form Data:", formData);
+
 
       if (
         !formData.title ||
@@ -186,7 +184,7 @@ const AddProperty = () => {
         throw new Error("Property document is required");
       }
 
-      console.log("✅ Validation passed!");
+      
 
       // Create FormData
       const submitData = new FormData();
@@ -205,7 +203,7 @@ const AddProperty = () => {
       submitData.append("IsAuction", formData.isAuction);
       submitData.append("Type", formData.type);
 
-      console.log("📋 Basic fields added to FormData");
+      
 
       // Optional fields
       if (formData.totalUnitsInBuilding) {
@@ -213,65 +211,40 @@ const AddProperty = () => {
           "TotalUnitsInBuilding",
           formData.totalUnitsInBuilding,
         );
-        console.log(
-          "🏢 Added TotalUnitsInBuilding:",
-          formData.totalUnitsInBuilding,
-        );
       }
       if (formData.floorNumber) {
         submitData.append("FloorNumber", formData.floorNumber);
-        console.log("🔢 Added FloorNumber:", formData.floorNumber);
+        
       }
       if (formData.startRentalDate) {
         submitData.append("StartRentalDate", formData.startRentalDate);
-        console.log("📅 Added StartRentalDate:", formData.startRentalDate);
+        
       }
       if (formData.endRentalDate) {
         submitData.append("EndRentalDate", formData.endRentalDate);
-        console.log("📅 Added EndRentalDate:", formData.endRentalDate);
+      
       }
 
       // Tags
       if (formData.tags && formData.tags.length > 0) {
         formData.tags.forEach((tag) => submitData.append("Tags", tag));
-        console.log("🏷️ Added Tags:", formData.tags);
+        
       }
 
       // Document file (Required)
       submitData.append("PostDocFile", formData.postDocFile);
-      console.log(
-        "📄 Added Document:",
-        formData.postDocFile.name,
-        "Size:",
-        formData.postDocFile.size,
-      );
+      
 
       // Images
       if (formData.images && formData.images.length > 0) {
         formData.images.forEach((img, index) => {
           submitData.append("Images", img);
-          console.log(
-            `🖼️ Added Image ${index + 1}:`,
-            img.name,
-            "Size:",
-            img.size,
-          );
         });
-      }
-
-      // Log all FormData entries
-      console.log("📦 Final FormData contents:");
-      for (let pair of submitData.entries()) {
-        if (pair[1] instanceof File) {
-          console.log(pair[0], "→ FILE:", pair[1].name);
-        } else {
-          console.log(pair[0], "→", pair[1]);
-        }
       }
 
       // Call API using axios directly with full URL
       const apiUrl = `${API_BASE_URL}/api/Landlord/create-post/${userId}`;
-      console.log("🚀 Sending POST request to:", apiUrl);
+      
 
       const response = await axios.post(apiUrl, submitData, {
         headers: {
@@ -280,7 +253,7 @@ const AddProperty = () => {
         },
       });
 
-      console.log("✅ Success! Response:", response.data);
+    
 
       // Navigate directly to dashboard without success screen
       navigate("/landlord/dashboard", { 
@@ -290,9 +263,6 @@ const AddProperty = () => {
         } 
       });
     } catch (err) {
-      console.error("❌ Error:", err);
-      console.error("❌ Error Response:", err.response?.data);
-      console.error("❌ Error Message:", err.message);
       setError(
         err.response?.data?.message ||
           err.message ||

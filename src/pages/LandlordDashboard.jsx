@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
@@ -8,7 +8,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Eye,
   Settings,
   Trash2,
   DollarSign,
@@ -36,6 +35,8 @@ const LandlordDashboard = () => {
     accepted: 0,
     rejected: 0,
   });
+
+  const isDeletingRef = useRef(false);
 
   // Get userId from localStorage
   const getUserId = () => {
@@ -72,6 +73,11 @@ const LandlordDashboard = () => {
   // إعادة تحميل البيانات لما الصفحة ترجع تكون active
   useEffect(() => {
     const handleFocus = () => {
+      // Don't refresh if we are in the middle of a delete operation
+      if (isDeletingRef.current) {
+        return;
+      }
+      
       console.log("Dashboard focused - refreshing data");
       fetchProperties();
     };
@@ -154,12 +160,16 @@ const LandlordDashboard = () => {
   };
 
   const handleDelete = async (postId) => {
+    if (isDeletingRef.current) return;
+
     if (window.confirm("Are you sure you want to delete this property?")) {
+      isDeletingRef.current = true;
       try {
         // Find which category the property belongs to
         const propertyToDelete = properties.all.find(p => p.postId === postId);
         if (!propertyToDelete) {
           alert("Property not found");
+          isDeletingRef.current = false;
           return;
         }
 
@@ -191,12 +201,14 @@ const LandlordDashboard = () => {
         await API.delete(`${API_BASE_URL}/api/Landlord/delete-post/${postId}`);
         
         console.log("Property deleted successfully");
+        isDeletingRef.current = false;
       } catch (error) {
         console.error("Error deleting property:", error);
         alert("Failed to delete property");
         
         // Revert state on error by refetching
         fetchProperties();
+        isDeletingRef.current = false;
       }
     }
   };
@@ -362,16 +374,6 @@ const LandlordDashboard = () => {
             
             {/* نقل الأزرار هنا في الهيدر */}
             <div className="property-actions-header">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/property/${property.postId}`);
-                }}
-                className="btn-icon btn-view"
-                title="View Details"
-              >
-                <Eye size={16} />
-              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
