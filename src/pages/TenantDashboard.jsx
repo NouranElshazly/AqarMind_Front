@@ -678,7 +678,6 @@ const TenantDashboard = () => {
                 { icon: FaBookmark, label: "Saved Homes", path: "/saved-posts", color: "pink", action: "saved_homes", description: "Your favorites" },
                 { icon: FaFileAlt, label: "My Applications", path: "/UserProperties", color: "purple", action: "my_applications", description: "Track progress" },
                 { icon: FaEnvelope, label: "Messages", path: "/messages", color: "green", action: "messages", description: "Chat with agents" },
-                { icon: FaUser, label: "Profile", path: "/profile", color: "orange", action: "profile", description: "Account settings" },
                 { icon: FaComments, label: "Support", path: "/contact", color: "gray", action: "support", description: "Get help" }
               ].map((action, index) => (
                 <Link

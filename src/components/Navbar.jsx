@@ -69,6 +69,22 @@ const UserPlusIcon = ({ className = "icon" }) => (
   </svg>
 );
 
+const ProfileIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+    />
+  </svg>
+);
+
 const DashboardIcon = ({ className = "icon" }) => (
   <svg
     className={className}
@@ -390,6 +406,10 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showQuickLinksDropdown, setShowQuickLinksDropdown] = useState(false);
+
+  // Check role from localStorage for profile visibility
+  const storedRole = localStorage.getItem("role");
+  const shouldShowProfile = storedRole && ["tenant", "landlord"].includes(storedRole.toLowerCase());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -735,6 +755,15 @@ const Navbar = () => {
                       <div className="profile-role">{user.role}</div>
                     </div>
                   </div>
+                  {shouldShowProfile && (
+                    <Link
+                      to="/profile"
+                      className="profile-btn-desktop"
+                      title="Profile"
+                    >
+                      <ProfileIcon />
+                    </Link>
+                  )}
                   <button
                     className="logout-btn-desktop"
                     onClick={() => setShowLogoutModal(true)}
@@ -814,6 +843,25 @@ const Navbar = () => {
                   </div>
                   <div className="menu-card-arrow">→</div>
                 </Link>
+
+                {shouldShowProfile && (
+                  <Link
+                    to="/profile"
+                    className="menu-card"
+                    onClick={closeMenu}
+                  >
+                    <div className="menu-card-icon">
+                      <ProfileIcon />
+                    </div>
+                    <div className="menu-card-content">
+                      <div className="menu-card-title">Profile</div>
+                      <div className="menu-card-description">
+                        View and edit your profile
+                      </div>
+                    </div>
+                    <div className="menu-card-arrow">→</div>
+                  </Link>
+                )}
 
                 <Link
                   to="/show-all-post"
