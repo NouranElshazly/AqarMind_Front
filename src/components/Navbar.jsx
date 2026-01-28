@@ -21,6 +21,21 @@ const HomeIcon = ({ className = "icon" }) => (
   </svg>
 );
 
+const SupportIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
 const SearchIcon = ({ className = "icon" }) => (
   <svg
     className={className}
@@ -409,7 +424,8 @@ const Navbar = () => {
 
   // Check role from localStorage for profile visibility
   const storedRole = localStorage.getItem("role");
-  const shouldShowProfile = storedRole && ["tenant", "landlord"].includes(storedRole.toLowerCase());
+  const shouldShowProfile =
+    storedRole && ["tenant", "landlord"].includes(storedRole.toLowerCase());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -752,17 +768,28 @@ const Navbar = () => {
                     </div>
                     <div className="profile-info">
                       <div className="profile-name">{user.name}</div>
-                      <div className="profile-role">{user.role}</div>
+                      <div className="profile-role">
+                        {localStorage.getItem("role") || user.role}
+                      </div>
                     </div>
                   </div>
                   {shouldShowProfile && (
-                    <Link
-                      to="/profile"
-                      className="profile-btn-desktop"
-                      title="Profile"
-                    >
-                      <ProfileIcon />
-                    </Link>
+                    <>
+                      <Link
+                        to="/profile"
+                        className="profile-btn-desktop"
+                        title="Profile"
+                      >
+                        <ProfileIcon />
+                      </Link>
+                      <Link
+                        to="/contact"
+                        className="profile-btn-desktop"
+                        title="Support"
+                      >
+                        <SupportIcon />
+                      </Link>
+                    </>
                   )}
                   <button
                     className="logout-btn-desktop"
@@ -845,11 +872,7 @@ const Navbar = () => {
                 </Link>
 
                 {shouldShowProfile && (
-                  <Link
-                    to="/profile"
-                    className="menu-card"
-                    onClick={closeMenu}
-                  >
+                  <Link to="/profile" className="menu-card" onClick={closeMenu}>
                     <div className="menu-card-icon">
                       <ProfileIcon />
                     </div>
