@@ -18,6 +18,7 @@ import {
   Calendar,
   DollarSign,
   Eye,
+  MessageSquareWarning,
 } from "lucide-react";
 import axios from "axios";
 import "../styles/AdminDashboard.css";
@@ -47,7 +48,7 @@ const AdminDashboard = () => {
         `${API_BASE_URL}/api/admin/dashboard/user-stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setStats(response.data);
     } catch (error) {
@@ -63,7 +64,7 @@ const AdminDashboard = () => {
         `${API_BASE_URL}/api/admin/dashboard/activity`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       setRecentActivity(response.data);
     } catch (error) {
@@ -177,7 +178,6 @@ const AdminDashboard = () => {
         </div>
 
         <div className="header-right">
-          
           <button
             className="refresh-btn"
             onClick={handleRefresh}
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      
+
       <div className="stats-grid">
         <div className="stat-card stat-approved">
           <div className="stat-icon">
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
             </span>
           </div>
         </div>
-        
+
         <div className="stat-card stat-pending">
           <div className="stat-icon">
             <Users size={28} />
@@ -234,17 +234,13 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        
-
         <div className="stat-card stat-users">
           <div className="stat-icon">
             <Users size={28} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Users</p>
-            <h3 className="stat-value">
-              {stats.totalUsers}
-            </h3>
+            <h3 className="stat-value">{stats.totalUsers}</h3>
             <span className="stat-trend positive">
               <TrendingUp size={14} />
               +20% from last month
@@ -310,6 +306,20 @@ const AdminDashboard = () => {
               <div className="action-content">
                 <h3>All Properties</h3>
                 <p>View all property listings</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/manage-complaints"
+              className="action-card action-reports"
+            >
+              {" "}
+              <div className="action-icon">
+                <MessageSquareWarning size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Complaints</h3>
+                <p>View and manage complaints</p>
               </div>
             </Link>
 

@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import { logout as logoutApi } from "../services/api";
 import { useDarkMode } from "../App";
 import "../styles/Navbar.css";
 
@@ -444,7 +445,12 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    }
     logout();
     setShowLogoutModal(false);
     setIsMenuOpen(false);

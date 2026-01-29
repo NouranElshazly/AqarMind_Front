@@ -5,7 +5,6 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-
 import Home from "./pages/Home";
 import PropertyDetail from "./pages/PropertyDetail";
 import Login from "./pages/Login";
@@ -28,9 +27,9 @@ import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
 import ShowAnalytics from "./pages/showAnalytics";
 import AdminPendingApprovals from "./pages/AdminPendingApprovals";
-
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
+import AdminManageComplaints from "./pages/AdminManageComplaints";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/Changepassword";
 
@@ -172,6 +171,10 @@ function App() {
               <Route
                 path="/admin/AdminChatDashboard"
                 element={<AdminChatDashboard />}
+              />
+              <Route
+                path="/admin/manage-complaints"
+                element={<AdminManageComplaints />}
               />
               {/* Landlord Routes */}
               <Route
