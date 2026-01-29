@@ -25,7 +25,7 @@ import Unauthorized from "./components/Unauthorized";
 import UserProperties from "./pages/UserProperties";
 import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
-import ShowAnalytics from "./pages/showAnalytics";
+import ManageAdmins from "./pages/ManageAdmins";
 import AdminPendingApprovals from "./pages/AdminPendingApprovals";
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
@@ -167,7 +167,7 @@ function App() {
                 element={<LandlordApplicationDetail />}
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
-              <Route path="/admin/showAnalytics" element={<ShowAnalytics />} />
+              <Route path="/admin/manage-admins" element={<ManageAdmins />} />
               <Route
                 path="/admin/AdminChatDashboard"
                 element={<AdminChatDashboard />}

@@ -262,6 +262,19 @@ const AdminDashboard = () => {
 
           <div className="actions-grid">
             <Link
+              to="/admin/manage-admins"
+              className="action-card action-analytics"
+            >
+              <div className="action-icon">
+                <Settings size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Manage Admins</h3>
+                <p>Add, remove, and view admin accounts</p>
+              </div>
+            </Link>
+
+            <Link
               to="/admin/pending-approvals"
               className="action-card action-properties"
             >
@@ -336,18 +349,6 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-            <Link
-              to="/admin/showAnalytics"
-              className="action-card action-analytics"
-            >
-              <div className="action-icon">
-                <TrendingUp size={32} />
-              </div>
-              <div className="action-content">
-                <h3>Analytics</h3>
-                <p>View detailed analytics</p>
-              </div>
-            </Link>
 
             <Link
               to="/admin/landlord-applications"
