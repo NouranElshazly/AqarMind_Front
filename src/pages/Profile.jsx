@@ -77,6 +77,7 @@ const Profile = () => {
 
   // Get userId from localStorage
   const userId = localStorage.getItem("userId");
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     if (userId) {
@@ -110,7 +111,6 @@ const Profile = () => {
     const cardId = card.id || card.Id || card.paymentCardId || card.PaymentCardId || card.cardId || card.CardId;
     
     if (!cardId) {
-      console.error("Could not determine card ID from object:", card);
       setCardError("Error: Could not determine card ID.");
       return;
     }
@@ -631,7 +631,7 @@ const Profile = () => {
           <div className="profile-header-info">
             <h1 className="private-profile-name">{profile?.fullName}</h1>
             <p className="profile-role">
-              Premium Investor • Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"} • Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </p>
           </div>
         </div>

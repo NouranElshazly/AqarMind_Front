@@ -11,11 +11,9 @@ import {
   FaMapMarkerAlt,
   FaDollarSign,
   FaUser,
-  FaClock,
+  FaGavel,
   FaHome,
   FaTimes,
-  FaSearch,
-  FaFilter,
   FaEdit,
   FaTrash,
   FaReply,
@@ -44,6 +42,7 @@ import {
   FaLayerGroup,
   FaClipboardCheck,
   FaTag,
+  FaCreditCard,
 } from "react-icons/fa";
 
 import "../styles/PropertyDetail.css";
@@ -62,7 +61,6 @@ const decodeJWT = (token) => {
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error("Error decoding JWT token:", error);
     return null;
   }
 };
@@ -107,7 +105,6 @@ const convertImageToBase64 = (file) => {
 const API_HISTORY_URL = "http://localhost:5000/api/history";
 const recordHistoryEvent = async (userId, activityType, details) => {
   if (!userId || !activityType || !details) {
-    console.warn("History not recorded: Missing data");
     return;
   }
   try {
@@ -116,7 +113,6 @@ const recordHistoryEvent = async (userId, activityType, details) => {
       { activity_type: activityType, details: details },
       { headers: getAuthHeaders() },
     );
-    console.log(`History recorded: ${activityType}`, details);
   } catch (error) {
     console.error(
       `Failed to record history event (${activityType}):`,
@@ -200,7 +196,6 @@ const InlineReplyBox = ({
       }
       onSuccess(response.data);
     } catch (error) {
-      console.error("Failed to submit reply:", error);
       alert("Failed to post reply.");
     } finally {
       setIsSubmitting(false);
@@ -285,6 +280,15 @@ const PropertyDetail = () => {
     endRentalDate: "",
     file: null,
     offeredPrice: "",
+    isInstallment: 0,
+  });
+  const [showEligibility, setShowEligibility] = useState(false);
+  const [eligibilityData, setEligibilityData] = useState({
+    monthlyIncome: "",
+    monthlyExpenses: "",
+    existingMonthlyDebt: "",
+    hasStableJob: false,
+    dependents: 0,
   });
   const [error, setError] = useState(null);
   const [pageError, setPageError] = useState(null);
@@ -373,7 +377,6 @@ const PropertyDetail = () => {
       const sorted = sortComments(fetchedComments, post.userId, userId);
       setComments(sorted);
     } catch (err) {
-      console.error("Error loading comments:", err);
       setComments([]);
     } finally {
       setLoadingAction(null);
@@ -389,13 +392,6 @@ const PropertyDetail = () => {
         );
         if (isMounted) {
           setPost(res.data);
-          console.log("Post data loaded:", res.data);
-          console.log("Available image fields:", {
-            fileBase64s: res.data.fileBase64s,
-            fileBase64: res.data.fileBase64,
-            images: res.data.images,
-            image: res.data.image,
-          });
           if (userId && !viewRecordedRef.current && res.data?.title) {
             recordHistoryEvent(userId, "view", {
               post_id: postId,
@@ -574,7 +570,6 @@ const PropertyDetail = () => {
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
-      console.error("Error submitting comment:", err);
       setError("Failed to post comment");
     } finally {
       setIsUploading(false);
@@ -645,123 +640,154 @@ const PropertyDetail = () => {
     setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
     setError(null);
   };
+  const handleEligibilityChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEligibilityData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : name === "dependents"
+            ? parseInt(value) || 0
+            : value,
+    }));
+  };
   const handleSubmitApplication = async (e) => {
     e.preventDefault();
     setError(null);
 
-    console.log("=== 🚀 Starting Application Submission ===");
-    console.log("Post ID:", postId);
-    console.log("Tenant ID:", tenantId);
-    console.log("Form Data:", formData);
-
     if (!post) {
-      console.error("❌ Post data not loaded");
       setError("Post data not loaded yet.");
       return;
     }
-    console.log("✅ Post data loaded:", post);
 
     if (!tenantId) {
-      console.error("❌ Tenant ID not found");
       setError("User ID not found.");
       return;
     }
-    console.log("✅ Tenant ID found:", tenantId);
 
     if (!formData.phone) {
-      console.error("❌ Phone number missing");
       setError("Phone number is required.");
       return;
     }
-    console.log("✅ Phone:", formData.phone);
 
-    if (!formData.startRentalDate) {
-      console.error("❌ Start rental date missing");
-      setError("Start rental date is required.");
-      return;
-    }
-    console.log("✅ Start Date:", formData.startRentalDate);
+    // Only validate rental dates if rentType is 0 (rent)
+    if (post.rentType === 0) {
+      if (!formData.startRentalDate) {
+        setError("Start rental date is required.");
+        return;
+      }
 
-    if (!formData.endRentalDate) {
-      console.error("❌ End rental date missing");
-      setError("End rental date is required.");
-      return;
+      if (!formData.endRentalDate) {
+        setError("End rental date is required.");
+        return;
+      }
     }
-    console.log("✅ End Date:", formData.endRentalDate);
 
     if (!formData.file) {
-      console.error("❌ File missing");
       setError("Document upload is required.");
       return;
     }
-    if (!formData.offeredPrice || parseFloat(formData.offeredPrice) <= 0) {
-      console.error("❌ Offered price invalid:", formData.offeredPrice);
-      setError("Offered price must be greater than zero.");
-      return;
+    if (post.isAuction == 1) {
+      if (!formData.offeredPrice || parseFloat(formData.offeredPrice) <= 0) {
+        setError("Offered price must be greater than zero.");
+        return;
+      }
     }
-    console.log("✅ Offered Price:", formData.offeredPrice);
-    console.log("✅ File:", {
-      name: formData.file.name,
-      size: formData.file.size,
-      type: formData.file.type,
-    });
+
+    // Check if eligibility is required
+    const isEligibilityRequired =
+      post.rentType === 0 || // Rent
+      (post.rentType === 1 && parseInt(formData.isInstallment) === 1); // Sale with installment
+
+    if (isEligibilityRequired) {
+      // Validate eligibility fields
+      if (
+        !eligibilityData.monthlyIncome ||
+        parseFloat(eligibilityData.monthlyIncome) <= 0
+      ) {
+        setError("Monthly income is required and must be greater than 0.");
+        return;
+      }
+      if (
+        !eligibilityData.monthlyExpenses ||
+        parseFloat(eligibilityData.monthlyExpenses) < 0
+      ) {
+        setError("Monthly expenses is required and must be 0 or greater.");
+        return;
+      }
+      if (
+        !eligibilityData.existingMonthlyDebt ||
+        parseFloat(eligibilityData.existingMonthlyDebt) < 0
+      ) {
+        setError("Existing monthly debt is required and must be 0 or greater.");
+        return;
+      }
+      if (eligibilityData.dependents < 0 || eligibilityData.dependents > 50) {
+        setError("Number of dependents must be between 0 and 50.");
+        return;
+      }
+    }
 
     try {
       // إنشاء FormData
       const data = new FormData();
       data.append("Phone", formData.phone);
 
-      const startISO = new Date(formData.startRentalDate).toISOString();
-      const endISO = new Date(formData.endRentalDate).toISOString();
+      // Only add rental dates if rentType is 0 (rent)
+      if (post.rentType === 0) {
+        const startISO = new Date(formData.startRentalDate).toISOString();
+        const endISO = new Date(formData.endRentalDate).toISOString();
 
-      console.log("📅 Start Date ISO:", startISO);
-      console.log("📅 End Date ISO:", endISO);
-
-      data.append("StartRentalDate", startISO);
-      data.append("EndRentalDate", endISO);
+        data.append("StartRentalDate", startISO);
+        data.append("EndRentalDate", endISO);
+      }
       data.append("File", formData.file);
-      data.append("Offeredprice", parseFloat(formData.offeredPrice));
 
-      // طباعة FormData
-      console.log("📦 FormData contents:");
-      for (let pair of data.entries()) {
-        if (pair[0] === "File") {
-          console.log(`  ${pair[0]}:`, pair[1].name, `(${pair[1].size} bytes)`);
-        } else {
-          console.log(`  ${pair[0]}: ${pair[1]}`);
-        }
+      if (post.isAuction == 1) {
+        data.append("Offeredprice", parseFloat(formData.offeredPrice));
+      }
+      data.append("IsInstallment", parseInt(formData.isInstallment));
+
+      // Define isEligibilityRequired BEFORE the try block
+      const isEligibilityRequired =
+        post.rentType === 0 ||
+        (post.rentType === 1 && parseInt(formData.isInstallment) === 1);
+
+      if (isEligibilityRequired) {
+        const eligibilityObject = {
+          MonthlyIncome: parseFloat(eligibilityData.monthlyIncome) || 0,
+          MonthlyExpenses: parseFloat(eligibilityData.monthlyExpenses) || 0,
+          ExistingMonthlyDebt:
+            parseFloat(eligibilityData.existingMonthlyDebt) || 0,
+          HasStableJob: Boolean(eligibilityData.hasStableJob),
+          Dependents: parseInt(eligibilityData.dependents) || 0,
+          ExtraAnswers: null,
+        };
+
+        const eligibilityJson = JSON.stringify(eligibilityObject);
+
+        data.append("EligibilityAnswersJson", eligibilityJson);
+
+        console.log("✅ EligibilityAnswersJson appended to FormData");
+      } else {
+        console.log("⚠️ Eligibility NOT required - skipping");
       }
 
       // const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`;
       const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}/${tenantId}`;
       const token = localStorage.getItem("token");
 
-      console.log("🔍 Checking URL parameters:");
-      console.log("  - postId:", postId);
-      console.log("  - tenantId:", tenantId);
-      console.log(
-        "  - Expected URL:",
-        `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}/${tenantId}`,
-      );
-      console.log("  - Current URL:", apiUrl);
       const headers = {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       };
 
-      console.log("📤 Request Headers:", headers);
-      console.log("⏳ Sending request...");
-
       // استدعاء الـ API
       const response = await axios.post(apiUrl, data, { headers });
 
-      console.log("✅ Success! Response:", response);
-      console.log("✅ Response Data:", response.data);
-      console.log("✅ Response Status:", response.status);
-
       alert("Application submitted successfully!");
 
-      console.log("📝 Recording history event...");
       await recordHistoryEvent(userId, "apply", {
         post_id: postId,
         post_title: post.title || "N/A",
@@ -773,7 +799,6 @@ const PropertyDetail = () => {
             ? post.fileBase64s[0]
             : null),
       });
-      console.log("✅ History recorded");
 
       setShowForm(false);
       setFormData({
@@ -783,23 +808,21 @@ const PropertyDetail = () => {
         file: null,
         offeredPrice: "",
       });
-      console.log("✅ Form reset and closed");
-      console.log("=== ✅ Application Submission Complete ===");
-    } catch (err) {
-      console.error("=== ❌ Application Submission Failed ===");
-      console.error("Error object:", err);
-      console.error("Error message:", err.message);
-      console.error("Error response:", err.response);
-      console.error("Response status:", err.response?.status);
-      console.error("Response data:", err.response?.data);
-      console.error("Response headers:", err.response?.headers);
 
+      setEligibilityData({
+        monthlyIncome: "",
+        monthlyExpenses: "",
+        existingMonthlyDebt: "",
+        hasStableJob: false,
+        dependents: 0,
+      });
+    } catch (err) {
       if (err.response?.data?.errors) {
         console.error("Validation errors:", err.response.data.errors);
         const errorMessages = Object.values(err.response.data.errors)
           .flat()
           .join("\n");
-        console.error("Error messages joined:", errorMessages);
+
         setError(errorMessages || "Validation failed.");
       } else {
         const errorMsg =
@@ -807,10 +830,9 @@ const PropertyDetail = () => {
           err.response?.data?.message ||
           err.response?.data ||
           "Failed to submit.";
-        console.error("Final error message:", errorMsg);
+
         setError(errorMsg);
       }
-      console.error("=== ❌ End of Error Handling ===");
     }
   };
   const handleSave = async () => {
@@ -828,7 +850,6 @@ const PropertyDetail = () => {
       try {
         await axios.delete(cancelSaveUrl, { headers: headers });
       } catch (error) {
-        console.error("Failed to unsave post:", error);
         setSaved(true);
       }
     } else {
@@ -848,7 +869,6 @@ const PropertyDetail = () => {
           post_location: post.location,
         });
       } catch (error) {
-        console.error("Failed to save post:", error);
         setSaved(false);
       }
     }
@@ -920,7 +940,6 @@ const PropertyDetail = () => {
           });
       setComments((prev) => deleteRecursively(prev, commentId));
     } catch (err) {
-      console.error("Delete comment failed:", err);
       setError(err.response?.data?.error || "Failed to delete comment");
     } finally {
       setLoadingAction(null);
@@ -940,7 +959,6 @@ const PropertyDetail = () => {
       );
       updateCommentInState(response.data.comment);
     } catch (err) {
-      console.error("Failed to like comment:", err);
       alert(err.response?.data?.error || "Failed to update like.");
     }
   };
@@ -958,10 +976,6 @@ const PropertyDetail = () => {
       );
       await loadComments();
     } catch (err) {
-      console.error(
-        "Failed to pin/unpin comment:",
-        err.response?.data || err.message,
-      );
       alert(err.response?.data?.error || "Failed to update pin status.");
     } finally {
       setLoadingAction(null);
@@ -982,7 +996,6 @@ const PropertyDetail = () => {
   const handleLikePost = async (e) => {
     e.stopPropagation();
     if (!userId || !post) {
-      console.log("handleLikePost stopped: Missing userId or post");
       return;
     }
     const originalLikeStatus = { ...likeStatus };
@@ -1024,7 +1037,6 @@ const PropertyDetail = () => {
         });
       }
     } catch (err) {
-      console.error("Failed to like post:", err);
       alert("Failed to like post.");
       setLikeStatus(originalLikeStatus);
     }
@@ -1048,7 +1060,6 @@ const PropertyDetail = () => {
         await navigator.clipboard.writeText(postUrl);
         alert("Link copied to clipboard!");
       } catch (err) {
-        console.error("Failed to copy link:", err);
         alert("Could not copy link.");
       }
     }
@@ -1475,9 +1486,6 @@ const PropertyDetail = () => {
                         src={imageSrc}
                         alt={`${post.title} - Image ${currentImageIndex + 1}`}
                         onError={(e) => {
-                          console.log("Image failed to load:", imageSrc);
-                          console.log("Original image data:", currentImage);
-                          console.log("Post data:", post);
                           // Try different fallback approaches
                           if (!e.target.dataset.retried) {
                             e.target.dataset.retried = "true";
@@ -1531,10 +1539,6 @@ const PropertyDetail = () => {
                     </>
                   );
                 } else {
-                  // Fallback: try to show any available image data
-                  console.log("No images found, checking for fallback options");
-                  console.log("Post object keys:", Object.keys(post));
-
                   return (
                     <div className="property-image-empty">
                       <FaHome className="property-image-empty-icon" />
@@ -1589,10 +1593,6 @@ const PropertyDetail = () => {
                             src={imageSrc}
                             alt={`${post.title} - Thumbnail ${index + 1}`}
                             onError={(e) => {
-                              console.log(
-                                "Thumbnail failed to load:",
-                                imageSrc,
-                              );
                               e.target.src = "/placeholder.jpg";
                             }}
                           />
@@ -1628,6 +1628,17 @@ const PropertyDetail = () => {
 
             {/* Price */}
             <div className="property-price-section">
+              <div
+                className="property-price-label"
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "bold",
+                  color: "#555",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                {post.isAuction == 1 ? "Start with: " : "Final Price: "}
+              </div>
               <div className="property-price">
                 ${post.price?.toLocaleString()}
                 <span className="property-price-period">/month</span>
@@ -1691,7 +1702,9 @@ const PropertyDetail = () => {
                   <span className="property-feature-value">
                     {post.totalUnitsInBuilding || 0}
                   </span>
-                  <span className="property-feature-label">Total Units</span>
+                  <span className="property-feature-label">
+                    Units in the Building
+                  </span>
                 </div>
               </div>
             </div>
@@ -1737,7 +1750,7 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin && !isLandlord && post.rentalStatus === 0 && (
+              {!isAdmin && !isLandlord && post.rentalStatus !== -1 && (
                 <button
                   onClick={handleApplyClick}
                   className="property-btn property-btn-primary"
@@ -1807,17 +1820,19 @@ const PropertyDetail = () => {
               Property Details & Amenities
             </h2>
             <div className="property-amenities-grid">
-              {post.isFurnished && (
+              {post.isFurnished !== undefined && (
                 <div className="property-amenity-item">
                   <FaCouch className="property-amenity-icon" />
-                  <span className="property-amenity-text">Furnished</span>
+                  <span className="property-amenity-text">
+                    {post.isFurnished == 1 ? "Furnished" : "Not Furnished"}
+                  </span>
                 </div>
               )}
-              {post.hasGarage && (
+              {post.hasGarage !== undefined && (
                 <div className="property-amenity-item">
                   <FaCar className="property-amenity-icon" />
                   <span className="property-amenity-text">
-                    Garage Available
+                    {post.hasGarage == 1 ? "Garage Available" : "No Garage"}
                   </span>
                 </div>
               )}
@@ -1829,10 +1844,14 @@ const PropertyDetail = () => {
                   </span>
                 </div>
               )}
-              <div className="property-amenity-item">
-                <FaMapMarkerAlt className="property-amenity-icon" />
-                <span className="property-amenity-text">Prime Location</span>
-              </div>
+              {post.isAuction !== undefined && (
+                <div className="property-amenity-item">
+                  <FaGavel className="property-amenity-icon" />
+                  <span className="property-amenity-text">
+                    {post.isAuction == 1 ? "Auction" : "Not Auction"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1882,7 +1901,7 @@ const PropertyDetail = () => {
         )}
       </div>
 
-      {/* Application Form Modal - Modern Design */}
+      {/* Proposal Form Modal - Modern Design */}
       {showForm && (
         <div
           className="application-modal-overlay"
@@ -1898,7 +1917,7 @@ const PropertyDetail = () => {
               <div className="application-modal-header-icon">
                 <FaPaperPlane />
               </div>
-              <h2 className="application-modal-title">Application Form</h2>
+              <h2 className="application-modal-title">Proposal Form</h2>
             </div>
 
             <form
@@ -1921,35 +1940,40 @@ const PropertyDetail = () => {
                 />
               </div>
 
-              <div className="application-form-group">
-                <label className="application-form-label">
-                  <FaCalendarAlt />
-                  Start Rental Date
-                </label>
-                <input
-                  type="datetime-local"
-                  name="startRentalDate"
-                  required
-                  value={formData.startRentalDate}
-                  onChange={handleInputChange}
-                  className="application-form-input"
-                />
-              </div>
+              {/* Show rental dates only if rentType is 0 (rent) */}
+              {post.rentType === 0 && (
+                <>
+                  <div className="application-form-group">
+                    <label className="application-form-label">
+                      <FaCalendarAlt />
+                      Start Rental Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="startRentalDate"
+                      required
+                      value={formData.startRentalDate}
+                      onChange={handleInputChange}
+                      className="application-form-input"
+                    />
+                  </div>
 
-              <div className="application-form-group">
-                <label className="application-form-label">
-                  <FaCalendarAlt />
-                  End Rental Date
-                </label>
-                <input
-                  type="datetime-local"
-                  name="endRentalDate"
-                  required
-                  value={formData.endRentalDate}
-                  onChange={handleInputChange}
-                  className="application-form-input"
-                />
-              </div>
+                  <div className="application-form-group">
+                    <label className="application-form-label">
+                      <FaCalendarAlt />
+                      End Rental Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="endRentalDate"
+                      required
+                      value={formData.endRentalDate}
+                      onChange={handleInputChange}
+                      className="application-form-input"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="application-form-group">
                 <label className="application-form-label">
@@ -1965,26 +1989,292 @@ const PropertyDetail = () => {
                   className="application-form-input"
                 />
               </div>
-              <div className="application-form-group">
-                <label className="application-form-label">
-                  <FaDollarSign />
-                  Offered Price
-                </label>
-                <input
-                  type="number"
-                  name="offeredPrice"
-                  placeholder={`Suggested: $${post?.price?.toLocaleString() || "0"}`}
-                  required
-                  min="1"
-                  step="0.01"
-                  value={formData.offeredPrice || ""}
-                  onChange={handleInputChange}
-                  className="application-form-input"
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  Property price: ${post?.price?.toLocaleString() || "0"}
-                </p>
-              </div>
+
+              {/* Show installment option only if rentType is 1 (sale) */}
+              {post.rentType === 1 && (
+                <div className="application-form-group">
+                  <label className="application-form-label">
+                    <FaCreditCard />
+                    Payment Method
+                  </label>
+                  <select
+                    name="isInstallment"
+                    value={formData.isInstallment}
+                    onChange={handleInputChange}
+                    className="application-form-input"
+                  >
+                    <option value={0}>Cash</option>
+                    <option value={1}>Installment</option>
+                  </select>
+                </div>
+              )}
+
+              {post.isAuction == 1 && (
+                <div className="application-form-group">
+                  <label className="application-form-label">
+                    <FaDollarSign />
+                    Offered Price
+                  </label>
+                  <input
+                    type="number"
+                    name="offeredPrice"
+                    placeholder={`Suggested: $${post?.price?.toLocaleString() || "0"}`}
+                    required
+                    min="1"
+                    step="0.01"
+                    value={formData.offeredPrice || ""}
+                    onChange={handleInputChange}
+                    className="application-form-input"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Property price: ${post?.price?.toLocaleString() || "0"}
+                  </p>
+                </div>
+              )}
+              {/* Eligibility Section - Collapsible */}
+              {(post.rentType === 0 ||
+                (post.rentType === 1 &&
+                  parseInt(formData.isInstallment) === 1)) && (
+                <div className="application-form-group">
+                  <div
+                    className="eligibility-section-header"
+                    onClick={() => setShowEligibility(!showEligibility)}
+                    style={{
+                      cursor: "pointer",
+                      padding: "16px",
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: "12px",
+                      marginBottom: showEligibility ? "16px" : "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      border: "2px solid #e9ecef",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <FaClipboardCheck
+                        style={{ color: "#6366f1", fontSize: "20px" }}
+                      />
+                      <span
+                        style={{
+                          fontWeight: "600",
+                          fontSize: "16px",
+                          color: "#1f2937",
+                        }}
+                      >
+                        📊 Financial Eligibility Assessment
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "#ef4444",
+                          backgroundColor: "#fee2e2",
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Required
+                      </span>
+                    </div>
+                    <FaChevronDown
+                      style={{
+                        transition: "transform 0.3s ease",
+                        transform: showEligibility
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        color: "#6b7280",
+                      }}
+                    />
+                  </div>
+
+                  {showEligibility && (
+                    <div
+                      className="eligibility-form-content"
+                      style={{
+                        padding: "20px",
+                        backgroundColor: "#ffffff",
+                        borderRadius: "12px",
+                        border: "2px solid #e9ecef",
+                        marginTop: "8px",
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          color: "#6b7280",
+                          marginBottom: "20px",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        Please provide your financial information to assess your
+                        eligibility for this property.
+                      </p>
+
+                      {/* Monthly Income */}
+                      <div
+                        className="application-form-group"
+                        style={{ marginBottom: "16px" }}
+                      >
+                        <label
+                          className="application-form-label"
+                          style={{ fontSize: "14px", fontWeight: "500" }}
+                        >
+                          <FaDollarSign style={{ color: "#10b981" }} />
+                          Monthly Income *
+                        </label>
+                        <input
+                          type="number"
+                          name="monthlyIncome"
+                          placeholder="Enter your monthly income"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.monthlyIncome}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input"
+                          style={{ fontSize: "14px" }}
+                        />
+                      </div>
+
+                      {/* Monthly Expenses */}
+                      <div
+                        className="application-form-group"
+                        style={{ marginBottom: "16px" }}
+                      >
+                        <label
+                          className="application-form-label"
+                          style={{ fontSize: "14px", fontWeight: "500" }}
+                        >
+                          <FaDollarSign style={{ color: "#f59e0b" }} />
+                          Monthly Expenses *
+                        </label>
+                        <input
+                          type="number"
+                          name="monthlyExpenses"
+                          placeholder="Enter your total monthly expenses"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.monthlyExpenses}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input"
+                          style={{ fontSize: "14px" }}
+                        />
+                      </div>
+
+                      {/* Existing Monthly Debt */}
+                      <div
+                        className="application-form-group"
+                        style={{ marginBottom: "16px" }}
+                      >
+                        <label
+                          className="application-form-label"
+                          style={{ fontSize: "14px", fontWeight: "500" }}
+                        >
+                          <FaCreditCard style={{ color: "#ef4444" }} />
+                          Existing Monthly Debt *
+                        </label>
+                        <input
+                          type="number"
+                          name="existingMonthlyDebt"
+                          placeholder="Enter your monthly debt payments (0 if none)"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.existingMonthlyDebt}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input"
+                          style={{ fontSize: "14px" }}
+                        />
+                      </div>
+
+                      {/* Has Stable Job */}
+                      <div
+                        className="application-form-group"
+                        style={{ marginBottom: "16px" }}
+                      >
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            cursor: "pointer",
+                            padding: "12px",
+                            backgroundColor: "#f9fafb",
+                            borderRadius: "8px",
+                            border: "1px solid #e5e7eb",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            name="hasStableJob"
+                            checked={eligibilityData.hasStableJob}
+                            onChange={handleEligibilityChange}
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              cursor: "pointer",
+                              accentColor: "#6366f1",
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              color: "#1f2937",
+                            }}
+                          >
+                            <FaUserTie
+                              style={{ color: "#6366f1", marginRight: "8px" }}
+                            />
+                            I have a stable job *
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Number of Dependents */}
+                      <div className="application-form-group">
+                        <label
+                          className="application-form-label"
+                          style={{ fontSize: "14px", fontWeight: "500" }}
+                        >
+                          <FaUser style={{ color: "#8b5cf6" }} />
+                          Number of Dependents *
+                        </label>
+                        <input
+                          type="number"
+                          name="dependents"
+                          placeholder="Number of people dependent on your income"
+                          required
+                          min="0"
+                          max="50"
+                          value={eligibilityData.dependents}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input"
+                          style={{ fontSize: "14px" }}
+                        />
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#6b7280",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Enter 0 if you have no dependents
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {error && (
                 <div className="application-form-error">
@@ -1998,6 +2288,13 @@ const PropertyDetail = () => {
                   onClick={() => {
                     setShowForm(false);
                     setError(null);
+                    setEligibilityData({
+                      monthlyIncome: "",
+                      monthlyExpenses: "",
+                      existingMonthlyDebt: "",
+                      hasStableJob: false,
+                      dependents: 0,
+                    });
                   }}
                   className="application-modal-btn application-modal-btn-cancel"
                 >
@@ -2008,9 +2305,18 @@ const PropertyDetail = () => {
                   className="application-modal-btn application-modal-btn-submit"
                   disabled={
                     !formData.phone ||
-                    !formData.startRentalDate ||
-                    !formData.endRentalDate ||
-                    !formData.file
+                    (post.rentType === 0 &&
+                      (!formData.startRentalDate || !formData.endRentalDate)) ||
+                    !formData.file ||
+                    (post.isAuction == 1 && !formData.offeredPrice) ||
+                    // Disable if eligibility is required but not filled
+                    ((post.rentType === 0 ||
+                      (post.rentType === 1 &&
+                        parseInt(formData.isInstallment) === 1)) &&
+                      (!eligibilityData.monthlyIncome ||
+                        !eligibilityData.monthlyExpenses ||
+                        eligibilityData.existingMonthlyDebt === "" ||
+                        eligibilityData.dependents === ""))
                   }
                 >
                   Submit Application
@@ -2256,7 +2562,6 @@ const PropertyDetail = () => {
                     alt={`${post.title} - Enlarged view`}
                     className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl"
                     onError={(e) => {
-                      console.log("Lightbox image failed to load:", imageSrc);
                       e.target.src = "/placeholder.jpg";
                     }}
                   />
@@ -2304,10 +2609,6 @@ const PropertyDetail = () => {
                         }}
                         className={`w-28 h-24 object-cover rounded-2xl cursor-pointer transition-all duration-300 shadow-lg ${index === currentImageIndex ? "opacity-100 ring-4 ring-white scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
                         onError={(e) => {
-                          console.log(
-                            "Lightbox thumbnail failed to load:",
-                            imageSrc,
-                          );
                           e.target.src = "/placeholder.jpg";
                         }}
                       />

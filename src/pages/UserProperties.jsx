@@ -31,12 +31,12 @@ const getToken = () => localStorage.getItem("token");
 // دالة للتحقق من وجود الملف
 const checkFileExists = async (filePath) => {
   try {
-    const response = await fetch(`http://localhost:44357/${filePath}`, {
-      method: 'HEAD', // استخدام HEAD للتحقق فقط دون تحميل الملف
+    const response = await fetch(`${API_BASE_URL}/${filePath}`, {
+      method: "HEAD", // استخدام HEAD للتحقق فقط دون تحميل الملف
     });
     return response.ok;
   } catch (error) {
-    console.error('File check error:', error);
+    console.error("File check error:", error);
     return false;
   }
 };
@@ -56,51 +56,69 @@ const FileViewerModal = ({
   // تحديد نوع الملف
   const getFileType = (fileName, fileBase64, isPDF) => {
     if (isPath) {
-      return isPDF ? 'pdf' : 'image';
+      return isPDF ? "pdf" : "image";
     }
-    
-    if (!fileBase64) return 'unknown';
-    
+
+    if (!fileBase64) return "unknown";
+
     // التحقق من البداية المميزة لكل نوع ملف في base64
     const base64Header = fileBase64.substring(0, 50);
-    
+
     // PDF يبدأ بـ JVBERi (base64 for %PDF)
-    if (base64Header.startsWith('JVBERi') || fileName?.toLowerCase().endsWith('.pdf')) {
-      return 'pdf';
+    if (
+      base64Header.startsWith("JVBERi") ||
+      fileName?.toLowerCase().endsWith(".pdf")
+    ) {
+      return "pdf";
     }
-    
+
     // JPEG يبدأ بـ /9j/
-    if (base64Header.startsWith('/9j/') || fileName?.toLowerCase().match(/\.(jpg|jpeg)$/i)) {
-      return 'image';
+    if (
+      base64Header.startsWith("/9j/") ||
+      fileName?.toLowerCase().match(/\.(jpg|jpeg)$/i)
+    ) {
+      return "image";
     }
-    
+
     // PNG يبدأ بـ iVBORw
-    if (base64Header.startsWith('iVBORw') || fileName?.toLowerCase().endsWith('.png')) {
-      return 'image';
+    if (
+      base64Header.startsWith("iVBORw") ||
+      fileName?.toLowerCase().endsWith(".png")
+    ) {
+      return "image";
     }
-    
+
     // GIF يبدأ بـ R0lGOD
-    if (base64Header.startsWith('R0lGOD') || fileName?.toLowerCase().endsWith('.gif')) {
-      return 'image';
+    if (
+      base64Header.startsWith("R0lGOD") ||
+      fileName?.toLowerCase().endsWith(".gif")
+    ) {
+      return "image";
     }
-    
+
     // WebP يبدأ بـ UklGR
-    if (base64Header.startsWith('UklGR') || fileName?.toLowerCase().endsWith('.webp')) {
-      return 'image';
+    if (
+      base64Header.startsWith("UklGR") ||
+      fileName?.toLowerCase().endsWith(".webp")
+    ) {
+      return "image";
     }
-    
+
     // BMP يبدأ بـ Qk
-    if (base64Header.startsWith('Qk') || fileName?.toLowerCase().endsWith('.bmp')) {
-      return 'image';
+    if (
+      base64Header.startsWith("Qk") ||
+      fileName?.toLowerCase().endsWith(".bmp")
+    ) {
+      return "image";
     }
-    
+
     // إذا كان اسم الملف يحتوي على امتداد صورة
     if (fileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)) {
-      return 'image';
+      return "image";
     }
-    
+
     // افتراضي
-    return fileName?.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image';
+    return fileName?.toLowerCase().endsWith(".pdf") ? "pdf" : "image";
   };
 
   const fileType = getFileType(fileName, fileBase64, isPDF);
@@ -110,16 +128,18 @@ const FileViewerModal = ({
       // تحميل من مسار
       const link = document.createElement("a");
       link.href = filePath;
-      link.download = fileName || `document.${fileType === 'pdf' ? 'pdf' : 'jpg'}`;
-      link.target = '_blank';
+      link.download =
+        fileName || `document.${fileType === "pdf" ? "pdf" : "jpg"}`;
+      link.target = "_blank";
       link.click();
     } else if (fileBase64) {
       // تحميل من base64
       const link = document.createElement("a");
-      const mimeType = fileType === 'pdf' ? 'application/pdf' : 'image/*';
-      
+      const mimeType = fileType === "pdf" ? "application/pdf" : "image/*";
+
       link.href = `data:${mimeType};base64,${fileBase64}`;
-      link.download = fileName || `document.${fileType === 'pdf' ? 'pdf' : 'jpg'}`;
+      link.download =
+        fileName || `document.${fileType === "pdf" ? "pdf" : "jpg"}`;
       link.click();
     }
   };
@@ -127,14 +147,14 @@ const FileViewerModal = ({
   const handleOpenInNewTab = () => {
     if (isPath && filePath) {
       // فتح من مسار
-      window.open(filePath, '_blank');
+      window.open(filePath, "_blank");
     } else if (fileBase64) {
       // فتح من base64
       const pdfWindow = window.open();
       if (pdfWindow) {
-        const mimeType = fileType === 'pdf' ? 'application/pdf' : 'image/*';
-        
-        if (fileType === 'pdf') {
+        const mimeType = fileType === "pdf" ? "application/pdf" : "image/*";
+
+        if (fileType === "pdf") {
           pdfWindow.document.write(`
             <html>
               <head><title>${fileName || "PDF Document"}</title></head>
@@ -163,8 +183,8 @@ const FileViewerModal = ({
         {/* Header */}
         <div className="property-modal-header">
           <div className="property-modal-title">
-            {fileType === 'pdf' ? <FaFilePdf /> : <FaEye />}
-            {fileType === 'pdf' ? 'PDF Document' : 'Image Document'}
+            {fileType === "pdf" ? <FaFilePdf /> : <FaEye />}
+            {fileType === "pdf" ? "PDF Document" : "Image Document"}
           </div>
           <div className="property-modal-actions">
             <button
@@ -181,10 +201,7 @@ const FileViewerModal = ({
               <FaExpand />
               Open Full
             </button>
-            <button
-              onClick={onClose}
-              className="property-modal-close"
-            >
+            <button onClick={onClose} className="property-modal-close">
               <FaTimesCircle />
             </button>
           </div>
@@ -192,11 +209,15 @@ const FileViewerModal = ({
 
         {/* File Content */}
         <div className="property-modal-body">
-          {(fileBase64 || filePath) ? (
+          {fileBase64 || filePath ? (
             <div className="property-file-viewer">
-              {fileType === 'pdf' ? (
+              {fileType === "pdf" ? (
                 <embed
-                  src={isPath ? filePath : `data:application/pdf;base64,${fileBase64}`}
+                  src={
+                    isPath
+                      ? filePath
+                      : `data:application/pdf;base64,${fileBase64}`
+                  }
                   type="application/pdf"
                   className="property-pdf-embed"
                   onLoad={() => {
@@ -209,7 +230,9 @@ const FileViewerModal = ({
               ) : (
                 <div className="property-image-viewer">
                   <img
-                    src={isPath ? filePath : `data:image/*;base64,${fileBase64}`}
+                    src={
+                      isPath ? filePath : `data:image/*;base64,${fileBase64}`
+                    }
                     alt="Document"
                     className="property-image-embed"
                     onLoad={() => {
@@ -221,15 +244,15 @@ const FileViewerModal = ({
                         isPath: isPath,
                         filePath: filePath,
                         fileBase64Length: fileBase64?.length,
-                        fileType: fileType
+                        fileType: fileType,
                       });
-                      
+
                       e.target.parentElement.innerHTML = `
                         <div class="property-file-error">
                           <div class="property-file-error-icon">⚠️</div>
                           <h3>Unable to display this file</h3>
                           <p>File type: ${fileType}</p>
-                          <p>Source: ${isPath ? 'File path' : 'Base64 data'}</p>
+                          <p>Source: ${isPath ? "File path" : "Base64 data"}</p>
                           <p>The file may be corrupted or in an unsupported format</p>
                         </div>
                       `;
@@ -243,8 +266,12 @@ const FileViewerModal = ({
               <div className="property-pdf-empty-icon">
                 <FaFilePdf />
               </div>
-              <h3 className="property-pdf-empty-title">No document available</h3>
-              <p className="property-pdf-empty-text">The file could not be loaded</p>
+              <h3 className="property-pdf-empty-title">
+                No document available
+              </h3>
+              <p className="property-pdf-empty-text">
+                The file could not be loaded
+              </p>
             </div>
           )}
         </div>
@@ -284,21 +311,26 @@ const MyProperties = () => {
 
         console.log("✅ Proposals fetched successfully:", response.data);
         console.log("📊 Total proposals:", response.data?.length || 0);
-        
+
         // طباعة البيانات الخام كما هي
-        console.log("🔍 Raw API Response:", JSON.stringify(response.data, null, 2));
-        
+        console.log(
+          "🔍 Raw API Response:",
+          JSON.stringify(response.data, null, 2),
+        );
+
         // طباعة تفاصيل كل proposal لفهم البيانات المتاحة
         if (Array.isArray(response.data) && response.data.length > 0) {
           console.log("📋 First proposal details:", response.data[0]);
           console.log("📋 Available fields:", Object.keys(response.data[0]));
-          
+
           // فحص الحقول المهمة
           response.data.forEach((proposal, index) => {
             console.log(`📄 Proposal ${index + 1} - All fields:`, proposal);
             console.log(`📄 Proposal ${index + 1} - Key analysis:`, {
               proposalId: proposal.proposalId,
-              fileBase64: proposal.fileBase64 ? `✅ Available (${proposal.fileBase64.length} chars)` : "❌ Missing",
+              fileBase64: proposal.fileBase64
+                ? `✅ Available (${proposal.fileBase64.length} chars)`
+                : "❌ Missing",
               fileName: proposal.fileName || "❌ Missing",
               offeredPrice: proposal.offeredPrice || "❌ Missing",
               Offeredprice: proposal.Offeredprice || "❌ Missing", // تحقق من الاسم بحرف كبير
@@ -307,7 +339,7 @@ const MyProperties = () => {
               startRentalDate: proposal.startRentalDate || "❌ Missing",
               endRentalDate: proposal.endRentalDate || "❌ Missing",
               landlordName: proposal.landlordName || "❌ Missing",
-              landlordId: proposal.landlordId || "❌ Missing"
+              landlordId: proposal.landlordId || "❌ Missing",
             });
           });
         }
@@ -366,25 +398,25 @@ const MyProperties = () => {
     const fileName = property.fileName || property.file_name;
     const filePath = property.filePath;
     const imagePath = property.imagePath;
-    
+
     if (fileBase64) {
       // استخدام base64
       setSelectedFile({
         fileBase64: fileBase64,
         fileName: fileName,
-        isPath: false
+        isPath: false,
       });
       setIsFileModalOpen(true);
     } else if (filePath || imagePath) {
       // استخدام مسار الملف
       const path = filePath || imagePath;
-      const name = fileName || path.split('/').pop();
-      
+      const name = fileName || path.split("/").pop();
+
       setSelectedFile({
-        filePath: `http://localhost:44357/${path}`,
+        filePath: `${API_BASE_URL}/${path}`,
         fileName: name,
         isPath: true,
-        isPDF: !!filePath
+        isPDF: !!filePath,
       });
       setIsFileModalOpen(true);
     }
@@ -397,7 +429,7 @@ const MyProperties = () => {
         icon: <FaClock />,
       },
       Approved: {
-        className: "property-status-approved", 
+        className: "property-status-approved",
         icon: <FaCheckCircle />,
       },
       Rejected: {
@@ -436,11 +468,15 @@ const MyProperties = () => {
 
   // Filter properties based on search and status
   const filteredProperties = myProperties.filter((property) => {
-    const matchesSearch = property.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.landlordName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (property.offeredPrice || property.Offeredprice || property.offered_price)?.toString().includes(searchTerm) ||
-                         property.proposalId?.toString().includes(searchTerm);
-    const matchesStatus = statusFilter === "All" || property.rentalStatus === statusFilter;
+    const matchesSearch =
+      property.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.landlordName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (property.offeredPrice || property.Offeredprice || property.offered_price)
+        ?.toString()
+        .includes(searchTerm) ||
+      property.proposalId?.toString().includes(searchTerm);
+    const matchesStatus =
+      statusFilter === "All" || property.rentalStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -538,9 +574,14 @@ const MyProperties = () => {
                       <FaHome />
                     </div>
                     <div className="user-property-meta">
-                      <h3 className="user-property-id">Application #{property.proposalId}</h3>
+                      <h3 className="user-property-id">
+                        Application #{property.proposalId}
+                      </h3>
                       <p className="user-property-date">
-                        Applied on {new Date(property.startRentalDate).toLocaleDateString()}
+                        Applied on{" "}
+                        {new Date(
+                          property.startRentalDate,
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -553,33 +594,51 @@ const MyProperties = () => {
                     // البحث عن مسارات الملفات
                     const filePath = property.filePath;
                     const imagePath = property.imagePath;
-                    const fileBase64 = property.fileBase64 || property.file_base64 || property.fileData;
-                    const fileName = property.fileName || property.file_name || property.filename;
-                    
-                    console.log(`🔍 File check for proposal ${property.proposalId}:`, {
-                      filePath: filePath,
-                      imagePath: imagePath,
-                      hasFileBase64: !!fileBase64,
-                      fileName: fileName,
-                      allKeys: Object.keys(property),
-                      fullPdfUrl: filePath ? `http://localhost:44357/${filePath}` : null,
-                      fullImageUrl: imagePath ? `http://localhost:44357/${imagePath}` : null
-                    });
-                    
+                    const fileBase64 =
+                      property.fileBase64 ||
+                      property.file_base64 ||
+                      property.fileData;
+                    const fileName =
+                      property.fileName ||
+                      property.file_name ||
+                      property.filename;
+
+                    console.log(
+                      `🔍 File check for proposal ${property.proposalId}:`,
+                      {
+                        filePath: filePath,
+                        imagePath: imagePath,
+                        hasFileBase64: !!fileBase64,
+                        fileName: fileName,
+                        allKeys: Object.keys(property),
+                        fullPdfUrl: filePath
+                          ? `${API_BASE_URL}/${filePath}`
+                          : null,
+                        fullImageUrl: imagePath
+                          ? `${API_BASE_URL}/${imagePath}`
+                          : null,
+                      },
+                    );
+
                     // إذا كان هناك filePath (PDF) أو imagePath (صورة)
                     if (filePath || imagePath || fileBase64) {
                       const isImage = !!imagePath;
                       const isPDF = !!filePath;
                       const displayPath = filePath || imagePath;
-                      const displayName = fileName || (displayPath ? displayPath.split('/').pop() : 'Unknown file');
-                      
+                      const displayName =
+                        fileName ||
+                        (displayPath
+                          ? displayPath.split("/").pop()
+                          : "Unknown file");
+
                       return (
                         <div className="user-property-file-preview">
                           <div className="user-property-file-container">
                             {fileBase64 ? (
                               // عرض من base64 (الطريقة القديمة)
                               <>
-                                {isPDF || displayName.toLowerCase().endsWith('.pdf') ? (
+                                {isPDF ||
+                                displayName.toLowerCase().endsWith(".pdf") ? (
                                   <div className="user-property-pdf-wrapper">
                                     <embed
                                       src={`data:application/pdf;base64,${fileBase64}#toolbar=0&navpanes=0`}
@@ -598,11 +657,15 @@ const MyProperties = () => {
                                       alt="Application document"
                                       className="user-property-image-embed"
                                       onLoad={() => {
-                                        console.log(`✅ Base64 image loaded for proposal ${property.proposalId}`);
+                                        console.log(
+                                          `✅ Base64 image loaded for proposal ${property.proposalId}`,
+                                        );
                                       }}
                                       onError={(e) => {
-                                        console.error(`❌ Base64 image error for proposal ${property.proposalId}`);
-                                        e.target.style.display = 'none';
+                                        console.error(
+                                          `❌ Base64 image error for proposal ${property.proposalId}`,
+                                        );
+                                        e.target.style.display = "none";
                                       }}
                                     />
                                     <div className="user-property-file-type-badge image">
@@ -618,17 +681,22 @@ const MyProperties = () => {
                                 {isPDF ? (
                                   <div className="user-property-pdf-wrapper">
                                     <embed
-                                      src={`http://localhost:44357/${filePath}`}
+                                      src={`${API_BASE_URL}/${filePath}`}
                                       type="application/pdf"
                                       className="user-property-pdf-embed"
                                       onLoad={() => {
-                                        console.log(`✅ PDF loaded from path for proposal ${property.proposalId}`);
+                                        console.log(
+                                          `✅ PDF loaded from path for proposal ${property.proposalId}`,
+                                        );
                                       }}
                                       onError={() => {
-                                        console.error(`❌ PDF load error for proposal ${property.proposalId}:`, {
-                                          filePath: filePath,
-                                          fullUrl: `http://localhost:44357/${filePath}`
-                                        });
+                                        console.error(
+                                          `❌ PDF load error for proposal ${property.proposalId}:`,
+                                          {
+                                            filePath: filePath,
+                                            fullUrl: `${API_BASE_URL}/${filePath}`,
+                                          },
+                                        );
                                       }}
                                     />
                                     <div className="user-property-file-type-badge pdf">
@@ -639,27 +707,36 @@ const MyProperties = () => {
                                 ) : isImage ? (
                                   <div className="user-property-image-wrapper">
                                     <img
-                                      src={`http://localhost:44357/${imagePath}`}
+                                      src={`${API_BASE_URL}/${imagePath}`}
                                       alt="Application document"
                                       className="user-property-image-embed"
                                       onLoad={() => {
-                                        console.log(`✅ Image loaded from path for proposal ${property.proposalId}`);
+                                        console.log(
+                                          `✅ Image loaded from path for proposal ${property.proposalId}`,
+                                        );
                                       }}
                                       onError={(e) => {
-                                        console.error(`❌ Image load error for proposal ${property.proposalId}:`, {
-                                          src: e.target.src,
-                                          imagePath: imagePath
-                                        });
-                                        
-                                        const errorDiv = document.createElement('div');
-                                        errorDiv.className = 'user-property-file-error';
+                                        console.error(
+                                          `❌ Image load error for proposal ${property.proposalId}:`,
+                                          {
+                                            src: e.target.src,
+                                            imagePath: imagePath,
+                                          },
+                                        );
+
+                                        const errorDiv =
+                                          document.createElement("div");
+                                        errorDiv.className =
+                                          "user-property-file-error";
                                         errorDiv.innerHTML = `
                                           <div class="user-property-file-error-icon">⚠️</div>
                                           <p>Unable to load image</p>
                                           <small>Path: ${imagePath}</small>
                                         `;
-                                        e.target.parentElement.appendChild(errorDiv);
-                                        e.target.style.display = 'none';
+                                        e.target.parentElement.appendChild(
+                                          errorDiv,
+                                        );
+                                        e.target.style.display = "none";
                                       }}
                                     />
                                     <div className="user-property-file-type-badge image">
@@ -670,7 +747,7 @@ const MyProperties = () => {
                                 ) : null}
                               </>
                             )}
-                            
+
                             <div className="user-property-file-overlay">
                               <button
                                 onClick={() => {
@@ -679,18 +756,18 @@ const MyProperties = () => {
                                     openFileModal({
                                       ...property,
                                       fileBase64: fileBase64,
-                                      fileName: displayName
+                                      fileName: displayName,
                                     });
                                   } else {
                                     // فتح من مسار
-                                    const fileUrl = `http://localhost:44357/${displayPath}`;
-                                    window.open(fileUrl, '_blank');
+                                    const fileUrl = `${API_BASE_URL}/${displayPath}`;
+                                    window.open(fileUrl, "_blank");
                                   }
                                 }}
                                 className="user-property-file-view-btn"
                               >
                                 <FaEye />
-                                View {isPDF ? 'PDF' : 'Image'}
+                                View {isPDF ? "PDF" : "Image"}
                               </button>
                             </div>
                           </div>
@@ -704,7 +781,7 @@ const MyProperties = () => {
                               {displayName}
                             </span>
                             <span className="user-property-file-type">
-                              {isPDF ? 'PDF' : 'IMAGE'}
+                              {isPDF ? "PDF" : "IMAGE"}
                             </span>
                           </div>
                         </div>
@@ -719,7 +796,9 @@ const MyProperties = () => {
                             No document available
                           </p>
                           <small className="user-property-file-debug">
-                            Debug: filePath={filePath || 'null'}, imagePath={imagePath || 'null'}, fileBase64={fileBase64 ? 'exists' : 'null'}
+                            Debug: filePath={filePath || "null"}, imagePath=
+                            {imagePath || "null"}, fileBase64=
+                            {fileBase64 ? "exists" : "null"}
                           </small>
                         </div>
                       );
@@ -735,8 +814,12 @@ const MyProperties = () => {
                       <FaPhone />
                     </div>
                     <div className="user-property-detail-content">
-                      <span className="user-property-detail-label">Contact Number</span>
-                      <span className="user-property-detail-value">{property.phone}</span>
+                      <span className="user-property-detail-label">
+                        Contact Number
+                      </span>
+                      <span className="user-property-detail-value">
+                        {property.phone}
+                      </span>
                     </div>
                   </div>
 
@@ -747,24 +830,51 @@ const MyProperties = () => {
                         <FaUser />
                       </div>
                       <div className="user-property-detail-content">
-                        <span className="user-property-detail-label">Landlord</span>
-                        <span className="user-property-detail-value">{property.landlordName}</span>
+                        <span className="user-property-detail-label">
+                          Landlord
+                        </span>
+                        <span className="user-property-detail-value">
+                          {property.landlordName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {property.landlordName && (
+                    <div className="user-property-detail-item">
+                      <div className="user-property-detail-icon">
+                        <FaUser />
+                      </div>
+                      <div className="user-property-detail-content">
+                        <span className="user-property-detail-label">
+                          Property title
+                        </span>
+                        <span className="user-property-detail-value">
+                          {property.title}
+                        </span>
                       </div>
                     </div>
                   )}
 
                   {/* Offered Price */}
                   {(() => {
-                    const offeredPrice = property.offeredPrice || property.Offeredprice || property.offered_price || property.price;
-                    
-                    console.log(`💰 Price check for proposal ${property.proposalId}:`, {
-                      offeredPrice: property.offeredPrice,
-                      Offeredprice: property.Offeredprice,
-                      offered_price: property.offered_price,
-                      price: property.price,
-                      finalPrice: offeredPrice
-                    });
-                    
+                    const offeredPrice =
+                      property.offeredPrice ||
+                      property.Offeredprice ||
+                      property.offered_price ||
+                      property.price;
+
+                    console.log(
+                      `💰 Price check for proposal ${property.proposalId}:`,
+                      {
+                        offeredPrice: property.offeredPrice,
+                        Offeredprice: property.Offeredprice,
+                        offered_price: property.offered_price,
+                        price: property.price,
+                        finalPrice: offeredPrice,
+                      },
+                    );
+
                     if (offeredPrice) {
                       return (
                         <div className="user-property-detail-item">
@@ -772,7 +882,9 @@ const MyProperties = () => {
                             <FaDollarSign />
                           </div>
                           <div className="user-property-detail-content">
-                            <span className="user-property-detail-label">Offered Price</span>
+                            <span className="user-property-detail-label">
+                              Offered Price
+                            </span>
                             <span className="user-property-detail-value">
                               ${parseFloat(offeredPrice).toLocaleString()}
                             </span>
@@ -784,50 +896,65 @@ const MyProperties = () => {
                   })()}
 
                   {/* Rental Period */}
-                  <div className="user-property-rental-period">
-                    <div className="user-property-date-item">
-                      <div className="user-property-date-icon start">
-                        <FaCalendarAlt />
+                  {property.startRentalDate && property.endRentalDate && (
+                    <div className="user-property-rental-period">
+                      <div className="user-property-date-item">
+                        <div className="user-property-date-icon start">
+                          <FaCalendarAlt />
+                        </div>
+                        <div className="user-property-date-content">
+                          <span className="user-property-date-label">
+                            Start Date
+                          </span>
+                          <span className="user-property-date-value">
+                            {new Date(
+                              property.startRentalDate,
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </div>
-                      <div className="user-property-date-content">
-                        <span className="user-property-date-label">Start Date</span>
-                        <span className="user-property-date-value">
-                          {new Date(property.startRentalDate).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="user-property-date-arrow">
-                      <FaChevronRight />
-                    </div>
+                      <div className="user-property-date-arrow">
+                        <FaChevronRight />
+                      </div>
 
-                    <div className="user-property-date-item">
-                      <div className="user-property-date-icon end">
-                        <FaCalendarAlt />
-                      </div>
-                      <div className="user-property-date-content">
-                        <span className="user-property-date-label">End Date</span>
-                        <span className="user-property-date-value">
-                          {new Date(property.endRentalDate).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
+                      <div className="user-property-date-item">
+                        <div className="user-property-date-icon end">
+                          <FaCalendarAlt />
+                        </div>
+                        <div className="user-property-date-content">
+                          <span className="user-property-date-label">
+                            End Date
+                          </span>
+                          <span className="user-property-date-value">
+                            {new Date(
+                              property.endRentalDate,
+                            ).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Actions */}
                 <div className="user-property-actions">
                   {property.rentalStatus === "Approved" && (
                     <button
-                      onClick={() => handleMessageClick(property.landlordId, property.landlordName)}
+                      onClick={() =>
+                        handleMessageClick(
+                          property.landlordId,
+                          property.landlordName,
+                        )
+                      }
                       className="user-property-btn user-property-btn-primary"
                     >
                       <FaEnvelope />
@@ -839,7 +966,7 @@ const MyProperties = () => {
                     className="user-property-btn user-property-btn-danger"
                   >
                     <FaTrashAlt />
-                    Delete Application
+                    Delete Proposal
                   </button>
                 </div>
               </div>
@@ -852,13 +979,14 @@ const MyProperties = () => {
                 <FaHome />
               </div>
               <h3 className="user-properties-empty-title">
-                {myProperties.length === 0 ? "No Applications Yet" : "No matching applications"}
+                {myProperties.length === 0
+                  ? "No Applications Yet"
+                  : "No matching applications"}
               </h3>
               <p className="user-properties-empty-text">
-                {myProperties.length === 0 
+                {myProperties.length === 0
                   ? "You haven't applied to any properties yet. Start exploring and apply to find your perfect home!"
-                  : "Try adjusting your search or filter criteria to find what you're looking for."
-                }
+                  : "Try adjusting your search or filter criteria to find what you're looking for."}
               </p>
               {myProperties.length === 0 && (
                 <button
