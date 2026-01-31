@@ -1750,7 +1750,7 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin && !isLandlord && post.rentalStatus !== -1 && (
+              {!isAdmin && !isLandlord && post.rentalStatus !== -1 && post.rentalStatus !== 1 && (
                 <button
                   onClick={handleApplyClick}
                   className="property-btn property-btn-primary"
@@ -2625,3 +2625,5 @@ const PropertyDetail = () => {
 };
 
 export default PropertyDetail;
+
+

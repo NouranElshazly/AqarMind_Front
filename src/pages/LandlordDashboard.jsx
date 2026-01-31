@@ -11,10 +11,11 @@ import {
   Settings,
   Trash2,
   DollarSign,
-  AlertCircle,
+  FileText,
   User,
   ChevronLeft,
   ChevronRight,
+  Gavel,
 } from "lucide-react";
 import "../styles/LandlordDashboard.css";
 
@@ -25,15 +26,9 @@ const LandlordDashboard = () => {
   const [currentImageIndexes, setCurrentImageIndexes] = useState({});
   const [properties, setProperties] = useState({
     all: [],
-    pending: [],
-    accepted: [],
-    rejected: [],
   });
   const [stats, setStats] = useState({
     total: 0,
-    pending: 0,
-    accepted: 0,
-    rejected: 0,
   });
 
   const isDeletingRef = useRef(false);
@@ -80,10 +75,10 @@ const LandlordDashboard = () => {
       fetchProperties();
     };
 
-    window.addEventListener('focus', handleFocus);
-    
+    window.addEventListener("focus", handleFocus);
+
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -93,29 +88,16 @@ const LandlordDashboard = () => {
 
       // Fetch all posts using the existing API
       const allResponse = await API.get(
-        `${API_BASE_URL}/api/Landlord/get-my-posts/${userId}`
+        `${API_BASE_URL}/api/Landlord/get-my-posts/${userId}`,
       );
       const allPosts = allResponse.data || [];
 
-      // Filter posts by status locally
-      const pendingPosts = allPosts.filter((post) => post.pendingStatus === 0);
-      const acceptedPosts = allPosts.filter((post) => post.pendingStatus === 1);
-      const rejectedPosts = allPosts.filter(
-        (post) => post.pendingStatus === -1
-      );
-
       setProperties({
         all: allPosts,
-        pending: pendingPosts,
-        accepted: acceptedPosts,
-        rejected: rejectedPosts,
       });
 
       setStats({
         total: allPosts.length,
-        pending: pendingPosts.length,
-        accepted: acceptedPosts.length,
-        rejected: rejectedPosts.length,
       });
 
       // Initialize current image index for each property
@@ -164,7 +146,9 @@ const LandlordDashboard = () => {
       isDeletingRef.current = true;
       try {
         // Find which category the property belongs to
-        const propertyToDelete = properties.all.find(p => p.postId === postId);
+        const propertyToDelete = properties.all.find(
+          (p) => p.postId === postId,
+        );
         if (!propertyToDelete) {
           alert("Property not found");
           isDeletingRef.current = false;
@@ -172,18 +156,18 @@ const LandlordDashboard = () => {
         }
 
         // Update state immediately - remove from all categories
-        setProperties(prevProperties => ({
-          all: prevProperties.all.filter(p => p.postId !== postId),
-          pending: prevProperties.pending.filter(p => p.postId !== postId),
-          accepted: prevProperties.accepted.filter(p => p.postId !== postId),
-          rejected: prevProperties.rejected.filter(p => p.postId !== postId),
+        setProperties((prevProperties) => ({
+          all: prevProperties.all.filter((p) => p.postId !== postId),
+          pending: prevProperties.pending.filter((p) => p.postId !== postId),
+          accepted: prevProperties.accepted.filter((p) => p.postId !== postId),
+          rejected: prevProperties.rejected.filter((p) => p.postId !== postId),
         }));
-        
+
         // Update stats based on the property's status
-        setStats(prevStats => {
+        setStats((prevStats) => {
           const newStats = { ...prevStats };
           newStats.total = Math.max(0, newStats.total - 1);
-          
+
           if (propertyToDelete.pendingStatus === 0) {
             newStats.pending = Math.max(0, newStats.pending - 1);
           } else if (propertyToDelete.pendingStatus === 1) {
@@ -191,19 +175,19 @@ const LandlordDashboard = () => {
           } else if (propertyToDelete.pendingStatus === -1) {
             newStats.rejected = Math.max(0, newStats.rejected - 1);
           }
-          
+
           return newStats;
         });
 
         // Make API call
         await API.delete(`${API_BASE_URL}/api/Landlord/delete-post/${postId}`);
-        
+
         console.log("Property deleted successfully");
         isDeletingRef.current = false;
       } catch (error) {
         console.error("Error deleting property:", error);
         alert("Failed to delete property");
-        
+
         // Revert state on error by refetching
         fetchProperties();
         isDeletingRef.current = false;
@@ -231,35 +215,35 @@ const LandlordDashboard = () => {
 
   const PropertyCard = ({ property }) => {
     const currentIndex = currentImageIndexes[property.postId] || 0;
-    
+
     // Get all images from the property
     let allImages = [];
-    
+
     // Check if property has postImages array (like in LandlordDashboard)
     if (property.postImages && property.postImages.length > 0) {
-      allImages = property.postImages.map(img => {
+      allImages = property.postImages.map((img) => {
         const imagePath = img.imagePath;
         if (imagePath.startsWith("http")) {
           return imagePath;
         } else if (imagePath.startsWith("data:")) {
           return imagePath;
         } else {
-          return imagePath.startsWith("/") 
-            ? `${API_BASE_URL}${imagePath}` 
+          return imagePath.startsWith("/")
+            ? `${API_BASE_URL}${imagePath}`
             : `${API_BASE_URL}/${imagePath}`;
         }
       });
     }
     // Check if property has images array (like in Home.jsx)
     else if (property.images && property.images.length > 0) {
-      allImages = property.images.map(img => {
+      allImages = property.images.map((img) => {
         if (img.startsWith("http")) {
           return img;
         } else if (img.startsWith("data:")) {
           return img;
         } else {
-          return img.startsWith("/") 
-            ? `${API_BASE_URL}${img}` 
+          return img.startsWith("/")
+            ? `${API_BASE_URL}${img}`
             : `${API_BASE_URL}/${img}`;
         }
       });
@@ -272,9 +256,11 @@ const LandlordDashboard = () => {
       } else if (singleImage.startsWith("data:")) {
         allImages = [singleImage];
       } else {
-        allImages = [singleImage.startsWith("/") 
-          ? `${API_BASE_URL}${singleImage}` 
-          : `${API_BASE_URL}/${singleImage}`];
+        allImages = [
+          singleImage.startsWith("/")
+            ? `${API_BASE_URL}${singleImage}`
+            : `${API_BASE_URL}/${singleImage}`,
+        ];
       }
     }
     // Check for fileBase64 (base64 encoded image)
@@ -306,14 +292,15 @@ const LandlordDashboard = () => {
             alt={property.title || "Property"}
             onError={(e) => {
               console.error("❌ Image failed to load:", currentImageSrc);
-              e.target.src = "https://via.placeholder.com/400x300?text=No+Image";
+              e.target.src =
+                "https://via.placeholder.com/400x300?text=No+Image";
             }}
           />
-          
+
           <div className="property-status-overlay">
             {getStatusBadge(property.pendingStatus)}
           </div>
-          
+
           <div className="property-type-badge">
             {property.type === 0 ? "For Rent" : "For Sale"}
           </div>
@@ -369,7 +356,7 @@ const LandlordDashboard = () => {
                 </span>
               </div>
             </div>
-            
+
             {/* نقل الأزرار هنا في الهيدر */}
             <div className="property-actions-header">
               <button
@@ -402,6 +389,13 @@ const LandlordDashboard = () => {
             {property.description || "No description available"}
           </p>
 
+          <div
+            className={`property-auction-badge ${property.isAuction == 1 ? "auction" : "not-auction"}`}
+          >
+            <Gavel size={14} />
+            {property.isAuction == 1 ? "Auction" : "Not Auction"}
+          </div>
+
           <div className="property-footer">
             <div className="property-price">
               <DollarSign size={20} />
@@ -413,29 +407,22 @@ const LandlordDashboard = () => {
     );
   };
 
-  const EmptyState = ({ tab }) => {
-    const messages = {
-      all: "You haven't added any properties yet",
-      pending: "No properties pending approval",
-      accepted: "No accepted properties yet",
-      rejected: "No rejected properties",
-    };
-
-    return (
-      <div className="empty-state">
-        <Home size={80} className="empty-icon" />
-        <h3>{messages[tab]}</h3>
-        <p>Start by adding your first property</p>
-        <button
-          onClick={() => navigate("/landlord/add-property")}
-          className="btn btn-primary"
-        >
-          <Plus size={20} />
-          Add Property
-        </button>
+  const EmptyState = ({ tab }) => (
+    <div className="empty-state">
+      <div className="empty-state-icon">
+        <Home size={48} />
       </div>
-    );
-  };
+      <h3>No Properties Found</h3>
+      <p>You haven't added any properties yet.</p>
+      <button
+        onClick={() => navigate("/landlord/add-property")}
+        className="btn btn-primary mt-4"
+      >
+        <Plus size={18} />
+        Add Your First Property
+      </button>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -453,7 +440,9 @@ const LandlordDashboard = () => {
         <div className="header-content">
           <div className="header-text">
             <h1 className="dashboard-title">My Properties</h1>
-            <p className="dashboard-subtitle">Manage your property listings</p>
+            <p className="dashboard-subtitle">
+              Manage your properties and Proposals
+            </p>
           </div>
           <button
             onClick={() => navigate("/landlord/add-property")}
@@ -461,6 +450,14 @@ const LandlordDashboard = () => {
           >
             <Plus size={20} />
             Add Property
+          </button>
+          <button
+            onClick={() => navigate("/landlord/manage-proposals")}
+            className="btn btn-secondary"
+            style={{ marginLeft: "10px" }}
+          >
+            <FileText size={20} />
+            Manage Proposals
           </button>
         </div>
 
@@ -475,81 +472,8 @@ const LandlordDashboard = () => {
               <p className="stat-value">{stats.total}</p>
             </div>
           </div>
-
-          <div className="stat-card">
-            <div className="stat-icon stat-pending">
-              <Clock size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Pending Approval</p>
-              <p className="stat-value">{stats.pending}</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon stat-approved">
-              <CheckCircle size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Accepted</p>
-              <p className="stat-value">{stats.accepted}</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon stat-rejected">
-              <XCircle size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Rejected</p>
-              <p className="stat-value">{stats.rejected}</p>
-            </div>
-          </div>
         </div>
       </div>
-
-      {/* Tabs */}
-      <div className="dashboard-tabs">
-        <button
-          className={`tab-button ${activeTab === "all" ? "active" : ""}`}
-          onClick={() => setActiveTab("all")}
-        >
-          <Home size={18} />
-          All ({stats.total})
-        </button>
-        <button
-          className={`tab-button ${activeTab === "pending" ? "active" : ""}`}
-          onClick={() => setActiveTab("pending")}
-        >
-          <Clock size={18} />
-          Pending ({stats.pending})
-        </button>
-        <button
-          className={`tab-button ${activeTab === "accepted" ? "active" : ""}`}
-          onClick={() => setActiveTab("accepted")}
-        >
-          <CheckCircle size={18} />
-          Accepted ({stats.accepted})
-        </button>
-        <button
-          className={`tab-button ${activeTab === "rejected" ? "active" : ""}`}
-          onClick={() => setActiveTab("rejected")}
-        >
-          <XCircle size={18} />
-          Rejected ({stats.rejected})
-        </button>
-      </div>
-
-      {/* Info Alert for Pending */}
-      {activeTab === "pending" && stats.pending > 0 && (
-        <div className="info-alert">
-          <AlertCircle size={20} />
-          <p>
-            Your properties are waiting for admin approval. This usually takes
-            24-48 hours.
-          </p>
-        </div>
-      )}
 
       {/* Properties Grid */}
       <div className="properties-container">

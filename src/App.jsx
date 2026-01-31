@@ -32,6 +32,7 @@ import AdminChatDashboard from "./pages/AdminChatDashboard";
 import AdminManageComplaints from "./pages/AdminManageComplaints";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/Changepassword";
+import LandlordProposalManage from "./pages/LandlordProposalManage"
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -193,6 +194,10 @@ function App() {
               <Route
                 path="/landlord/proposals"
                 element={<PropertyProposals />}
+              />
+              <Route
+                path="/landlord/manage-proposals"
+                element={<LandlordProposalManage />}
               />
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />
