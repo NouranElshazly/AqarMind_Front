@@ -686,3 +686,68 @@
     margin: 0 auto;
   }
 }
+
+/* ==========================================
+   DARK MODE OVERRIDES
+   ========================================== */
+
+.dark .admin-dashboard {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.dark .dashboard-header,
+.dark .stat-card,
+.dark .quick-actions-section,
+.dark .activity-section,
+.dark .alerts-section {
+  background: #1e293b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dark .dashboard-title,
+.dark .stat-value,
+.dark .section-title,
+.dark .action-content h3,
+.dark .activity-message,
+.dark .alert-content h4 {
+  color: #f1f5f9;
+}
+
+.dark .dashboard-date,
+.dark .stat-label,
+.dark .action-content p,
+.dark .activity-meta,
+.dark .alert-content p {
+  color: #94a3b8;
+}
+
+.dark .search-box,
+.dark .icon-btn,
+.dark .activity-count {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.dark .search-box input {
+  color: #f1f5f9;
+}
+
+.dark .action-card {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+.dark .activity-item {
+  background: #334155;
+}
+
+.dark .activity-item:hover {
+  background: #475569;
+}
+
+.dark .activity-time {
+  color: #cbd5e1;
+}
+
+.dark .activity-user {
+  color: #e2e8f0;
+}
