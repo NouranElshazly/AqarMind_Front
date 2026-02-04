@@ -1750,7 +1750,7 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin &&
+              {isAdmin &&
                 !isLandlord &&
                 post.rentalStatus !== -1 &&
                 post.rentalStatus !== 1 && (

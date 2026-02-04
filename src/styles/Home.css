@@ -438,10 +438,20 @@
 }
 
 .home-property-price {
+  margin-bottom: 0.5rem;
+}
+
+.home-price-row {
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--brand-primary);
-  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.home-price-icon {
+  margin-right: 0.25rem;
+  font-size: 1.25rem;
 }
 
 .home-property-title {

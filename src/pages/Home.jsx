@@ -30,6 +30,7 @@ import {
   FaUser,
   FaCalendarAlt,
   FaAlignLeft,
+  FaDollarSign,
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
 import Navbar from "../components/Navbar";
@@ -104,7 +105,7 @@ const Home = () => {
       // Initialize current image index for each property
       const initialIndexes = {};
       featured.forEach((property) => {
-        initialIndexes[property.postId || property.id] = 0;
+        initialIndexes[property.postId] = 0;
       });
       setCurrentImageIndexes(initialIndexes);
     } catch (error) {
@@ -114,7 +115,7 @@ const Home = () => {
       // Initialize indexes for sample properties too
       const initialIndexes = {};
       sampleProperties.forEach((property) => {
-        initialIndexes[property.postId || property.id] = 0;
+        initialIndexes[property.postId] = 0;
       });
       setCurrentImageIndexes(initialIndexes);
     } finally {
@@ -212,7 +213,7 @@ const Home = () => {
         "You've found home with the right Agent. This was my first home and I appreciated the patience shown to me.",
       rating: 5,
       avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop",
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
       role: "Real Estate Investor",
     },
     {
@@ -376,16 +377,15 @@ const Home = () => {
           ) : (
             <div className="home-properties-grid">
               {featuredProperties.map((property) => {
-                const propertyKey = property.postId || property.id;
-                const currentIndex = currentImageIndexes[propertyKey] || 0;
-                const images =
-                  property.images || (property.image ? [property.image] : []);
+                const propertyKey = property.postId;
+                const currentIndex = currentImageIndexes[propertyKey] ;
+                const images =property.images ;
                 const hasMultipleImages = images && images.length > 1;
 
                 return (
                   <Link
                     key={propertyKey}
-                    to={`/properties/${property.postId || property.id}`}
+                    to={`/properties/${property.postId}`}
                     className="home-property-card-link"
                   >
                     <div className="home-property-card">
@@ -404,17 +404,14 @@ const Home = () => {
                           alt={property.title}
                         />
                         <div className="home-property-badge">
-                          {property.type}
+                          {property.status === -1
+                            ? "Sold"
+                            : property.status === 0
+                              ? "Available"
+                              : property.status === 1
+                                ? "Under Negotiation"
+                                : property.status}
                         </div>
-                        <button
-                          className="home-property-favorite"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                        >
-                          <FaHeart />
-                        </button>
 
                         {/* Image Navigation Arrows */}
                         {hasMultipleImages && (
@@ -469,13 +466,16 @@ const Home = () => {
                             <i class="fa-solid fa-angle-right"></i>
                             <span>{property.description}</span>
                           </div>
-                          ${property.price?.toLocaleString() || "N/A"}
+                          <div className="home-price-row">
+                            <FaDollarSign className="home-price-icon" />{" "}
+                            {property.price?.toLocaleString()}
+                          </div>
                         </div>
 
                         <div className="home-property-meta-small">
                           <div className="home-property-user">
                             <FaUser />
-                            <span>{property.userName || "Unknown"}</span>
+                            <span>{property.userName}</span>
                           </div>
                           <div className="home-property-date">
                             <FaCalendarAlt />
