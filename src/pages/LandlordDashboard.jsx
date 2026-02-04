@@ -26,9 +26,15 @@ const LandlordDashboard = () => {
   const [currentImageIndexes, setCurrentImageIndexes] = useState({});
   const [properties, setProperties] = useState({
     all: [],
+    pending: [],
+    accepted: [],
+    rejected: [],
   });
   const [stats, setStats] = useState({
     total: 0,
+    pending: 0,
+    accepted: 0,
+    rejected: 0,
   });
 
   const isDeletingRef = useRef(false);
@@ -92,12 +98,22 @@ const LandlordDashboard = () => {
       );
       const allPosts = allResponse.data || [];
 
+      const pendingPosts = allPosts.filter((p) => p.pendingStatus === 0);
+      const acceptedPosts = allPosts.filter((p) => p.pendingStatus === 1);
+      const rejectedPosts = allPosts.filter((p) => p.pendingStatus === -1);
+
       setProperties({
         all: allPosts,
+        pending: pendingPosts,
+        accepted: acceptedPosts,
+        rejected: rejectedPosts,
       });
 
       setStats({
         total: allPosts.length,
+        pending: pendingPosts.length,
+        accepted: acceptedPosts.length,
+        rejected: rejectedPosts.length,
       });
 
       // Initialize current image index for each property
@@ -463,16 +479,90 @@ const LandlordDashboard = () => {
 
         {/* Stats Cards */}
         <div className="stats-grid">
-          <div className="stat-card">
+          <div
+            className={`stat-card ${activeTab === "all" ? "active" : ""}`}
+            onClick={() => setActiveTab("all")}
+          >
             <div className="stat-icon stat-total">
               <Home size={24} />
             </div>
             <div className="stat-info">
-              <p className="stat-label">Total Properties</p>
+              <p className="stat-label">Total Properties Created</p>
               <p className="stat-value">{stats.total}</p>
             </div>
           </div>
+
+          <div
+            className={`stat-card ${activeTab === "pending" ? "active" : ""}`}
+            onClick={() => setActiveTab("pending")}
+          >
+            <div className="stat-icon stat-pending">
+              <Clock size={24} />
+            </div>
+            <div className="stat-info">
+              <p className="stat-label">Pending</p>
+              <p className="stat-value">{stats.pending}</p>
+            </div>
+          </div>
+
+          <div
+            className={`stat-card ${activeTab === "accepted" ? "active" : ""}`}
+            onClick={() => setActiveTab("accepted")}
+          >
+            <div className="stat-icon stat-approved">
+              <CheckCircle size={24} />
+            </div>
+            <div className="stat-info">
+              <p className="stat-label">Accepted</p>
+              <p className="stat-value">{stats.accepted}</p>
+            </div>
+          </div>
+
+          <div
+            className={`stat-card ${activeTab === "rejected" ? "active" : ""}`}
+            onClick={() => setActiveTab("rejected")}
+          >
+            <div className="stat-icon stat-rejected">
+              <XCircle size={24} />
+            </div>
+            <div className="stat-info">
+              <p className="stat-label">Rejected</p>
+              <p className="stat-value">{stats.rejected}</p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="dashboard-tabs">
+        <button
+          className={`tab-button ${activeTab === "all" ? "active" : ""}`}
+          onClick={() => setActiveTab("all")}
+        >
+          <Home size={18} />
+          All Properties
+        </button>
+        <button
+          className={`tab-button ${activeTab === "pending" ? "active" : ""}`}
+          onClick={() => setActiveTab("pending")}
+        >
+          <Clock size={18} />
+          Pending
+        </button>
+        <button
+          className={`tab-button ${activeTab === "accepted" ? "active" : ""}`}
+          onClick={() => setActiveTab("accepted")}
+        >
+          <CheckCircle size={18} />
+          Accepted
+        </button>
+        <button
+          className={`tab-button ${activeTab === "rejected" ? "active" : ""}`}
+          onClick={() => setActiveTab("rejected")}
+        >
+          <XCircle size={18} />
+          Rejected
+        </button>
       </div>
 
       {/* Properties Grid */}

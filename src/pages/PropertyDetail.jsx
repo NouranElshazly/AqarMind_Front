@@ -1750,15 +1750,18 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin && !isLandlord && post.rentalStatus !== -1 && post.rentalStatus !== 1 && (
-                <button
-                  onClick={handleApplyClick}
-                  className="property-btn property-btn-primary"
-                >
-                  <FaPaperPlane className="mr-2" />
-                  Apply Now
-                </button>
-              )}
+              {!isAdmin &&
+                !isLandlord &&
+                post.rentalStatus !== -1 &&
+                post.rentalStatus !== 1 && (
+                  <button
+                    onClick={handleApplyClick}
+                    className="property-btn property-btn-primary"
+                  >
+                    <FaPaperPlane className="mr-2" />
+                    Apply Now
+                  </button>
+                )}
               <button
                 onClick={handleMessageClick}
                 className="property-btn property-btn-secondary"
@@ -2623,7 +2626,4 @@ const PropertyDetail = () => {
     </div>
   );
 };
-
 export default PropertyDetail;
-
-

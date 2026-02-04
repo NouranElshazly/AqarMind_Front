@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import API_BASE_URL from "../services/ApiConfig";
 import API from "../services/api";
 import {
@@ -18,6 +19,7 @@ import {
   Mail,
   Gavel,
 } from "lucide-react";
+import ConfirmationModal from "../components/ConfirmationModal";
 import "../styles/AdminPendingApprovals.css";
 
 const PostDetails = ({ post, onApprove, onReject, actionLoading }) => {
@@ -287,10 +289,22 @@ const AdminPendingApprovals = () => {
   const [pendingPosts, setPendingPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    confirmText: "",
+    cancelText: "Cancel",
+  });
 
   useEffect(() => {
     fetchPendingPosts();
   }, []);
+
+  const closeConfirmationModal = () => {
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+  };
 
   const fetchPendingPosts = async () => {
     try {
@@ -305,10 +319,7 @@ const AdminPendingApprovals = () => {
     }
   };
 
-  const handleApprove = async (postId) => {
-    if (!window.confirm("Are you sure you want to approve this property?"))
-      return;
-
+  const performApprove = async (postId) => {
     try {
       setActionLoading(true);
       // استخدام الـ API الموجود
@@ -317,19 +328,27 @@ const AdminPendingApprovals = () => {
       // Remove from list
       setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
       setSelectedPost(null);
-      alert("Property approved successfully!");
+      toast.success("Property approved successfully!");
     } catch (error) {
       console.error("Error approving post:", error);
-      alert(error.response?.data?.message || "Failed to approve property");
+      toast.error(error.response?.data?.message || "Failed to approve property");
     } finally {
       setActionLoading(false);
+      closeConfirmationModal();
     }
   };
 
-  const handleReject = async (postId) => {
-    if (!window.confirm("Are you sure you want to reject this property?"))
-      return;
+  const handleApprove = (postId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "Approve Property",
+      message: "Are you sure you want to approve this property?",
+      confirmText: "Approve",
+      onConfirm: () => performApprove(postId),
+    });
+  };
 
+  const performReject = async (postId) => {
     try {
       setActionLoading(true);
       // استخدام الـ API الموجود
@@ -339,13 +358,24 @@ const AdminPendingApprovals = () => {
       setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
       setSelectedPost(null);
 
-      alert("Property rejected successfully!");
+      toast.success("Property rejected successfully!");
     } catch (error) {
       console.error("Error rejecting post:", error);
-      alert(error.response?.data?.message || "Failed to reject property");
+      toast.error(error.response?.data?.message || "Failed to reject property");
     } finally {
       setActionLoading(false);
+      closeConfirmationModal();
     }
+  };
+
+  const handleReject = (postId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "Reject Property",
+      message: "Are you sure you want to reject this property?",
+      confirmText: "Reject",
+      onConfirm: () => performReject(postId),
+    });
   };
 
   const PostCard = ({ post }) => (
@@ -444,6 +474,16 @@ const AdminPendingApprovals = () => {
           )}
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        cancelText={confirmationModal.cancelText}
+        isLoading={actionLoading}
+      />
     </div>
   );
 };

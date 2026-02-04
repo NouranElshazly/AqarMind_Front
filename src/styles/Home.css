@@ -468,11 +468,24 @@
 
 .home-property-description {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Align to top to handle multi-line text */
   gap: 0.5rem;
   color: var(--text-secondary);
   font-size: 0.875rem;
   margin-bottom: 1rem;
+}
+
+.home-property-description i {
+  margin-top: 0.2rem; /* Adjust icon alignment */
+}
+
+.home-property-description span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .home-property-description svg {

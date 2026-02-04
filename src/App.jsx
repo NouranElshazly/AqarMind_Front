@@ -1,5 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
 
 import Navbar from "./components/Navbar";
@@ -228,6 +230,7 @@ function App() {
           
           {/* Global Scroll to Top Button */}
           <ScrollToTop />
+          <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </AuthProvider>
     </DarkModeProvider>
