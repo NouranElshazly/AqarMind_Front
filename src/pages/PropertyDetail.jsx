@@ -318,9 +318,9 @@ const PropertyDetail = () => {
   const { userId, userName } = userInfo || {};
   const tenantId = localStorage.getItem("userId");
   const tenantRole = localStorage.getItem("role");
-  const isAdmin = tenantRole === "admin";
+  const isAdmin = tenantRole === "Admin";
   const isLandlord = tenantRole === "landlord";
-  const isTenant = tenantRole === "tenant";
+  const isTenant = tenantRole === "Tenant";
 
   // --- (جميع الدوال والـ useEffects بدون تغيير) ---
   const calculateTotalComments = (commentList) => {
@@ -1750,7 +1750,7 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {isAdmin &&
+              {!isAdmin &&
                 !isLandlord &&
                 post.rentalStatus !== -1 &&
                 post.rentalStatus !== 1 && (
@@ -2035,250 +2035,134 @@ const PropertyDetail = () => {
                 </div>
               )}
               {/* Eligibility Section - Collapsible */}
-              {(post.rentType === 0 ||
-                (post.rentType === 1 &&
-                  parseInt(formData.isInstallment) === 1)) && (
-                <div className="application-form-group">
-                  <div
-                    className="eligibility-section-header"
-                    onClick={() => setShowEligibility(!showEligibility)}
-                    style={{
-                      cursor: "pointer",
-                      padding: "16px",
-                      backgroundColor: "#f8f9fa",
-                      borderRadius: "12px",
-                      marginBottom: showEligibility ? "16px" : "0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      border: "2px solid #e9ecef",
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <FaClipboardCheck
-                        style={{ color: "#6366f1", fontSize: "20px" }}
-                      />
-                      <span
-                        style={{
-                          fontWeight: "600",
-                          fontSize: "16px",
-                          color: "#1f2937",
-                        }}
-                      >
-                        📊 Financial Eligibility Assessment
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#ef4444",
-                          backgroundColor: "#fee2e2",
-                          padding: "2px 8px",
-                          borderRadius: "6px",
-                          fontWeight: "500",
-                        }}
-                      >
-                        Required
-                      </span>
-                    </div>
-                    <FaChevronDown
-                      style={{
-                        transition: "transform 0.3s ease",
-                        transform: showEligibility
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                        color: "#6b7280",
-                      }}
-                    />
-                  </div>
+{(post.rentType === 0 ||
+  (post.rentType === 1 &&
+    parseInt(formData.isInstallment) === 1)) && (
+  <div className="application-form-group">
+    <div
+      className={`eligibility-section-header ${showEligibility ? 'expanded' : 'collapsed'}`}
+      onClick={() => setShowEligibility(!showEligibility)}
+    >
+      <div className="eligibility-header-content">
+        
+        <span className="eligibility-header-title">
+           Financial Eligibility Assessment
+        </span>
+        <span className="eligibility-required-badge">
+          Required
+        </span>
+      </div>
+      <FaChevronDown
+        className={`eligibility-chevron ${showEligibility ? 'expanded' : 'collapsed'}`}
+      />
+    </div>
 
-                  {showEligibility && (
-                    <div
-                      className="eligibility-form-content"
-                      style={{
-                        padding: "20px",
-                        backgroundColor: "#ffffff",
-                        borderRadius: "12px",
-                        border: "2px solid #e9ecef",
-                        marginTop: "8px",
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          color: "#6b7280",
-                          marginBottom: "20px",
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        Please provide your financial information to assess your
-                        eligibility for this property.
-                      </p>
+    {showEligibility && (
+      <div className="eligibility-form-content">
+        <p className="eligibility-form-description">
+          Provide This information to assess your
+          eligibility for this property.
+        </p>
 
-                      {/* Monthly Income */}
-                      <div
-                        className="application-form-group"
-                        style={{ marginBottom: "16px" }}
-                      >
-                        <label
-                          className="application-form-label"
-                          style={{ fontSize: "14px", fontWeight: "500" }}
-                        >
-                          <FaDollarSign style={{ color: "#10b981" }} />
-                          Monthly Income *
-                        </label>
-                        <input
-                          type="number"
-                          name="monthlyIncome"
-                          placeholder="Enter your monthly income"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={eligibilityData.monthlyIncome}
-                          onChange={handleEligibilityChange}
-                          className="application-form-input"
-                          style={{ fontSize: "14px" }}
-                        />
-                      </div>
+        {/* Monthly Income */}
+        <div className="application-form-group eligibility-field-group">
+          <label className="application-form-label eligibility-field-label">
+            <FaDollarSign className="eligibility-icon-income" />
+            Monthly Income *
+          </label>
+          <input
+            type="number"
+            name="monthlyIncome"
+            placeholder="Enter your monthly income"
+            required
+            min="0"
+            step="0.01"
+            value={eligibilityData.monthlyIncome}
+            onChange={handleEligibilityChange}
+            className="application-form-input eligibility-field-input"
+          />
+        </div>
 
-                      {/* Monthly Expenses */}
-                      <div
-                        className="application-form-group"
-                        style={{ marginBottom: "16px" }}
-                      >
-                        <label
-                          className="application-form-label"
-                          style={{ fontSize: "14px", fontWeight: "500" }}
-                        >
-                          <FaDollarSign style={{ color: "#f59e0b" }} />
-                          Monthly Expenses *
-                        </label>
-                        <input
-                          type="number"
-                          name="monthlyExpenses"
-                          placeholder="Enter your total monthly expenses"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={eligibilityData.monthlyExpenses}
-                          onChange={handleEligibilityChange}
-                          className="application-form-input"
-                          style={{ fontSize: "14px" }}
-                        />
-                      </div>
+        {/* Monthly Expenses */}
+        <div className="application-form-group eligibility-field-group">
+          <label className="application-form-label eligibility-field-label">
+            <FaDollarSign className="eligibility-icon-expenses" />
+            Monthly Expenses *
+          </label>
+          <input
+            type="number"
+            name="monthlyExpenses"
+            placeholder="Enter your total monthly expenses"
+            required
+            min="0"
+            step="0.01"
+            value={eligibilityData.monthlyExpenses}
+            onChange={handleEligibilityChange}
+            className="application-form-input eligibility-field-input"
+          />
+        </div>
 
-                      {/* Existing Monthly Debt */}
-                      <div
-                        className="application-form-group"
-                        style={{ marginBottom: "16px" }}
-                      >
-                        <label
-                          className="application-form-label"
-                          style={{ fontSize: "14px", fontWeight: "500" }}
-                        >
-                          <FaCreditCard style={{ color: "#ef4444" }} />
-                          Existing Monthly Debt *
-                        </label>
-                        <input
-                          type="number"
-                          name="existingMonthlyDebt"
-                          placeholder="Enter your monthly debt payments (0 if none)"
-                          required
-                          min="0"
-                          step="0.01"
-                          value={eligibilityData.existingMonthlyDebt}
-                          onChange={handleEligibilityChange}
-                          className="application-form-input"
-                          style={{ fontSize: "14px" }}
-                        />
-                      </div>
+        {/* Existing Monthly Debt */}
+        <div className="application-form-group eligibility-field-group">
+          <label className="application-form-label eligibility-field-label">
+            <FaCreditCard className="eligibility-icon-debt" />
+            Existing Monthly Debt *
+          </label>
+          <input
+            type="number"
+            name="existingMonthlyDebt"
+            placeholder="Enter your monthly debt payments (0 if none)"
+            required
+            min="0"
+            step="0.01"
+            value={eligibilityData.existingMonthlyDebt}
+            onChange={handleEligibilityChange}
+            className="application-form-input eligibility-field-input"
+          />
+        </div>
 
-                      {/* Has Stable Job */}
-                      <div
-                        className="application-form-group"
-                        style={{ marginBottom: "16px" }}
-                      >
-                        <label
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            cursor: "pointer",
-                            padding: "12px",
-                            backgroundColor: "#f9fafb",
-                            borderRadius: "8px",
-                            border: "1px solid #e5e7eb",
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            name="hasStableJob"
-                            checked={eligibilityData.hasStableJob}
-                            onChange={handleEligibilityChange}
-                            style={{
-                              width: "20px",
-                              height: "20px",
-                              cursor: "pointer",
-                              accentColor: "#6366f1",
-                            }}
-                          />
-                          <span
-                            style={{
-                              fontSize: "14px",
-                              fontWeight: "500",
-                              color: "#1f2937",
-                            }}
-                          >
-                            <FaUserTie
-                              style={{ color: "#6366f1", marginRight: "8px" }}
-                            />
-                            I have a stable job *
-                          </span>
-                        </label>
-                      </div>
+        {/* Has Stable Job */}
+        <div className="application-form-group eligibility-field-group">
+          <label className="eligibility-checkbox-container">
+            <input
+              type="checkbox"
+              name="hasStableJob"
+              checked={eligibilityData.hasStableJob}
+              onChange={handleEligibilityChange}
+              className="eligibility-checkbox-input"
+            />
+            <span className="eligibility-checkbox-label">
+              <FaUserTie className="eligibility-icon-job" />
+              I have a stable job *
+            </span>
+          </label>
+        </div>
 
-                      {/* Number of Dependents */}
-                      <div className="application-form-group">
-                        <label
-                          className="application-form-label"
-                          style={{ fontSize: "14px", fontWeight: "500" }}
-                        >
-                          <FaUser style={{ color: "#8b5cf6" }} />
-                          Number of Dependents *
-                        </label>
-                        <input
-                          type="number"
-                          name="dependents"
-                          placeholder="Number of people dependent on your income"
-                          required
-                          min="0"
-                          max="50"
-                          value={eligibilityData.dependents}
-                          onChange={handleEligibilityChange}
-                          className="application-form-input"
-                          style={{ fontSize: "14px" }}
-                        />
-                        <p
-                          style={{
-                            fontSize: "12px",
-                            color: "#6b7280",
-                            marginTop: "4px",
-                          }}
-                        >
-                          Enter 0 if you have no dependents
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
+        {/* Number of Dependents */}
+        <div className="application-form-group">
+          <label className="application-form-label eligibility-field-label">
+            <FaUser className="eligibility-icon-dependents" />
+            Number of Dependents *
+          </label>
+          <input
+            type="number"
+            name="dependents"
+            placeholder="Number of people dependent on your income"
+            required
+            min="0"
+            max="50"
+            value={eligibilityData.dependents}
+            onChange={handleEligibilityChange}
+            className="application-form-input eligibility-field-input"
+          />
+          <p className="eligibility-field-hint">
+            Enter 0 if you have no dependents
+          </p>
+        </div>
+      </div>
+    )}
+  </div>
+)}
               {error && (
                 <div className="application-form-error">
                   {typeof error === "object" ? JSON.stringify(error) : error}

@@ -4270,3 +4270,205 @@ img {
     padding: 0.875rem 1rem !important;
   }
 }
+
+/* Eligibility Section Styles */
+
+.eligibility-section-header {
+  cursor: pointer !important;
+  padding: 1.5rem !important;
+  background-color: var(--bg-card) !important;
+  border-radius: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border: 2px solid var(--border-primary) !important;
+  transition: all 0.3s ease !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.eligibility-section-header:hover {
+  border-color: var(--brand-primary) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.eligibility-section-header.expanded {
+  margin-bottom: 1.5rem !important;
+  border-color: var(--brand-primary) !important;
+}
+
+.eligibility-section-header.collapsed {
+  margin-bottom: 0 !important;
+}
+
+.eligibility-header-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+.eligibility-header-icon {
+  color: var(--brand-primary) !important;
+  font-size: 1.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  background: rgba(251, 191, 36, 0.1) !important;
+  border-radius: 0.75rem !important;
+}
+
+.eligibility-header-title {
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  color: var(--text-primary) !important;
+}
+
+.eligibility-required-badge {
+  font-size: 0.75rem !important;
+  color: var(--error) !important;
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 2rem !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+.eligibility-chevron {
+  transition: transform 0.3s ease !important;
+  color: var(--text-secondary) !important;
+  font-size: 1.25rem !important;
+}
+
+.eligibility-chevron.expanded {
+  transform: rotate(180deg) !important;
+  color: var(--brand-primary) !important;
+}
+
+.eligibility-chevron.collapsed {
+  transform: rotate(0deg) !important;
+}
+
+.eligibility-form-content {
+  padding: 2.5rem !important;
+  background-color: var(--bg-card) !important;
+  border-radius: 1rem !important;
+  border: 2px solid var(--border-primary) !important;
+  margin-top: 1rem !important;
+  animation: slideUp 0.3s ease;
+}
+
+.eligibility-form-description {
+  font-size: 1rem !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 2rem !important;
+  line-height: 1.6 !important;
+  padding: 1rem !important;
+  background: var(--bg-primary) !important;
+  border-radius: 0.75rem !important;
+  border-left: 4px solid var(--brand-primary) !important;
+}
+
+.eligibility-field-group {
+  margin-bottom: 2rem !important;
+}
+
+.eligibility-field-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  font-size: 1.1rem !important;
+}
+
+.eligibility-field-input {
+  width: 100% !important;
+  padding: 1.25rem 1.5rem !important;
+  border: 2px solid var(--border-primary) !important;
+  border-radius: 1rem !important;
+  font-size: 1rem !important;
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  transition: all 0.3s ease !important;
+  font-family: inherit !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.eligibility-field-input:hover {
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15) !important;
+}
+
+.eligibility-field-input:focus {
+  outline: none !important;
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.2) !important;
+  background: var(--bg-primary) !important;
+}
+
+.eligibility-icon-income {
+  color: #10b981;
+  font-size: 1.25rem;
+}
+
+.eligibility-icon-expenses {
+  color: #f59e0b;
+  font-size: 1.25rem;
+}
+
+.eligibility-icon-debt {
+  color: #ef4444;
+  font-size: 1.25rem;
+}
+
+.eligibility-icon-job {
+  color: var(--brand-primary);
+  margin-right: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.eligibility-icon-dependents {
+  color: #8b5cf6;
+  font-size: 1.25rem;
+}
+
+.eligibility-checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--bg-primary);
+  border-radius: 1rem;
+  border: 2px solid var(--border-primary);
+  transition: all 0.3s ease;
+}
+
+.eligibility-checkbox-container:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.eligibility-checkbox-input {
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: pointer;
+  accent-color: var(--brand-primary);
+}
+
+.eligibility-checkbox-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.eligibility-field-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+}
