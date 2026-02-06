@@ -337,6 +337,19 @@ const AdminDashboard = () => {
             </Link>
 
             <Link
+              to="/admin/manage-subs"
+              className="action-card action-reports"
+            >
+              <div className="action-icon">
+                <BarChart3 size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Subscription plans</h3>
+                <p>Manage subscription plans</p>
+              </div>
+            </Link>
+
+            <Link
               to="/admin/SystemReports"
               className="action-card action-reports"
             >
@@ -348,7 +361,6 @@ const AdminDashboard = () => {
                 <p>View analytics and reports</p>
               </div>
             </Link>
-
 
             <Link
               to="/admin/landlord-applications"

@@ -786,7 +786,7 @@ const PropertyDetail = () => {
       // استدعاء الـ API
       const response = await axios.post(apiUrl, data, { headers });
 
-      alert("Application submitted successfully!");
+      toast.success("Application submitted successfully!");
 
       await recordHistoryEvent(userId, "apply", {
         post_id: postId,
@@ -1750,18 +1750,15 @@ const PropertyDetail = () => {
 
             {/* Action Buttons */}
             <div className="property-actions-main">
-              {!isAdmin &&
-                !isLandlord &&
-                post.rentalStatus !== -1 &&
-                post.rentalStatus !== 1 && (
-                  <button
-                    onClick={handleApplyClick}
-                    className="property-btn property-btn-primary"
-                  >
-                    <FaPaperPlane className="mr-2" />
-                    Apply Now
-                  </button>
-                )}
+              {!isAdmin && !isLandlord && post.rentalStatus !== -1 && (
+                <button
+                  onClick={handleApplyClick}
+                  className="property-btn property-btn-primary"
+                >
+                  <FaPaperPlane className="mr-2" />
+                  Apply Now
+                </button>
+              )}
               <button
                 onClick={handleMessageClick}
                 className="property-btn property-btn-secondary"
@@ -2035,134 +2032,133 @@ const PropertyDetail = () => {
                 </div>
               )}
               {/* Eligibility Section - Collapsible */}
-{(post.rentType === 0 ||
-  (post.rentType === 1 &&
-    parseInt(formData.isInstallment) === 1)) && (
-  <div className="application-form-group">
-    <div
-      className={`eligibility-section-header ${showEligibility ? 'expanded' : 'collapsed'}`}
-      onClick={() => setShowEligibility(!showEligibility)}
-    >
-      <div className="eligibility-header-content">
-        
-        <span className="eligibility-header-title">
-           Financial Eligibility Assessment
-        </span>
-        <span className="eligibility-required-badge">
-          Required
-        </span>
-      </div>
-      <FaChevronDown
-        className={`eligibility-chevron ${showEligibility ? 'expanded' : 'collapsed'}`}
-      />
-    </div>
+              {(post.rentType === 0 ||
+                (post.rentType === 1 &&
+                  parseInt(formData.isInstallment) === 1)) && (
+                <div className="application-form-group">
+                  <div
+                    className={`eligibility-section-header ${showEligibility ? "expanded" : "collapsed"}`}
+                    onClick={() => setShowEligibility(!showEligibility)}
+                  >
+                    <div className="eligibility-header-content">
+                      <span className="eligibility-header-title">
+                        Financial Eligibility Assessment
+                      </span>
+                      <span className="eligibility-required-badge">
+                        Required
+                      </span>
+                    </div>
+                    <FaChevronDown
+                      className={`eligibility-chevron ${showEligibility ? "expanded" : "collapsed"}`}
+                    />
+                  </div>
 
-    {showEligibility && (
-      <div className="eligibility-form-content">
-        <p className="eligibility-form-description">
-          Provide This information to assess your
-          eligibility for this property.
-        </p>
+                  {showEligibility && (
+                    <div className="eligibility-form-content">
+                      <p className="eligibility-form-description">
+                        Provide This information to assess your eligibility for
+                        this property.
+                      </p>
 
-        {/* Monthly Income */}
-        <div className="application-form-group eligibility-field-group">
-          <label className="application-form-label eligibility-field-label">
-            <FaDollarSign className="eligibility-icon-income" />
-            Monthly Income *
-          </label>
-          <input
-            type="number"
-            name="monthlyIncome"
-            placeholder="Enter your monthly income"
-            required
-            min="0"
-            step="0.01"
-            value={eligibilityData.monthlyIncome}
-            onChange={handleEligibilityChange}
-            className="application-form-input eligibility-field-input"
-          />
-        </div>
+                      {/* Monthly Income */}
+                      <div className="application-form-group eligibility-field-group">
+                        <label className="application-form-label eligibility-field-label">
+                          <FaDollarSign className="eligibility-icon-income" />
+                          Monthly Income *
+                        </label>
+                        <input
+                          type="number"
+                          name="monthlyIncome"
+                          placeholder="Enter your monthly income"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.monthlyIncome}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input eligibility-field-input"
+                        />
+                      </div>
 
-        {/* Monthly Expenses */}
-        <div className="application-form-group eligibility-field-group">
-          <label className="application-form-label eligibility-field-label">
-            <FaDollarSign className="eligibility-icon-expenses" />
-            Monthly Expenses *
-          </label>
-          <input
-            type="number"
-            name="monthlyExpenses"
-            placeholder="Enter your total monthly expenses"
-            required
-            min="0"
-            step="0.01"
-            value={eligibilityData.monthlyExpenses}
-            onChange={handleEligibilityChange}
-            className="application-form-input eligibility-field-input"
-          />
-        </div>
+                      {/* Monthly Expenses */}
+                      <div className="application-form-group eligibility-field-group">
+                        <label className="application-form-label eligibility-field-label">
+                          <FaDollarSign className="eligibility-icon-expenses" />
+                          Monthly Expenses *
+                        </label>
+                        <input
+                          type="number"
+                          name="monthlyExpenses"
+                          placeholder="Enter your total monthly expenses"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.monthlyExpenses}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input eligibility-field-input"
+                        />
+                      </div>
 
-        {/* Existing Monthly Debt */}
-        <div className="application-form-group eligibility-field-group">
-          <label className="application-form-label eligibility-field-label">
-            <FaCreditCard className="eligibility-icon-debt" />
-            Existing Monthly Debt *
-          </label>
-          <input
-            type="number"
-            name="existingMonthlyDebt"
-            placeholder="Enter your monthly debt payments (0 if none)"
-            required
-            min="0"
-            step="0.01"
-            value={eligibilityData.existingMonthlyDebt}
-            onChange={handleEligibilityChange}
-            className="application-form-input eligibility-field-input"
-          />
-        </div>
+                      {/* Existing Monthly Debt */}
+                      <div className="application-form-group eligibility-field-group">
+                        <label className="application-form-label eligibility-field-label">
+                          <FaCreditCard className="eligibility-icon-debt" />
+                          Existing Monthly Debt *
+                        </label>
+                        <input
+                          type="number"
+                          name="existingMonthlyDebt"
+                          placeholder="Enter your monthly debt payments (0 if none)"
+                          required
+                          min="0"
+                          step="0.01"
+                          value={eligibilityData.existingMonthlyDebt}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input eligibility-field-input"
+                        />
+                      </div>
 
-        {/* Has Stable Job */}
-        <div className="application-form-group eligibility-field-group">
-          <label className="eligibility-checkbox-container">
-            <input
-              type="checkbox"
-              name="hasStableJob"
-              checked={eligibilityData.hasStableJob}
-              onChange={handleEligibilityChange}
-              className="eligibility-checkbox-input"
-            />
-            <span className="eligibility-checkbox-label">
-              <FaUserTie className="eligibility-icon-job" />
-              I have a stable job *
-            </span>
-          </label>
-        </div>
+                      {/* Has Stable Job */}
+                      <div className="application-form-group eligibility-field-group">
+                        <label className="eligibility-checkbox-container">
+                          <input
+                            type="checkbox"
+                            name="hasStableJob"
+                            checked={eligibilityData.hasStableJob}
+                            onChange={handleEligibilityChange}
+                            className="eligibility-checkbox-input"
+                          />
+                          <span className="eligibility-checkbox-label">
+                            <FaUserTie className="eligibility-icon-job" />I have
+                            a stable job *
+                          </span>
+                        </label>
+                      </div>
 
-        {/* Number of Dependents */}
-        <div className="application-form-group">
-          <label className="application-form-label eligibility-field-label">
-            <FaUser className="eligibility-icon-dependents" />
-            Number of Dependents *
-          </label>
-          <input
-            type="number"
-            name="dependents"
-            placeholder="Number of people dependent on your income"
-            required
-            min="0"
-            max="50"
-            value={eligibilityData.dependents}
-            onChange={handleEligibilityChange}
-            className="application-form-input eligibility-field-input"
-          />
-          <p className="eligibility-field-hint">
-            Enter 0 if you have no dependents
-          </p>
-        </div>
-      </div>
-    )}
-  </div>
-)}
+                      {/* Number of Dependents */}
+                      <div className="application-form-group">
+                        <label className="application-form-label eligibility-field-label">
+                          <FaUser className="eligibility-icon-dependents" />
+                          Number of Dependents *
+                        </label>
+                        <input
+                          type="number"
+                          name="dependents"
+                          placeholder="Number of people dependent on your income"
+                          required
+                          min="0"
+                          max="50"
+                          value={eligibilityData.dependents}
+                          onChange={handleEligibilityChange}
+                          className="application-form-input eligibility-field-input"
+                        />
+                        <p className="eligibility-field-hint">
+                          Enter 0 if you have no dependents
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               {error && (
                 <div className="application-form-error">
                   {typeof error === "object" ? JSON.stringify(error) : error}

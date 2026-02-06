@@ -35,6 +35,8 @@ import AdminManageComplaints from "./pages/AdminManageComplaints";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/Changepassword";
 import LandlordProposalManage from "./pages/LandlordProposalManage"
+import AdminManageSubs from "./pages/AdminManageSubs"
+import SubsPlan from "./pages/SubsPlan";
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -170,6 +172,7 @@ function App() {
                 element={<LandlordApplicationDetail />}
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
+              <Route path="/admin/manage-subs" element={<AdminManageSubs />} />
               <Route path="/admin/manage-admins" element={<ManageAdmins />} />
               <Route
                 path="/admin/AdminChatDashboard"
@@ -200,6 +203,10 @@ function App() {
               <Route
                 path="/landlord/manage-proposals"
                 element={<LandlordProposalManage />}
+              />
+              <Route
+                path="/landlord/subscription-plans"
+                element={<SubsPlan />}
               />
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />

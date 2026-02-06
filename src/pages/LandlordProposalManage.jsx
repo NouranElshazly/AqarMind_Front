@@ -13,12 +13,23 @@ import {
   Home,
   Calendar,
 } from "lucide-react";
+import ConfirmationModal from "../components/ConfirmationModal";
 import "../styles/LandlordProposalManage.css";
 
 const LandlordProposalManage = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    message: "",
+    action: null,
+    proposalId: null,
+    confirmText: "Confirm",
+    confirmColor: "bg-blue-600" // Optional if modal supports it, but standard props are enough
+  });
 
   // Helper for date formatting
   const formatDate = (dateString) => {
@@ -97,61 +108,71 @@ const LandlordProposalManage = () => {
     fetchProposals();
   }, []);
 
-  const handleAccept = async (proposalId) => {
-    if (!window.confirm("Are you sure you want to accept this proposal?"))
-      return;
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `https://localhost:7119/api/Landlord/accept-waiting-proposal/${proposalId}`,
-        {},
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      // Update local state to reflect change
-      setProposals((prev) =>
-        prev.map((p) =>
-          p.proposalId === proposalId ? { ...p, proposalStatus: 1 } : p,
-        ),
-      );
-    } catch (err) {
-      console.error("Error accepting proposal:", err);
-      alert("Failed to accept proposal. Please try again.");
-    }
+  const handleAccept = (proposalId) => {
+    setModalConfig({
+      title: "Accept Proposal",
+      message: "Are you sure you want to accept this proposal?",
+      action: "accept",
+      proposalId: proposalId,
+      confirmText: "Accept"
+    });
+    setModalOpen(true);
   };
 
-  const handleReject = async (proposalId) => {
-    if (!window.confirm("Are you sure you want to reject this proposal?"))
-      return;
+  const handleReject = (proposalId) => {
+    setModalConfig({
+      title: "Reject Proposal",
+      message: "Are you sure you want to reject this proposal?",
+      action: "reject",
+      proposalId: proposalId,
+      confirmText: "Reject"
+    });
+    setModalOpen(true);
+  };
 
+  const performAction = async () => {
+    const { action, proposalId } = modalConfig;
+    if (!action || !proposalId) return;
+
+    setIsProcessing(true);
     try {
       const token = localStorage.getItem("token");
+      let url = "";
+      let newStatus = 0;
+
+      if (action === "accept") {
+        url = `https://localhost:7119/api/Landlord/accept-waiting-proposal/${proposalId}`;
+        newStatus = 1;
+      } else if (action === "reject") {
+        url = `https://localhost:7119/api/Landlord/reject-waiting-proposal/${proposalId}`;
+        newStatus = 2;
+      }
+
       await axios.put(
-        `https://localhost:7119/api/Landlord/reject-waiting-proposal/${proposalId}`,
+        url,
         {},
         {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       // Update local state to reflect change
       setProposals((prev) =>
         prev.map((p) =>
-          p.proposalId === proposalId ? { ...p, proposalStatus: 2 } : p,
-        ),
+          p.proposalId === proposalId ? { ...p, proposalStatus: newStatus } : p
+        )
       );
+      
+      setModalOpen(false);
     } catch (err) {
-      console.error("Error rejecting proposal:", err);
-      alert("Failed to reject proposal. Please try again.");
+      console.error(`Error ${action}ing proposal:`, err);
+      alert(`Failed to ${action} proposal. Please try again.`);
+      setModalOpen(false);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -289,6 +310,15 @@ const LandlordProposalManage = () => {
           })
         )}
       </div>
+      <ConfirmationModal
+        isOpen={modalOpen}
+        onClose={() => !isProcessing && setModalOpen(false)}
+        onConfirm={performAction}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        isLoading={isProcessing}
+      />
     </div>
   );
 };

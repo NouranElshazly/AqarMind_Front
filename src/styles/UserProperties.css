@@ -67,11 +67,10 @@
    ========================================== */
 
 .user-properties-container {
-  max-width: 1400px;
+  max-width: 1200px; /* Even smaller */
   margin: 0 auto;
-  padding: 3rem 1rem;
+  padding: 3rem 2rem;
 }
-
 /* ==========================================
    SEARCH AND FILTER CONTROLS
    ========================================== */
@@ -277,6 +276,12 @@
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
   color: var(--error);
   border-color: var(--error);
+}
+
+.property-status-uncertain {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .property-status-default {

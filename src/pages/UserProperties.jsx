@@ -19,6 +19,7 @@ import {
   FaChevronRight,
   FaDollarSign,
   FaImage,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
@@ -336,6 +337,7 @@ const MyProperties = () => {
               Offeredprice: proposal.Offeredprice || "❌ Missing", // تحقق من الاسم بحرف كبير
               phone: proposal.phone || "❌ Missing",
               rentalStatus: proposal.rentalStatus || "❌ Missing",
+              proposalStatus: proposal.proposalStatus,
               startRentalDate: proposal.startRentalDate || "❌ Missing",
               endRentalDate: proposal.endRentalDate || "❌ Missing",
               landlordName: proposal.landlordName || "❌ Missing",
@@ -422,9 +424,24 @@ const MyProperties = () => {
     }
   };
 
+  // Helper function to get status label from numeric or string status
+  const getProposalStatusLabel = (status) => {
+    const numericStatus = Number(status);
+    if (!isNaN(numericStatus) && status !== null && status !== "") {
+      if (numericStatus === -1) return "Rejected";
+      if (numericStatus === 0) return "Waiting";
+      if (numericStatus === 1) return "Approved";
+      if (numericStatus === 2) return "Uncertain";
+    }
+    return status;
+  };
+
   const renderStatusBadge = (status) => {
+    const label = getProposalStatusLabel(status);
+    const normalizedStatus = label;
+
     const statusConfig = {
-      Pending: {
+      Waiting: {
         className: "property-status-pending",
         icon: <FaClock />,
       },
@@ -436,9 +453,13 @@ const MyProperties = () => {
         className: "property-status-rejected",
         icon: <FaTimesCircle />,
       },
+      Uncertain: {
+        className: "property-status-uncertain",
+        icon: <FaQuestionCircle />,
+      },
     };
 
-    const config = statusConfig[status] || {
+    const config = statusConfig[normalizedStatus] || {
       className: "property-status-default",
       icon: null,
     };
@@ -446,7 +467,7 @@ const MyProperties = () => {
     return (
       <div className={`property-status-badge ${config.className}`}>
         {config.icon}
-        <span>{status}</span>
+        <span>{label}</span>
       </div>
     );
   };
@@ -476,7 +497,8 @@ const MyProperties = () => {
         .includes(searchTerm) ||
       property.proposalId?.toString().includes(searchTerm);
     const matchesStatus =
-      statusFilter === "All" || property.rentalStatus === statusFilter;
+      statusFilter === "All" ||
+      getProposalStatusLabel(property.proposalStatus) === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -531,6 +553,7 @@ const MyProperties = () => {
 
       {/* Main Content */}
       <div className="user-properties-container">
+        {/* IF used search */}
         {/* Search and Filter Bar */}
         <div className="user-properties-controls">
           <div className="user-properties-search">
@@ -542,19 +565,6 @@ const MyProperties = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="user-properties-search-input"
             />
-          </div>
-          <div className="user-properties-filter">
-            <FaFilter className="user-properties-filter-icon" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="user-properties-filter-select"
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
           </div>
         </div>
 
@@ -577,15 +587,9 @@ const MyProperties = () => {
                       <h3 className="user-property-id">
                         Application #{property.proposalId}
                       </h3>
-                      <p className="user-property-date">
-                        Applied on{" "}
-                        {new Date(
-                          property.startRentalDate,
-                        ).toLocaleDateString()}
-                      </p>
                     </div>
                   </div>
-                  {renderStatusBadge(property.rentalStatus)}
+                  {renderStatusBadge(property.proposalStatus)}
                 </div>
 
                 {/* File Preview Section */}
