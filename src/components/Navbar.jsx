@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import { logout as logoutApi } from "../services/api";
 import { useDarkMode } from "../App";
 import "../styles/Navbar.css";
 
@@ -21,6 +22,21 @@ const HomeIcon = ({ className = "icon" }) => (
   </svg>
 );
 
+const SupportIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
 const SearchIcon = ({ className = "icon" }) => (
   <svg
     className={className}
@@ -65,6 +81,22 @@ const UserPlusIcon = ({ className = "icon" }) => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+    />
+  </svg>
+);
+
+const ProfileIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
     />
   </svg>
 );
@@ -277,6 +309,22 @@ const MoonIcon = ({ className = "icon-sm" }) => (
   </svg>
 );
 
+const CreditCardIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+    />
+  </svg>
+);
+
 // Logout Modal Component
 const LogoutModal = ({ isOpen, onConfirm, onCancel }) => {
   if (!isOpen) return null;
@@ -391,6 +439,11 @@ const Navbar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showQuickLinksDropdown, setShowQuickLinksDropdown] = useState(false);
 
+  // Check role from localStorage for profile visibility
+  const storedRole = localStorage.getItem("role");
+  const shouldShowProfile =
+    storedRole && ["tenant", "landlord", "admin"].includes(storedRole.toLowerCase());
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -408,7 +461,14 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    }
+    // Clear the ad shown flag on logout
+    sessionStorage.removeItem('adShown');
     logout();
     setShowLogoutModal(false);
     setIsMenuOpen(false);
@@ -643,31 +703,51 @@ const Navbar = () => {
                     </div>
                   </Link>
 
-                  <Link to="/UserHistory" className="dropdown-item">
-                    <div className="dropdown-item-icon">
-                      <HistoryIcon />
-                    </div>
-                    <div className="dropdown-item-content">
-                      <div className="dropdown-item-title">History</div>
-                      <div className="dropdown-item-description">
-                        Your activity timeline
+                  {user.role === "Tenant" && (
+                    <Link to="/UserHistory" className="dropdown-item">
+                      <div className="dropdown-item-icon">
+                        <HistoryIcon />
                       </div>
-                    </div>
-                  </Link>
+                      <div className="dropdown-item-content">
+                        <div className="dropdown-item-title">History</div>
+                        <div className="dropdown-item-description">
+                          Your activity timeline
+                        </div>
+                      </div>
+                    </Link>
+                  )}
 
-                  <Link to="/UserProperties" className="dropdown-item">
-                    <div className="dropdown-item-icon">
-                      <DocumentIcon />
-                    </div>
-                    <div className="dropdown-item-content">
-                      <div className="dropdown-item-title">
-                        Your Applications
+                  {user.role === "Tenant" && (
+                    <Link to="/UserProperties" className="dropdown-item">
+                      <div className="dropdown-item-icon">
+                        <DocumentIcon />
                       </div>
-                      <div className="dropdown-item-description">
-                        Track your applications
+                      <div className="dropdown-item-content">
+                        <div className="dropdown-item-title">
+                          Your Applications
+                        </div>
+                        <div className="dropdown-item-description">
+                          Track your applications
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+                  )}
+
+                  {user.role === "Landlord" && (
+                    <Link to="/landlord/subscription-plans" className="dropdown-item">
+                      <div className="dropdown-item-icon">
+                        <CreditCardIcon />
+                      </div>
+                      <div className="dropdown-item-content">
+                        <div className="dropdown-item-title">
+                          Subscription Plans
+                        </div>
+                        <div className="dropdown-item-description">
+                          View and manage plans
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                 </div>
               </div>
             )}
@@ -732,9 +812,29 @@ const Navbar = () => {
                     </div>
                     <div className="profile-info">
                       <div className="profile-name">{user.name}</div>
-                      <div className="profile-role">{user.role}</div>
+                      <div className="profile-role">
+                        {localStorage.getItem("role") || user.role}
+                      </div>
                     </div>
                   </div>
+                  {shouldShowProfile && (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="profile-btn-desktop"
+                        title="Profile"
+                      >
+                        <ProfileIcon />
+                      </Link>
+                      <Link
+                        to="/contact"
+                        className="profile-btn-desktop"
+                        title="Support"
+                      >
+                        <SupportIcon />
+                      </Link>
+                    </>
+                  )}
                   <button
                     className="logout-btn-desktop"
                     onClick={() => setShowLogoutModal(true)}
@@ -814,6 +914,21 @@ const Navbar = () => {
                   </div>
                   <div className="menu-card-arrow">→</div>
                 </Link>
+
+                {shouldShowProfile && (
+                  <Link to="/profile" className="menu-card" onClick={closeMenu}>
+                    <div className="menu-card-icon">
+                      <ProfileIcon />
+                    </div>
+                    <div className="menu-card-content">
+                      <div className="menu-card-title">Profile</div>
+                      <div className="menu-card-description">
+                        View and edit your profile
+                      </div>
+                    </div>
+                    <div className="menu-card-arrow">→</div>
+                  </Link>
+                )}
 
                 <Link
                   to="/show-all-post"

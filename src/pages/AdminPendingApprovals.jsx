@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import API_BASE_URL from "../services/ApiConfig";
 import API from "../services/api";
 import {
@@ -11,143 +12,45 @@ import {
   Bed,
   Bath,
   Square,
-  Home,
   FileText,
   Calendar,
   Building,
   User,
   Mail,
-  Phone,
+  Gavel,
 } from "lucide-react";
+import ConfirmationModal from "../components/ConfirmationModal";
 import "../styles/AdminPendingApprovals.css";
 
-const AdminPendingApprovals = () => {
-  const [loading, setLoading] = useState(true);
-  const [pendingPosts, setPendingPosts] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
+const PostDetails = ({ post, onApprove, onReject, actionLoading }) => {
+  const [activeImage, setActiveImage] = useState(null);
+
+  // Normalize images
+  const imageList = React.useMemo(() => {
+    let imgs = [];
+    if (post.images && post.images.length > 0) {
+      imgs = post.images.map(img => (img.startsWith('http') ? img : `${API_BASE_URL}/${img}`));
+    } else if (post.postImages && post.postImages.length > 0) {
+      imgs = post.postImages.map(img => `${API_BASE_URL}/${img.imagePath}`);
+    }
+    return imgs;
+  }, [post]);
 
   useEffect(() => {
-    fetchPendingPosts();
-  }, []);
-
-  const fetchPendingPosts = async () => {
-    try {
-      setLoading(true);
-      // استخدام الـ API الموجود
-      const response = await API.get(`${API_BASE_URL}/api/admin/waitingPosts`);
-      setPendingPosts(response.data || []);
-    } catch (error) {
-      console.error("Error fetching pending posts:", error);
-    } finally {
-      setLoading(false);
+    if (imageList.length > 0) {
+      setActiveImage(imageList[0]);
+    } else {
+      setActiveImage(null);
     }
-  };
+  }, [imageList]);
 
-  const handleApprove = async (postId) => {
-    if (!window.confirm("Are you sure you want to approve this property?"))
-      return;
-
-    try {
-      setActionLoading(true);
-      // استخدام الـ API الموجود
-      await API.put(`${API_BASE_URL}/api/admin/accept-post/${postId}`);
-
-      // Remove from list
-      setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
-      setSelectedPost(null);
-
-      alert("Property approved successfully!");
-    } catch (error) {
-      console.error("Error approving post:", error);
-      alert(error.response?.data?.message || "Failed to approve property");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleReject = async (postId) => {
-    if (!window.confirm("Are you sure you want to reject this property?"))
-      return;
-
-    try {
-      setActionLoading(true);
-      // استخدام الـ API الموجود
-      await API.put(`${API_BASE_URL}/api/admin/reject-post/${postId}`);
-
-      // Remove from list
-      setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
-      setSelectedPost(null);
-
-      alert("Property rejected successfully!");
-    } catch (error) {
-      console.error("Error rejecting post:", error);
-      alert(error.response?.data?.message || "Failed to reject property");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const PostCard = ({ post }) => (
-    <div
-      className={`pending-card ${
-        selectedPost?.postId === post.postId ? "selected" : ""
-      }`}
-      onClick={() => setSelectedPost(post)}
-    >
-      <div className="pending-card-header">
-        <div className="pending-info">
-          <h3 className="pending-title">{post.title}</h3>
-          <p className="pending-location">
-            <MapPin size={16} />
-            {post.location}
-          </p>
-        </div>
-        <div className="pending-price">
-          <DollarSign size={20} />
-          <span>${post.price?.toLocaleString()}</span>
-        </div>
-      </div>
-
-      <div className="pending-meta">
-        <span className="pending-date">
-          <Calendar size={14} />
-          {new Date(post.datePost).toLocaleDateString()}
-        </span>
-        <span className={`pending-type ${post.type === 0 ? "rent" : "sale"}`}>
-          {post.type === 0 ? "For Rent" : "For Sale"}
-        </span>
-      </div>
-
-      <div className="pending-features">
-        <div className="feature">
-          <Bed size={16} />
-          <span>{post.numberOfRooms}</span>
-        </div>
-        <div className="feature">
-          <Bath size={16} />
-          <span>{post.numberOfBathrooms}</span>
-        </div>
-        <div className="feature">
-          <Square size={16} />
-          <span>{post.area} m²</span>
-        </div>
-      </div>
-
-      <div className="pending-landlord">
-        <User size={14} />
-        <span>By: {post.userName || "Unknown"}</span>
-      </div>
-    </div>
-  );
-
-  const PostDetails = ({ post }) => (
+  return (
     <div className="post-details fade-in">
       <div className="details-header">
         <h2>{post.title}</h2>
         <div className="details-actions">
           <button
-            onClick={() => handleApprove(post.postId)}
+            onClick={() => onApprove(post.postId)}
             disabled={actionLoading}
             className="btn btn-approve"
           >
@@ -155,7 +58,7 @@ const AdminPendingApprovals = () => {
             {actionLoading ? "Processing..." : "Approve"}
           </button>
           <button
-            onClick={() => handleReject(post.postId)}
+            onClick={() => onReject(post.postId)}
             disabled={actionLoading}
             className="btn btn-reject"
           >
@@ -166,28 +69,31 @@ const AdminPendingApprovals = () => {
       </div>
 
       {/* Property Images */}
-      {post.postImages && post.postImages.length > 0 && (
+      {imageList.length > 0 && (
         <div className="details-images">
           <div className="main-image">
             <img
-              src={`${API_BASE_URL}/${post.postImages[0]?.imagePath}`}
+              src={activeImage || imageList[0]}
               alt={post.title}
               onError={(e) => (e.target.src = "/placeholder.jpg")}
             />
           </div>
-          {post.postImages.length > 1 && (
+          {imageList.length > 1 && (
             <div className="thumbnail-images">
-              {post.postImages.slice(1, 5).map((img, idx) => (
+              {imageList.map((img, idx) => (
                 <img
                   key={idx}
-                  src={`${API_BASE_URL}/${img.imagePath}`}
-                  alt={`${post.title} ${idx + 2}`}
+                  src={img}
+                  alt={`${post.title} ${idx + 1}`}
+                  className={activeImage === img ? "active-thumb" : ""}
+                  style={{ 
+                    border: activeImage === img ? '2px solid var(--brand-primary, #3b82f6)' : '1px solid var(--border-primary)',
+                    opacity: activeImage === img ? 1 : 0.7 
+                  }}
+                  onClick={() => setActiveImage(img)}
                   onError={(e) => (e.target.src = "/placeholder.jpg")}
                 />
               ))}
-              {post.postImages.length > 5 && (
-                <div className="more-images">+{post.postImages.length - 5}</div>
-              )}
             </div>
           )}
         </div>
@@ -253,7 +159,7 @@ const AdminPendingApprovals = () => {
 
         {post.totalUnitsInBuilding && (
           <div className="detail-item">
-            <span className="detail-label">Total Units</span>
+            <span className="detail-label">Total Units in the Building</span>
             <span className="detail-value">
               <Building size={18} />
               {post.totalUnitsInBuilding}
@@ -269,7 +175,7 @@ const AdminPendingApprovals = () => {
         </div>
 
         <div className="detail-item">
-          <span className="detail-label">Garage</span>
+          <span className="detail-label">Has Garage</span>
           <span className="detail-value">
             {post.hasGarage ? "✓ Yes" : "✗ No"}
           </span>
@@ -376,6 +282,141 @@ const AdminPendingApprovals = () => {
       )}
     </div>
   );
+};
+
+const AdminPendingApprovals = () => {
+  const [loading, setLoading] = useState(true);
+  const [pendingPosts, setPendingPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    confirmText: "",
+    cancelText: "Cancel",
+  });
+
+  useEffect(() => {
+    fetchPendingPosts();
+  }, []);
+
+  const closeConfirmationModal = () => {
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const fetchPendingPosts = async () => {
+    try {
+      setLoading(true);
+      // استخدام الـ API الموجود
+      const response = await API.get(`${API_BASE_URL}/api/admin/waitingPosts`);
+      setPendingPosts(response.data || []);
+    } catch (error) {
+      console.error("Error fetching pending posts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const performApprove = async (postId) => {
+    try {
+      setActionLoading(true);
+      // استخدام الـ API الموجود
+      await API.put(`${API_BASE_URL}/api/admin/accept-post/${postId}`);
+
+      // Remove from list
+      setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
+      setSelectedPost(null);
+      toast.success("Property approved successfully!");
+    } catch (error) {
+      console.error("Error approving post:", error);
+      toast.error(error.response?.data?.message || "Failed to approve property");
+    } finally {
+      setActionLoading(false);
+      closeConfirmationModal();
+    }
+  };
+
+  const handleApprove = (postId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "Approve Property",
+      message: "Are you sure you want to approve this property?",
+      confirmText: "Approve",
+      onConfirm: () => performApprove(postId),
+    });
+  };
+
+  const performReject = async (postId) => {
+    try {
+      setActionLoading(true);
+      // استخدام الـ API الموجود
+      await API.put(`${API_BASE_URL}/api/admin/reject-post/${postId}`);
+
+      // Remove from list
+      setPendingPosts((prev) => prev.filter((post) => post.postId !== postId));
+      setSelectedPost(null);
+
+      toast.success("Property rejected successfully!");
+    } catch (error) {
+      console.error("Error rejecting post:", error);
+      toast.error(error.response?.data?.message || "Failed to reject property");
+    } finally {
+      setActionLoading(false);
+      closeConfirmationModal();
+    }
+  };
+
+  const handleReject = (postId) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "Reject Property",
+      message: "Are you sure you want to reject this property?",
+      confirmText: "Reject",
+      onConfirm: () => performReject(postId),
+    });
+  };
+
+  const PostCard = ({ post }) => (
+    <div
+      className={`pending-card ${
+        selectedPost?.postId === post.postId ? "selected" : ""
+      }`}
+      onClick={() => setSelectedPost(post)}
+    >
+      <div className="pending-card-header">
+        <div className="pending-info">
+          <h3 className="pending-title">{post.title}</h3>
+          <p className="pending-location">
+            <MapPin size={16} />
+            {post.location}
+          </p>
+        </div>
+        <div className="pending-price">
+          <DollarSign size={20} />
+          <span>${post.price?.toLocaleString()}</span>
+        </div>
+      </div>
+
+      <div className="pending-meta">
+        <span className="pending-date">
+          <Calendar size={14} />
+          {new Date(post.datePost).toLocaleDateString()}
+        </span>
+        <span className={`pending-type ${post.type === 0 ? "rent" : "sale"}`}>
+          {post.type === 0 ? "For Rent" : "For Sale"}
+        </span>
+      </div>
+
+      <div className="pending-landlord">
+        <User size={14} />
+        <span>By: {post.userName}</span>
+      </div>
+    </div>
+  );
+
+
 
   if (loading) {
     return (
@@ -418,7 +459,12 @@ const AdminPendingApprovals = () => {
 
         <div className="details-panel">
           {selectedPost ? (
-            <PostDetails post={selectedPost} />
+            <PostDetails 
+              post={selectedPost} 
+              onApprove={handleApprove} 
+              onReject={handleReject} 
+              actionLoading={actionLoading} 
+            />
           ) : (
             <div className="no-selection">
               <Eye size={60} className="no-selection-icon" />
@@ -428,6 +474,16 @@ const AdminPendingApprovals = () => {
           )}
         </div>
       </div>
+      <ConfirmationModal
+        isOpen={confirmationModal.isOpen}
+        onClose={closeConfirmationModal}
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+        confirmText={confirmationModal.confirmText}
+        cancelText={confirmationModal.cancelText}
+        isLoading={actionLoading}
+      />
     </div>
   );
 };

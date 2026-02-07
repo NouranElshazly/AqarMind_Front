@@ -43,7 +43,7 @@ export const verifyToken = () => API.get("/auth/verify");
 export const verifyLandlord = () => API.get("/landlord/verify");
 export const verifyAdmin = () => API.get("/admin/verify");
 export const verifyTenant = () => API.get("/tenant/verify");
-export const logout = () => API.post("/auth/logout");
+export const logout = () => API.post("/Auth/logout");
 export const requestPasswordReset = (email) =>
   API.post("/auth/forgot-password", { email });
 export const resetPassword = (token, newPassword) =>
@@ -522,3 +522,5 @@ export const submitRentalProposal = (postId, proposalData) => {
     },
   );
 };
+
+

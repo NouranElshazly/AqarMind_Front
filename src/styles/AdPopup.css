@@ -1,0 +1,174 @@
+/* AdPopup.css */
+.ad-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ad-popup-container {
+  background: var(--bg-card);
+  width: 90%;
+  max-width: 400px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-2xl);
+  position: relative;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border-light);
+}
+
+/* Dark Mode Support */
+.dark .ad-popup-container {
+  border: 1px solid var(--border-primary);
+}
+
+.ad-popup-header {
+  /* Using Dark Gray gradient for a premium look */
+  background: linear-gradient(135deg, #374151 0%, #111827 100%);
+  padding: 30px;
+  color: white;
+  position: relative;
+  text-align: center;
+}
+
+.ad-popup-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.ad-popup-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg) scale(1.1);
+}
+
+.ad-popup-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  display: block;
+  color: var(--accent-yellow); /* Gold icon for premium feel */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  animation: bounce 2s infinite;
+}
+
+.ad-popup-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.ad-popup-subtitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+  opacity: 0.95;
+}
+
+.ad-popup-content {
+  padding: 30px;
+  text-align: center;
+  background: var(--bg-card);
+}
+
+.ad-popup-title {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.ad-popup-body {
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
+  font-size: 1.1rem;
+}
+
+.ad-popup-action-btn {
+  /* Using Brand Yellow/Gold for primary action */
+  background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-gold) 100%);
+  color: #111827; /* Dark Gray text on gold button */
+  border: none;
+  padding: 16px 40px;
+  border-radius: 50px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+}
+
+.ad-popup-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(234, 179, 8, 0.6);
+  background: linear-gradient(135deg, var(--accent-gold) 0%, #ca8a04 100%);
+}
+
+.ad-popup-action-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .ad-popup-container {
+    width: 95%;
+  }
+  
+  .ad-popup-content {
+    padding: 24px;
+  }
+  
+  .ad-popup-title {
+    font-size: 1.25rem;
+  }
+}

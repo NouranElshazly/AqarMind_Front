@@ -1,11 +1,12 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
-
 import Home from "./pages/Home";
 import PropertyDetail from "./pages/PropertyDetail";
 import Login from "./pages/Login";
@@ -26,13 +27,17 @@ import Unauthorized from "./components/Unauthorized";
 import UserProperties from "./pages/UserProperties";
 import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
-import ShowAnalytics from "./pages/showAnalytics";
+import ManageAdmins from "./pages/ManageAdmins";
 import AdminPendingApprovals from "./pages/AdminPendingApprovals";
-
 import UserHistory from "./pages/UserHistory";
 import AdminChatDashboard from "./pages/AdminChatDashboard";
+import AdminManageComplaints from "./pages/AdminManageComplaints";
 import Profile from "./pages/Profile";
 import ChangePassword from "./pages/Changepassword";
+import LandlordProposalManage from "./pages/LandlordProposalManage"
+import AdminManageSubs from "./pages/AdminManageSubs"
+import SubsPlan from "./pages/SubsPlan";
+import ManageAds from "./pages/ManageAds";
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -168,11 +173,17 @@ function App() {
                 element={<LandlordApplicationDetail />}
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
-              <Route path="/admin/showAnalytics" element={<ShowAnalytics />} />
+              <Route path="/admin/manage-subs" element={<AdminManageSubs />} />
+              <Route path="/admin/manage-admins" element={<ManageAdmins />} />
               <Route
                 path="/admin/AdminChatDashboard"
                 element={<AdminChatDashboard />}
               />
+              <Route
+                path="/admin/manage-complaints"
+                element={<AdminManageComplaints />}
+              />
+              <Route path="/admin/manage-ads" element={<ManageAds />} />
               {/* Landlord Routes */}
               <Route
                 path="/landlord/dashboard"
@@ -190,6 +201,14 @@ function App() {
               <Route
                 path="/landlord/proposals"
                 element={<PropertyProposals />}
+              />
+              <Route
+                path="/landlord/manage-proposals"
+                element={<LandlordProposalManage />}
+              />
+              <Route
+                path="/landlord/subscription-plans"
+                element={<SubsPlan />}
               />
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />
@@ -220,6 +239,7 @@ function App() {
           
           {/* Global Scroll to Top Button */}
           <ScrollToTop />
+          <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </AuthProvider>
     </DarkModeProvider>

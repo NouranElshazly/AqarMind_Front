@@ -1,0 +1,649 @@
+/* ==========================================
+   ADMIN MANAGE COMPLAINTS
+   Consistent Theme with AdminPendingApprovals
+   ========================================== */
+
+/* Main Container */
+.complaints-container {
+  min-height: 100vh;
+  background-color: var(--bg-primary, #f9fafb);
+  padding: 2rem clamp(1rem, 5vw, 2rem);
+  padding-top: 6rem; /* Account for fixed navbar */
+  font-family: 'Cairo', sans-serif;
+  color: var(--text-primary, #333);
+}
+
+/* Header Section */
+.complaints-header {
+  background-color: var(--bg-card, #fff);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-primary, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .complaints-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header-icon {
+  color: var(--brand-primary, #3b82f6);
+  background-color: var(--bg-primary, #f3f4f6);
+  padding: 0.75rem;
+  border-radius: 1rem;
+  width: 4rem;
+  height: 4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+/* Controls Section */
+.complaints-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .complaints-controls {
+    flex-direction: row;
+    width: auto;
+  }
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-primary);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-primary);
+  flex: 1;
+}
+
+.control-icon {
+  margin-right: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.control-input,
+.control-select {
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--brand-primary);
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Content Layout - Split View */
+.complaints-content {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  height: calc(100vh - 14rem); /* Fixed height for scrolling */
+}
+
+/* Complaints List (Sidebar) */
+.complaints-list {
+  flex: 0 0 400px;
+  background-color: var(--bg-card, #fff);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-primary);
+  overflow-y: auto;
+  height: 100%;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.complaint-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.complaint-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-primary);
+}
+
+.complaint-card.selected {
+  background-color: var(--bg-card);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-primary);
+}
+
+.complaint-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.complaint-reporter {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.complaint-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.complaint-preview {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.complaint-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.complaint-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* Details Panel */
+.details-panel {
+  flex: 1;
+  background-color: var(--bg-card);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-primary);
+  height: 100%;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.details-header {
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.details-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.details-section {
+  margin-bottom: 2rem;
+}
+
+.details-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-item {
+  background-color: var(--bg-primary);
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-value.with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-contact-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.complaint-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 1rem;
+  border: 1px solid var(--border-primary);
+  background-color: var(--bg-primary);
+}
+
+.refuse-btn {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.refuse-btn:hover {
+  background-color: #dc2626;
+}
+
+.ban-btn {
+  background-color: #f97316;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+.ban-btn:hover {
+  background-color: #ea580c;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-card, #fff);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: scaleIn 0.2s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modal-icon-wrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+}
+
+.modal-message {
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.modal-btn.cancel {
+  background-color: var(--bg-primary, #f3f4f6);
+  color: var(--text-secondary, #4b5563);
+}
+
+.modal-btn.cancel:hover {
+  filter: brightness(0.95);
+}
+
+.modal-btn.confirm {
+  background-color: #ef4444;
+  color: white;
+}
+
+.modal-btn.confirm:hover {
+  background-color: #dc2626;
+}
+
+.modal-btn.ban-confirm {
+  background-color: #f97316;
+  color: white;
+}
+
+.modal-btn.ban-confirm:hover {
+  background-color: #ea580c;
+}
+
+.modal-icon-wrapper.ban-icon-wrapper {
+  background-color: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Empty States */
+.empty-state, .no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 2rem;
+}
+
+.empty-icon, .no-selection-icon {
+  margin-bottom: 1rem;
+  color: var(--text-secondary, #9ca3af);
+  opacity: 1;
+}
+
+.dark .empty-icon, .dark .no-selection-icon {
+  color: #cbd5e1;
+  opacity: 1;
+}
+
+.loading-spinner {
+  border: 3px solid rgba(59, 130, 246, 0.1);
+  border-left-color: var(--brand-primary);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Notification Toast Styles */
+.notification-toast {
+  position: fixed;
+  top: 6rem;
+  right: 2rem;
+  background: var(--bg-card, #fff);
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  border-left: 4px solid;
+  color: var(--text-primary, #333);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.dark .notification-toast {
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #334155;
+  border-left-width: 4px; /* Maintain the left border width */
+}
+
+.notification-toast.success {
+  border-left-color: #10b981;
+}
+
+.notification-toast.success svg {
+  color: #10b981;
+}
+
+.notification-toast.error {
+  border-left-color: #ef4444;
+}
+
+.notification-toast.error svg {
+  color: #ef4444;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Additional CSS for Suspend Button and Modal */
+
+/* Suspend Button */
+.suspend-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+  margin-top: 0.5rem;
+}
+
+.suspend-btn:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.suspend-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+/* Suspend Modal Icon Wrapper */
+.suspend-icon-wrapper {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+}
+
+/* Modal Input Group */
+.modal-input-group {
+  margin: 1.5rem 0;
+}
+
+.modal-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.modal-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.modal-input:hover {
+  border-color: #d1d5db;
+}
+
+.modal-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Suspend Confirm Button */
+.modal-btn.suspend-confirm {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.modal-btn.suspend-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.modal-btn.suspend-confirm:disabled {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive adjustments for button group */
+@media (max-width: 768px) {
+  .details-header .flex.gap-2 {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .refuse-btn,
+  .suspend-btn,
+  .ban-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

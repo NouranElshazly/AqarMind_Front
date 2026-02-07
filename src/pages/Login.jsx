@@ -217,15 +217,15 @@ const Login = () => {
     setMessage({ text: "Face Verified! Redirecting...", type: "success" });
 
     setTimeout(() => {
-      navigate(
-        role === "admin"
-          ? "/admin/dashboard"
-          : role === "tenant"
-          ? "/tenant/dashboard"
-          : "/"
-      );
-      // window.location.reload();
-    }, 1000);
+        navigate(
+          role === "admin"
+            ? "/admin/dashboard"
+            : role === "landlord"
+            ? "/landlord/dashboard"
+            : "/"
+        );
+        // window.location.reload();
+      }, 1000);
   };
 
   const handleSubmit = async (e) => {

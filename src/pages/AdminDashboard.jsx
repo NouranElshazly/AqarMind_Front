@@ -18,6 +18,7 @@ import {
   Calendar,
   DollarSign,
   Eye,
+  MessageSquareWarning,
 } from "lucide-react";
 import axios from "axios";
 import "../styles/AdminDashboard.css";
@@ -33,7 +34,7 @@ const AdminDashboard = () => {
     rejectedProperties: 0,
     monthlyRevenue: 0,
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,72 +44,19 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_BASE_URL}/api/admin/dashboard/user-stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/admin/Dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setStats(response.data);
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
   };
 
-  // Fetch Recent Activity
-  const fetchRecentActivity = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_BASE_URL}/api/admin/dashboard/activity`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setRecentActivity(response.data);
-    } catch (error) {
-      console.error("Error fetching activity:", error);
-      setRecentActivity([
-        {
-          id: 1,
-          type: "property",
-          message: "New property submitted - Modern Villa in New Cairo",
-          user: "Ahmed Hassan",
-          time: "2 mins ago",
-          status: "pending",
-        },
-        {
-          id: 2,
-          type: "landlord",
-          message: "New landlord registration - Mohamed Ali",
-          user: "Mohamed Ali",
-          time: "5 mins ago",
-          status: "pending",
-        },
-        {
-          id: 3,
-          type: "approval",
-          message: "Property approved - Luxury Apartment",
-          user: "Sara Ahmed",
-          time: "10 mins ago",
-          status: "approved",
-        },
-        {
-          id: 4,
-          type: "rejection",
-          message: "Property rejected - Incomplete documentation",
-          user: "Khaled Mahmoud",
-          time: "15 mins ago",
-          status: "rejected",
-        },
-      ]);
-    }
-  };
-
   // Handle Refresh
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([fetchStats(), fetchRecentActivity()]);
+    await fetchStats();
     setRefreshing(false);
   };
 
@@ -125,7 +73,7 @@ const AdminDashboard = () => {
       setUser(userData);
 
       try {
-        await Promise.all([fetchStats(), fetchRecentActivity()]);
+        await fetchStats();
       } catch (error) {
         console.error("Error initializing dashboard:", error);
       } finally {
@@ -177,7 +125,6 @@ const AdminDashboard = () => {
         </div>
 
         <div className="header-right">
-          
           <button
             className="refresh-btn"
             onClick={handleRefresh}
@@ -190,33 +137,34 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      
+
       <div className="stats-grid">
+        <div className="stat-card stat-users">
+          <div className="stat-icon">
+            <Users size={28} />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">Total Users</p>
+            <h3 className="stat-value">{stats.users.totalUsers}</h3>
+          </div>
+        </div>
         <div className="stat-card stat-approved">
           <div className="stat-icon">
             <CheckCircle size={28} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Admins</p>
-            <h3 className="stat-value">{stats.admins}</h3>
-            <span className="stat-trend positive">
-              <TrendingUp size={14} />
-              +15% from last month
-            </span>
+            <h3 className="stat-value">{stats.users.admins}</h3>
           </div>
         </div>
-        
+
         <div className="stat-card stat-pending">
           <div className="stat-icon">
             <Users size={28} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Tenants</p>
-            <h3 className="stat-value">{stats.tenants}</h3>
-            <span className="stat-trend positive">
-              <TrendingUp size={14} />
-              +12% from last week
-            </span>
+            <h3 className="stat-value">{stats.users.tenants}</h3>
           </div>
         </div>
 
@@ -226,29 +174,7 @@ const AdminDashboard = () => {
           </div>
           <div className="stat-content">
             <p className="stat-label">Landlords</p>
-            <h3 className="stat-value">{stats.owners}</h3>
-            <span className="stat-trend positive">
-              <TrendingUp size={14} />
-              +8% from last week
-            </span>
-          </div>
-        </div>
-
-        
-
-        <div className="stat-card stat-users">
-          <div className="stat-icon">
-            <Users size={28} />
-          </div>
-          <div className="stat-content">
-            <p className="stat-label">Total Users</p>
-            <h3 className="stat-value">
-              {stats.totalUsers}
-            </h3>
-            <span className="stat-trend positive">
-              <TrendingUp size={14} />
-              +20% from last month
-            </span>
+            <h3 className="stat-value">{stats.users.landlords}</h3>
           </div>
         </div>
       </div>
@@ -265,6 +191,19 @@ const AdminDashboard = () => {
           </div>
 
           <div className="actions-grid">
+            <Link
+              to="/admin/manage-admins"
+              className="action-card action-analytics"
+            >
+              <div className="action-icon">
+                <Settings size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Manage Admins</h3>
+                <p>Add, remove, and view admin accounts</p>
+              </div>
+            </Link>
+
             <Link
               to="/admin/pending-approvals"
               className="action-card action-properties"
@@ -303,6 +242,16 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
+            <Link to="/admin/manage-ads" className="action-card action-view">
+              <div className="action-icon">
+                <Eye size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Manage Ads</h3>
+                <p>Manage all ads</p>
+              </div>
+            </Link>
+
             <Link to="/show-all-post" className="action-card action-view">
               <div className="action-icon">
                 <Eye size={32} />
@@ -310,6 +259,33 @@ const AdminDashboard = () => {
               <div className="action-content">
                 <h3>All Properties</h3>
                 <p>View all property listings</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/manage-complaints"
+              className="action-card action-reports"
+            >
+              {" "}
+              <div className="action-icon">
+                <MessageSquareWarning size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Complaints</h3>
+                <p>View and manage complaints</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/manage-subs"
+              className="action-card action-reports"
+            >
+              <div className="action-icon">
+                <BarChart3 size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Subscription plans</h3>
+                <p>Manage subscription plans</p>
               </div>
             </Link>
 
@@ -325,72 +301,10 @@ const AdminDashboard = () => {
                 <p>View analytics and reports</p>
               </div>
             </Link>
-
-            <Link
-              to="/admin/showAnalytics"
-              className="action-card action-analytics"
-            >
-              <div className="action-icon">
-                <TrendingUp size={32} />
-              </div>
-              <div className="action-content">
-                <h3>Analytics</h3>
-                <p>View detailed analytics</p>
-              </div>
-            </Link>
-
-            <Link
-              to="/admin/landlord-applications"
-              className="action-card action-applications"
-            >
-              <div className="action-icon">
-                <Settings size={32} />
-              </div>
-              <div className="action-content">
-                <h3>Manage Applications</h3>
-                <p>Check pending applications</p>
-              </div>
-            </Link>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="activity-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <Activity size={24} />
-              Recent Activity
-            </h2>
-            <span className="activity-count">
-              {recentActivity.length} activities
-            </span>
-          </div>
-
-          <div className="activity-list">
-            {recentActivity.map((activity) => (
-              <div
-                key={activity.id}
-                className={`activity-item activity-${activity.status}`}
-              >
-                <div className="activity-icon">
-                  {activity.status === "pending" && <Clock size={20} />}
-                  {activity.status === "approved" && <CheckCircle size={20} />}
-                  {activity.status === "rejected" && <XCircle size={20} />}
-                </div>
-                <div className="activity-content">
-                  <p className="activity-message">{activity.message}</p>
-                  <div className="activity-meta">
-                    <span className="activity-user">{activity.user}</span>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-                <span className={`activity-status status-${activity.status}`}>
-                  {activity.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* System Alerts */}
