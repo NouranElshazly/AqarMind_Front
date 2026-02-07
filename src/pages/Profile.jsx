@@ -29,6 +29,7 @@ import {
   FaLock,
   FaEye,
   FaEyeSlash,
+  FaCrown,
 } from "react-icons/fa";
 
 const Profile = () => {
@@ -713,7 +714,13 @@ const Profile = () => {
           </div>
 
           <div className="profile-header-info">
-            <h1 className="private-profile-name">{profile?.fullName}</h1>
+            <h1 className="private-profile-name">
+              {profile?.fullName}
+              <FaCrown
+                className={profile?.isPro ? "pro-member-icon" : "regular-member-icon"}
+                title={profile?.isPro ? "Pro Member" : "Regular Member"}
+              />
+            </h1>
             <p className="profile-role">
               {role ? role.charAt(0).toUpperCase() + role.slice(1) : "User"} •
               Member since{" "}

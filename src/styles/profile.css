@@ -936,3 +936,14 @@
   border-radius: 0.5rem;
   border: 1px dashed var(--border-primary);
 }
+.pro-member-icon {
+  color: #FFD700;
+  margin-left: 0.5rem;
+  vertical-align: center;
+}
+
+.regular-member-icon {
+  color: #808080;
+  margin-left: 0.5rem;
+  vertical-align: center;
+}
