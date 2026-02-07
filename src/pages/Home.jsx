@@ -34,6 +34,7 @@ import {
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
 import Navbar from "../components/Navbar";
+import AdPopup from "../components/AdPopup";
 import "../styles/Home.css";
 
 // Animated Counter Component
@@ -85,10 +86,44 @@ const Home = () => {
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndexes, setCurrentImageIndexes] = useState({});
+  const [adData, setAdData] = useState(null);
+  const [showAdPopup, setShowAdPopup] = useState(false);
 
   useEffect(() => {
     fetchFeaturedProperties();
+    
+    // Delay fetching ad to handle redirect cases (e.g. after login)
+    // If the user is redirected immediately, the component will unmount and clear this timeout
+    const adTimer = setTimeout(() => {
+      fetchAd();
+    }, 800);
+
+    return () => clearTimeout(adTimer);
   }, []);
+
+  const fetchAd = async () => {
+    // Check if ad has already been shown in this session
+    if (sessionStorage.getItem('adShown')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE_URL}/api/ads/popup`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.data) {
+        setAdData(res.data);
+        setShowAdPopup(true);
+        // Mark ad as shown in this session
+        sessionStorage.setItem('adShown', 'true');
+      }
+    } catch (error) {
+      console.error("Error fetching ad:", error);
+    }
+  };
 
   const fetchFeaturedProperties = async () => {
     try {
@@ -639,6 +674,12 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
+      <AdPopup 
+        isOpen={showAdPopup} 
+        onClose={() => setShowAdPopup(false)} 
+        ad={adData} 
+      />
     </div>
   );
 };

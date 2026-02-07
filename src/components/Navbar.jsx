@@ -467,6 +467,8 @@ const Navbar = () => {
     } catch (error) {
       console.error("Logout API failed:", error);
     }
+    // Clear the ad shown flag on logout
+    sessionStorage.removeItem('adShown');
     logout();
     setShowLogoutModal(false);
     setIsMenuOpen(false);
