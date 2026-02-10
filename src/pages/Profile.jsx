@@ -8,7 +8,9 @@ import {
   getUserCards,
   deleteCard,
   setDefaultCard,
+  // upgradeToLandlord, // Moved to local function below
 } from "../services/api";
+import API from "../services/api"; // Import API instance
 import API_BASE_URL from "../services/ApiConfig";
 import ConfirmationModal from "../components/ConfirmationModal";
 import "../styles/profile.css";
@@ -30,6 +32,8 @@ import {
   FaEye,
   FaEyeSlash,
   FaCrown,
+  FaBriefcase,
+  FaFileUpload,
 } from "react-icons/fa";
 
 const Profile = () => {
@@ -89,6 +93,13 @@ const Profile = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
   const [isDeletingCard, setIsDeletingCard] = useState(false);
+
+  // Upgrade to Landlord state
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeFile, setUpgradeFile] = useState(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState("");
+  const [upgradeSuccess, setUpgradeSuccess] = useState("");
 
   // Get userId from localStorage
   const userId = localStorage.getItem("userId");
@@ -463,6 +474,51 @@ const Profile = () => {
     }
   };
 
+  const handleUpgradeFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setUpgradeFile(e.target.files[0]);
+      setUpgradeError("");
+    }
+  };
+
+  const handleUpgradeSubmit = async (e) => {
+    e.preventDefault();
+    if (!upgradeFile) {
+      setUpgradeError("Please select an ownership document.");
+      return;
+    }
+
+    setIsUpgrading(true);
+    setUpgradeError("");
+    setUpgradeSuccess("");
+
+    try {
+      // Direct API call within the component
+      const formData = new FormData();
+      formData.append("OwnershipDoc", upgradeFile);
+      
+      const response = await API.post(`${API_BASE_URL}/api/Tenant/upgrade-to-landlord/${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setUpgradeSuccess(response.data?.message);
+      setTimeout(() => {
+        setIsUpgradeModalOpen(false);
+        setUpgradeSuccess("");
+        setUpgradeFile(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Upgrade error:", err);
+      setUpgradeError(
+        err.response?.data?.error
+      );
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -729,6 +785,14 @@ const Profile = () => {
                 year: "numeric",
               })}
             </p>
+            {role && role.toLowerCase() === "tenant" && (
+              <button
+                className="btn-upgrade-landlord"
+                onClick={() => setIsUpgradeModalOpen(true)}
+              >
+                <FaBriefcase /> Upgrade to Landlord
+              </button>
+            )}
           </div>
         </div>
 
@@ -1265,6 +1329,93 @@ const Profile = () => {
         cancelText="Cancel"
         isLoading={isDeletingCard}
       />
+
+      {/* Upgrade to Landlord Modal */}
+      {isUpgradeModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content upgrade-modal">
+            <div className="modal-header">
+              <h3>Upgrade to Landlord</h3>
+              <button
+                className="close-modal-btn"
+                onClick={() => setIsUpgradeModalOpen(false)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p
+                style={{
+                  marginBottom: "1.5rem",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                To upgrade your account to Landlord, please upload a valid
+                ownership document (PDF or Image).
+              </p>
+
+              {upgradeError && (
+                <div className="alert alert-error">
+                  <FaTimes /> {upgradeError}
+                </div>
+              )}
+
+              {upgradeSuccess && (
+                <div className="alert alert-success">
+                  <FaCheck /> {upgradeSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleUpgradeSubmit}>
+                <div className="form-group">
+                  <label className="form-label">
+                    <FaFileUpload className="input-icon" />
+                    Ownership Document
+                  </label>
+                  <div className="file-input-wrapper">
+                    <input
+                      type="file"
+                      id="ownershipDoc"
+                      onChange={handleUpgradeFileChange}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="file-input"
+                    />
+                    <label htmlFor="ownershipDoc" className="file-input-label">
+                      <FaBriefcase />
+                      {upgradeFile ? upgradeFile.name : "Choose File"}
+                    </label>
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="btn-cancel"
+                    onClick={() => setIsUpgradeModalOpen(false)}
+                    disabled={isUpgrading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-save"
+                    disabled={isUpgrading || !upgradeFile}
+                  >
+                    {isUpgrading ? (
+                      <>
+                        <div className="btn-spinner"></div>
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Request"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

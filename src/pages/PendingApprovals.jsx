@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { approveLandlord, rejectLandlord } from "../services/api";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/PendingApprovals.css";
@@ -63,19 +64,29 @@ const PendingApprovals = () => {
     }
   }, [searchTerm, pendingLandlords]);
 
-  const handleLandlordAction = async (landlordId, action) => {
+  const handleLandlordAction = async (userId, action) => {
+    console.log(`Attempting to ${action} landlord with User ID:`, userId);
+    if (!userId) {
+      setError(`Invalid user ID. Cannot ${action}.`);
+      return;
+    }
+
     const originalLandlords = [...pendingLandlords];
 
     setPendingLandlords((prev) =>
-      prev.filter((landlord) => landlord.landlordId !== landlordId)
+      prev.filter((landlord) => landlord.userId !== userId)
     );
 
     try {
-      const url = `${API_BASE_URL}/api/admin/${action}-waiting-landlord/${landlordId}`;
-      await axios.put(url);
+      if (action === "accept") {
+        await approveLandlord(userId);
+      } else if (action === "reject") {
+        await rejectLandlord(userId);
+      }
       setSuccessMessage(`Landlord ${action}ed successfully!`);
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
+      console.error(`Error ${action}ing landlord:`, err);
       setError(`Failed to ${action} landlord.`);
       // Restore original list on error
       setPendingLandlords(originalLandlords);
@@ -324,14 +335,14 @@ const PendingApprovals = () => {
               {/* Card Actions */}
               <div className="card-actions">
                 <button
-                  onClick={() => handleLandlordAction(landlord.landlordId, "accept")}
+                  onClick={() => handleLandlordAction(landlord.userId, "accept")}
                   className="action-btn btn-approve"
                 >
                   <Check size={20} />
                   Approve
                 </button>
                 <button
-                  onClick={() => handleLandlordAction(landlord.landlordId, "reject")}
+                  onClick={() => handleLandlordAction(landlord.userId, "reject")}
                   className="action-btn btn-reject"
                 >
                   <X size={20} />
