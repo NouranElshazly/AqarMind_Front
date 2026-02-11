@@ -3,22 +3,22 @@ import { approveLandlord, rejectLandlord } from "../services/api";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/PendingApprovals.css";
-import { 
-  Search, 
-  X, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  FileText, 
-  Eye, 
-  Check, 
-  XCircle, 
+import {
+  Search,
+  X,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  Eye,
+  Check,
+  XCircle,
   AlertCircle,
   CheckCircle,
   Clock,
   File,
-  Download
+  Download,
 } from "lucide-react";
 
 const PendingApprovals = () => {
@@ -37,7 +37,7 @@ const PendingApprovals = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `${API_BASE_URL}/api/admin/waitingLandlords`
+          `${API_BASE_URL}/api/admin/waitingLandlords`,
         );
         setPendingLandlords(response.data);
         setFilteredLandlords(response.data);
@@ -47,7 +47,7 @@ const PendingApprovals = () => {
         setLoading(false);
       }
     };
-    fetchPendingLandlords(); 
+    fetchPendingLandlords();
   }, []);
 
   // Filter landlords based on search term
@@ -58,7 +58,7 @@ const PendingApprovals = () => {
       const filtered = pendingLandlords.filter(
         (landlord) =>
           landlord.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          landlord.email?.toLowerCase().includes(searchTerm.toLowerCase())
+          landlord.email?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       setFilteredLandlords(filtered);
     }
@@ -74,7 +74,7 @@ const PendingApprovals = () => {
     const originalLandlords = [...pendingLandlords];
 
     setPendingLandlords((prev) =>
-      prev.filter((landlord) => landlord.userId !== userId)
+      prev.filter((landlord) => landlord.userId !== userId),
     );
 
     try {
@@ -109,12 +109,12 @@ const PendingApprovals = () => {
     };
 
     const getFileType = (path) => {
-      if (!path) return 'unknown';
+      if (!path) return "unknown";
       // Remove query params and trim
-      const cleanPath = path.split('?')[0].trim().toLowerCase();
-      if (cleanPath.endsWith('.pdf')) return 'pdf';
-      if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(cleanPath)) return 'image';
-      return 'unknown';
+      const cleanPath = path.split("?")[0].trim().toLowerCase();
+      if (cleanPath.endsWith(".pdf")) return "pdf";
+      if (/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/.test(cleanPath)) return "image";
+      return "unknown";
     };
 
     const fileUrl = buildFileUrl(selectedDocument);
@@ -129,15 +129,15 @@ const PendingApprovals = () => {
           >
             <X size={24} />
           </button>
-          
+
           <div className="modal-content w-full h-full flex items-center justify-center">
-            {fileType === 'pdf' ? (
-              <iframe 
-                src={fileUrl} 
+            {fileType === "pdf" ? (
+              <iframe
+                src={fileUrl}
                 className="w-full h-[80vh] min-w-[80vw] border-0"
                 title="Document Viewer"
               />
-            ) : fileType === 'image' ? (
+            ) : fileType === "image" ? (
               <img
                 src={fileUrl}
                 alt="Document Preview"
@@ -146,20 +146,24 @@ const PendingApprovals = () => {
             ) : (
               <div className="flex flex-col items-center justify-center p-8 text-center bg-white rounded-lg">
                 <File size={64} className="text-gray-400 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">Preview not available</p>
-                <p className="text-gray-500">This file type cannot be previewed directly.</p>
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  Preview not available
+                </p>
+                <p className="text-gray-500">
+                  This file type cannot be previewed directly.
+                </p>
               </div>
             )}
           </div>
 
           <div className="modal-action-wrapper flex gap-4 justify-center">
-            <a 
-              href={fileUrl} 
+            <a
+              href={fileUrl}
               download
               target="_blank"
               rel="noopener noreferrer"
               className="modal-action-btn flex items-center gap-2 no-underline"
-              style={{ textDecoration: 'none' }}
+              style={{ textDecoration: "none" }}
             >
               <Download size={20} />
               Download / Open
@@ -167,7 +171,7 @@ const PendingApprovals = () => {
             <button
               onClick={() => setSelectedDocument(null)}
               className="modal-action-btn bg-gray-600"
-              style={{ background: '#4b5563' }} 
+              style={{ background: "#4b5563" }}
             >
               Close Preview
             </button>
@@ -184,9 +188,7 @@ const PendingApprovals = () => {
           <div className="spinner-ring"></div>
           <div className="spinner-segment"></div>
         </div>
-        <p className="loading-text">
-          Loading pending landlords...
-        </p>
+        <p className="loading-text">Loading pending landlords...</p>
         <p className="loading-subtext">Please wait</p>
       </div>
     );
@@ -209,9 +211,7 @@ const PendingApprovals = () => {
 
       {/* Header */}
       <div className="header-section">
-        <h1 className="page-title">
-          Pending Landlord Approvals
-        </h1>
+        <h1 className="page-title">Pending Landlord Approvals</h1>
         <p className="page-subtitle">
           Review and approve landlord registration requests
         </p>
@@ -254,15 +254,10 @@ const PendingApprovals = () => {
       {filteredLandlords.length > 0 ? (
         <div className="landlords-grid">
           {filteredLandlords.map((landlord) => (
-            <div
-              key={landlord.userId}
-              className="landlord-card"
-            >
+            <div key={landlord.userId} className="landlord-card">
               {/* Card Header */}
               <div className="card-header-gradient">
-                <h3 className="landlord-name">
-                  {landlord.userName}
-                </h3>
+                <h3 className="landlord-name">{landlord.userName}</h3>
                 <span className="status-badge">
                   <Clock size={12} className="mr-1" />
                   Pending
@@ -275,14 +270,9 @@ const PendingApprovals = () => {
                   <div className="info-item">
                     <Mail className="info-icon" />
                     <div className="info-content">
-                      <p className="info-value">
-                        {landlord.email}
-                      </p>
-                      
+                      <p className="info-value">{landlord.email}</p>
                     </div>
                   </div>
-
-                 
                 </div>
 
                 {/* Documents Section */}
@@ -335,14 +325,18 @@ const PendingApprovals = () => {
               {/* Card Actions */}
               <div className="card-actions">
                 <button
-                  onClick={() => handleLandlordAction(landlord.userId, "accept")}
+                  onClick={() =>
+                    handleLandlordAction(landlord.userId, "accept")
+                  }
                   className="action-btn btn-approve"
                 >
                   <Check size={20} />
                   Approve
                 </button>
                 <button
-                  onClick={() => handleLandlordAction(landlord.userId, "reject")}
+                  onClick={() =>
+                    handleLandlordAction(landlord.userId, "reject")
+                  }
                   className="action-btn btn-reject"
                 >
                   <X size={20} />
@@ -356,7 +350,9 @@ const PendingApprovals = () => {
         <div className="empty-state">
           <Search className="empty-state-icon" />
           <p className="empty-state-text">
-            {searchTerm ? "No landlords found matching your search" : "No pending landlord"}
+            {searchTerm
+              ? "No landlords found matching your search"
+              : "No pending landlord"}
           </p>
         </div>
       )}

@@ -2,13 +2,25 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
-import { 
-  FaTrash, FaSearch, FaHome, FaMapMarkerAlt, 
-  FaBed, FaBath, FaRulerCombined, FaBookmark,
-  FaExclamationTriangle, FaTimes, FaCheck, FaEye,
-  FaHeart, FaFilter, FaStar, FaDollarSign
+import {
+  FaTrash,
+  FaSearch,
+  FaHome,
+  FaMapMarkerAlt,
+  FaBed,
+  FaBath,
+  FaRulerCombined,
+  FaBookmark,
+  FaExclamationTriangle,
+  FaTimes,
+  FaCheck,
+  FaEye,
+  FaHeart,
+  FaFilter,
+  FaStar,
+  FaDollarSign,
 } from "react-icons/fa";
-import '../styles/SavedPosts.css';
+import "../styles/SavedPosts.css";
 
 const getTenantRole = () => {
   return localStorage.getItem("role");
@@ -21,7 +33,14 @@ const tenantId = getTenantId();
 const tenantRole = getTenantRole();
 
 // Confirmation Delete Modal Component
-const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message, isBulkDelete = false }) => {
+const ConfirmDeleteModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  isBulkDelete = false,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -32,9 +51,7 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, title, message, isBulk
             <FaExclamationTriangle className="modal-icon" />
           </div>
           <div className="modal-text-content">
-            <h3 className="modal-title">
-              {title || "Delete Confirmation"}
-            </h3>
+            <h3 className="modal-title">{title || "Delete Confirmation"}</h3>
             <p className="modal-message">
               {message || "Are you sure you want to delete this property?"}
             </p>
@@ -73,10 +90,10 @@ const SavedPosts = () => {
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
-  const [deleteModal, setDeleteModal] = useState({ 
-    isOpen: false, 
-    propertyId: null, 
-    propertyTitle: "" 
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    propertyId: null,
+    propertyTitle: "",
   });
   const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
   const navigate = useNavigate();
@@ -90,7 +107,7 @@ const SavedPosts = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         setSavedProperties(res.data);
       } catch (err) {
@@ -110,15 +127,15 @@ const SavedPosts = () => {
         `${API_BASE_URL}/api/Tenant/${tenantId}/cancel-save/${propertyId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
+        },
       );
       setSavedProperties(
-        savedProperties.filter((prop) => prop.postId !== propertyId)
+        savedProperties.filter((prop) => prop.postId !== propertyId),
       );
       setDeleteModal({ isOpen: false, propertyId: null, propertyTitle: "" });
     } catch (err) {
       setError(
-        err.response?.data?.message || "Failed to remove saved property"
+        err.response?.data?.message || "Failed to remove saved property",
       );
     }
   };
@@ -126,13 +143,15 @@ const SavedPosts = () => {
   const removeAllSavedProperties = async () => {
     try {
       // حذف جميع البوستات المحفوظة واحداً تلو الآخر
-      const deletePromises = savedProperties.map(property =>
+      const deletePromises = savedProperties.map((property) =>
         axios.delete(
           `${API_BASE_URL}/api/Tenant/${tenantId}/cancel-save/${property.postId}`,
           {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        )
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        ),
       );
 
       await Promise.all(deletePromises);
@@ -140,7 +159,7 @@ const SavedPosts = () => {
       setBulkDeleteModal(false);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Failed to remove all saved properties"
+        err.response?.data?.message || "Failed to remove all saved properties",
       );
     }
   };
@@ -150,7 +169,7 @@ const SavedPosts = () => {
     setDeleteModal({
       isOpen: true,
       propertyId,
-      propertyTitle
+      propertyTitle,
     });
   };
 
@@ -164,10 +183,11 @@ const SavedPosts = () => {
   };
 
   // فلترة البوستات بناءً على البحث
-  const filteredProperties = savedProperties.filter(property =>
-    property.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    property.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProperties = savedProperties.filter(
+    (property) =>
+      property.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading)
@@ -178,7 +198,9 @@ const SavedPosts = () => {
             <div className="spinner"></div>
           </div>
           <h3 className="loading-title">Loading Your Saved Properties</h3>
-          <p className="loading-text">Please wait while we fetch your collection...</p>
+          <p className="loading-text">
+            Please wait while we fetch your collection...
+          </p>
         </div>
       </div>
     );
@@ -194,8 +216,8 @@ const SavedPosts = () => {
               </div>
               <h2 className="empty-state-title">Error Loading Properties</h2>
               <p className="empty-state-description">{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="action-btn primary-btn"
               >
                 <FaSearch />
@@ -215,16 +237,11 @@ const SavedPosts = () => {
           <div className="hero-overlay"></div>
         </div>
         <div className="hero-content">
-         
-          <h1 className="saved-hero-title">
-            Your Saved Properties
-          </h1>
-         
+          <h1 className="saved-hero-title">Your Saved Properties</h1>
         </div>
       </div>
 
       <div className="saved-posts-wrapper">
-
         {/* Search and Actions Bar */}
         {savedProperties.length > 0 && (
           <div className="page-controls">
@@ -237,7 +254,7 @@ const SavedPosts = () => {
                 Search through your saved properties or manage your collection
               </p>
             </div>
-            
+
             <div className="controls-grid">
               <div className="search-container">
                 <FaSearch className="search-icon" />
@@ -249,25 +266,32 @@ const SavedPosts = () => {
                   className="search-input"
                 />
               </div>
-              
+
               <button
                 onClick={openBulkDeleteModal}
                 disabled={savedProperties.length === 0}
-                className="action-btn danger-btn"
+                className="action-btn danger-btn bulk-delete-btn  "
               >
                 <FaTrash />
                 Delete All ({savedProperties.length})
               </button>
             </div>
-            
+
             <div className="results-info">
               <div className="results-count">
-                Showing <span className="count-highlight">{filteredProperties.length}</span> of{' '}
-                <span className="count-highlight">{savedProperties.length}</span> saved properties
+                Showing{" "}
+                <span className="count-highlight">
+                  {filteredProperties.length}
+                </span>{" "}
+                of{" "}
+                <span className="count-highlight">
+                  {savedProperties.length}
+                </span>{" "}
+                saved properties
               </div>
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearchQuery("")}
                   className="clear-search-btn"
                 >
                   <FaTimes />
@@ -290,7 +314,7 @@ const SavedPosts = () => {
                 Properties you've bookmarked for future reference
               </p>
             </div>
-            
+
             <div className="properties-grid">
               {filteredProperties.map((property, index) => (
                 <div
@@ -319,7 +343,7 @@ const SavedPosts = () => {
                         <span>No image available</span>
                       </div>
                     )}
-                    
+
                     <div className="property-overlay">
                       <div className="property-price">
                         <FaDollarSign />
@@ -334,9 +358,7 @@ const SavedPosts = () => {
 
                   {/* Content Section */}
                   <div className="property-content">
-                    <h3 className="property-title">
-                      {property.title}
-                    </h3>
+                    <h3 className="property-title">{property.title}</h3>
 
                     {property.location && (
                       <div className="property-location">
@@ -358,7 +380,9 @@ const SavedPosts = () => {
                       </button>
                       <button
                         className="action-btn danger-btn"
-                        onClick={(e) => openDeleteModal(property.postId, property.title, e)}
+                        onClick={(e) =>
+                          openDeleteModal(property.postId, property.title, e)
+                        }
                       >
                         <FaTrash />
                         Remove
@@ -378,7 +402,8 @@ const SavedPosts = () => {
               </div>
               <h3 className="empty-state-title">No properties found</h3>
               <p className="empty-state-description">
-                No saved properties match your search criteria. Try different keywords or clear your search.
+                No saved properties match your search criteria. Try different
+                keywords or clear your search.
               </p>
               <button
                 onClick={() => setSearchQuery("")}
@@ -398,8 +423,9 @@ const SavedPosts = () => {
               </div>
               <h3 className="empty-state-title">No Saved Properties Yet</h3>
               <p className="empty-state-description">
-                Start exploring and save your favorite properties to see them here!
-                Your saved properties will appear in this collection for easy access.
+                Start exploring and save your favorite properties to see them
+                here! Your saved properties will appear in this collection for
+                easy access.
               </p>
               <button
                 onClick={() => navigate("/show-all-post")}
@@ -415,7 +441,13 @@ const SavedPosts = () => {
         {/* Delete Confirmation Modals */}
         <ConfirmDeleteModal
           isOpen={deleteModal.isOpen}
-          onClose={() => setDeleteModal({ isOpen: false, propertyId: null, propertyTitle: "" })}
+          onClose={() =>
+            setDeleteModal({
+              isOpen: false,
+              propertyId: null,
+              propertyTitle: "",
+            })
+          }
           onConfirm={() => removeSavedProperty(deleteModal.propertyId)}
           title="Remove Saved Property"
           message={`Are you sure you want to remove "${deleteModal.propertyTitle}" from your saved properties?`}
