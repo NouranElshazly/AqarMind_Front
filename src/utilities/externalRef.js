@@ -18,17 +18,7 @@ export function getOrCreateExternalRef(scope) {
     return existing;
   }
   
-  // Generate new UUID-based reference
-  // Fallback for older browsers that don't support crypto.randomUUID()
-  let uuid;
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    uuid = crypto.randomUUID();
-  } else {
-    // Fallback UUID generation
-    uuid = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-  
-  const ref = `${op}-${a}${b !== undefined ? `-${b}` : ""}-${uuid}`;
+  const ref = `${op}-${a}${b !== undefined ? `-${b}` : ""}`;
   
   // Store it
   localStorage.setItem(key, ref);

@@ -831,6 +831,18 @@
   box-shadow: var(--shadow-xl);
 }
 
+.user-property-btn-pay {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.user-property-btn-pay:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
 /* ==========================================
    MODAL STYLES
    ========================================== */
@@ -1032,6 +1044,22 @@
    LOADING & ERROR STATES
    ========================================== */
 
+/* Button Spinner */
+.btn-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .property-loading {
   display: flex;
   flex-direction: column;
@@ -1041,6 +1069,261 @@
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   gap: 2rem;
   padding: 2rem;
+}
+
+/* Modal Styles - Shared with SubsPlan */
+.subs-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+.subs-card-modal {
+  background: var(--bg-card, #ffffff);
+  width: 90%;
+  max-width: 500px;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: modalSlideIn 0.3s ease;
+  position: relative;
+}
+
+.subs-card-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-primary, #e2e8f0);
+  padding-bottom: 1rem;
+}
+
+.subs-card-modal-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+.subs-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subs-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary, #1e293b);
+}
+
+.subs-card-modal-body {
+  margin-bottom: 2rem;
+}
+
+.subs-modal-subtitle {
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.subs-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.subs-card-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-primary, #e2e8f0);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.subs-card-item:hover {
+  border-color: var(--brand-primary);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.subs-card-item.selected {
+  border-color: var(--brand-primary);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.subs-card-radio .radio-outer {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--brand-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subs-card-radio .radio-inner {
+  width: 0.625rem;
+  height: 0.625rem;
+  background: var(--brand-primary);
+  border-radius: 50%;
+}
+
+.subs-card-info {
+  flex: 1;
+}
+
+.subs-card-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.subs-card-main .card-icon {
+  color: var(--brand-primary);
+}
+
+.subs-card-expiry {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.subs-card-check {
+  color: var(--brand-primary);
+}
+
+.subs-cvv-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 1rem;
+}
+
+.subs-cvv-section label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subs-cvv-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-primary, #e2e8f0);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.subs-cvv-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+}
+
+.cvv-help {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.subs-card-modal-footer {
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid var(--border-primary, #e2e8f0);
+  padding-top: 1.5rem;
+}
+
+.subs-btn-cancel {
+  flex: 1;
+  padding: 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border-primary, #e2e8f0);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.subs-btn-confirm {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.subs-btn-confirm:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.subs-cards-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 0;
+  color: var(--text-secondary);
+}
+
+.subs-mini-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--brand-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.subs-no-cards {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-secondary);
+}
+
+.subs-add-card-btn {
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@keyframes modalSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .property-spinner {

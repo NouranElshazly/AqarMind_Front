@@ -24,7 +24,8 @@ import SavedPosts from "./pages/SavedPosts";
 import Messages from "./pages/Messages";
 import Contact from "./pages/contact";
 import Unauthorized from "./components/Unauthorized";
-import UserProperties from "./pages/UserProperties";
+import UserProposals from "./pages/UserProposals";
+import ContractDetails from "./pages/ContractDetails";
 import SystemReports from "./pages/SystemReports";
 import ShowAllPost from "./pages/ShowAllPosts";
 import ManageAdmins from "./pages/ManageAdmins";
@@ -38,6 +39,7 @@ import LandlordProposalManage from "./pages/LandlordProposalManage"
 import AdminManageSubs from "./pages/AdminManageSubs"
 import SubsPlan from "./pages/SubsPlan";
 import ManageAds from "./pages/ManageAds";
+import ManageContracts from "./pages/ManageContracts";
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -212,8 +214,10 @@ function App() {
               />
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />
+              <Route path="/tenant/contracts" element={<ManageContracts />} />
               <Route path="/saved-posts" element={<SavedPosts />} />
-              <Route path="/UserProperties" element={<UserProperties />} />
+              <Route path="/UserProposals" element={<UserProposals />} />
+              <Route path="/contract-details/:contractId" element={<ContractDetails />} />
               {/* Messages Routes */}
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:receiverId" element={<Messages />} />

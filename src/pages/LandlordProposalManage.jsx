@@ -70,7 +70,7 @@ const LandlordProposalManage = () => {
 
         // Direct API call as requested
         const response = await axios.get(
-          `https://localhost:7119/api/Landlord/proposals/${userId}`,
+          `https://localhost:7119/api/Landlord/proposals`,
           {
             headers: {
               Authorization: token ? `Bearer ${token}` : "",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
   FaCalendarAlt,
   FaTrashAlt,
@@ -20,27 +21,23 @@ import {
   FaDollarSign,
   FaImage,
   FaQuestionCircle,
+  FaTag,
+  FaCreditCard,
 } from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
+import { X, Check } from "lucide-react";
+import {
+  getOrCreateExternalRef,
+  clearExternalRef,
+} from "../utilities/externalRef";
 import API_BASE_URL from "../services/ApiConfig";
-import "../styles/UserProperties.css";
+import "../styles/UserProposals.css";
 
 const getUserId = () => localStorage.getItem("userId");
 const getToken = () => localStorage.getItem("token");
 
-// دالة للتحقق من وجود الملف
-const checkFileExists = async (filePath) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/${filePath}`, {
-      method: "HEAD", // استخدام HEAD للتحقق فقط دون تحميل الملف
-    });
-    return response.ok;
-  } catch (error) {
-    console.error("File check error:", error);
-    return false;
-  }
-};
+
 
 // File Viewer Modal Component
 const FileViewerModal = ({
@@ -281,7 +278,7 @@ const FileViewerModal = ({
   );
 };
 
-const MyProperties = () => {
+const UserProposals = () => {
   const [myProperties, setMyProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -289,6 +286,14 @@ const MyProperties = () => {
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  // Card Selection Modal States
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [paymentCards, setPaymentCards] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [cvv, setCvv] = useState("");
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const navigate = useNavigate();
   const tenantId = getUserId();
   const token = getToken();
@@ -297,9 +302,6 @@ const MyProperties = () => {
     const fetchMyProperties = async () => {
       setLoading(true);
       setError(null);
-
-      console.log("🔍 Fetching proposals for tenant:", tenantId);
-
       try {
         const response = await axios.get(
           `${API_BASE_URL}/api/Tenant/my-proposals/${tenantId}`,
@@ -395,32 +397,172 @@ const MyProperties = () => {
     }
   };
 
-  const openFileModal = (property) => {
-    const fileBase64 = property.fileBase64 || property.file_base64;
-    const fileName = property.fileName || property.file_name;
-    const filePath = property.filePath;
-    const imagePath = property.imagePath;
+  const fetchPaymentCards = async () => {
+    if (!tenantId || !token) return;
 
-    if (fileBase64) {
-      // استخدام base64
-      setSelectedFile({
-        fileBase64: fileBase64,
-        fileName: fileName,
-        isPath: false,
-      });
-      setIsFileModalOpen(true);
-    } else if (filePath || imagePath) {
-      // استخدام مسار الملف
-      const path = filePath || imagePath;
-      const name = fileName || path.split("/").pop();
+    setLoadingCards(true);
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/payments/cards/${tenantId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setPaymentCards(response.data || []);
+    } catch (error) {
+      console.error("Error fetching payment cards:", error);
+      toast.error("Failed to load payment cards.");
+      setPaymentCards([]);
+    } finally {
+      setLoadingCards(false);
+    }
+  };
 
-      setSelectedFile({
-        filePath: `${API_BASE_URL}/${path}`,
-        fileName: name,
-        isPath: true,
-        isPDF: !!filePath,
+  const closeCardModal = () => {
+    setShowCardModal(false);
+    setSelectedCardId(null);
+    setCvv("");
+    setSelectedProperty(null);
+  };
+
+  const handlePayment = async (property) => {
+    // If Sale (Cash), open card selection modal
+    if (property.propertyType === 1 && property.isInstallment === 0) {
+      setSelectedProperty(property);
+      setShowCardModal(true);
+      await fetchPaymentCards();
+      return;
+    }
+
+    setPaymentLoading(true);
+    try {
+      let endpoint = "";
+
+      // Determine endpoint based on property type and payment method
+      if (property.propertyType === 0) {
+        // Rent payment
+        endpoint = `${API_BASE_URL}/api/payments/rent/start/${tenantId}`;
+      } else if (property.propertyType === 1) {
+        // Sale payment
+        if (property.isInstallment === 1) {
+          // Installment sale
+          endpoint = `${API_BASE_URL}/api/payments/sale/installment/${tenantId}`;
+        }
+      }
+
+      if (!endpoint) {
+        toast.error("Invalid payment configuration");
+        return;
+      }
+
+      console.log("Initializing payment via:", endpoint);
+
+      const response = await axios.post(
+        endpoint,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data && response.data.paymentUrl) {
+        window.location.href = response.data.paymentUrl;
+      } else {
+        toast.success("Payment initialized successfully");
+        const idToUse = property.contractId || property.proposalId;
+        navigate(`/contract-details/${idToUse}`);
+      }
+    } catch (err) {
+      console.error("❌ Payment initialization error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Failed to initialize payment. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedCardId) {
+      toast.error("Please select a payment card");
+      return;
+    }
+
+    if (!cvv || cvv.length !== 3) {
+      toast.error("Please enter a valid 3-digit CVV");
+      return;
+    }
+
+    setPaymentLoading(true);
+
+    try {
+      const property = selectedProperty;
+      // Generate ExternalRef exactly as in SubsPlan
+      const externalRef = getOrCreateExternalRef({
+        op: "SALECASH",
+        a: tenantId,
+        b: property.proposalId,
       });
-      setIsFileModalOpen(true);
+
+      console.log("🔑 ExternalRef for Sale (Cash):", externalRef);
+
+      const payload = {
+        postId: property.postId,
+        proposalId: property.proposalId,
+        paymentCardId: selectedCardId,
+        externalRef,
+        // Adding CVV just in case, though not in screenshot, to match "exact as in subsplan"
+        // But screenshot is more authoritative for the specific endpoint
+        cvv: cvv, 
+      };
+
+      console.log("🚀 Sending Sale (Cash) payment request:", payload);
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/payments/sale/cash/${tenantId}`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data && response.data.success) {
+        clearExternalRef({
+          op: "SALECASH",
+          a: tenantId,
+          b: property.proposalId,
+        });
+
+        toast.success("Payment successful! 🎉");
+        closeCardModal();
+        
+        // Link to contract details page by the contractId or proposalId
+        const idToUse = response.data.contractId || property.contractId || property.proposalId;
+        navigate(`/contract-details/${idToUse}`);
+      } else if (response.data && response.data.paymentUrl) {
+        // If it returns a URL instead of success: true
+        window.location.href = response.data.paymentUrl;
+      } else {
+        toast.warning(
+          response.data.message || "Payment failed. Please try again.",
+        );
+      }
+    } catch (err) {
+      console.error("❌ Sale (Cash) payment error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Payment failed. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -585,229 +727,11 @@ const MyProperties = () => {
                     </div>
                     <div className="user-property-meta">
                       <h3 className="user-property-id">
-                        Application #{property.proposalId}
+                        Proposal #{property.proposalId}
                       </h3>
                     </div>
                   </div>
                   {renderStatusBadge(property.proposalStatus)}
-                </div>
-
-                {/* File Preview Section */}
-                <div className="user-property-document">
-                  {(() => {
-                    // البحث عن مسارات الملفات
-                    const filePath = property.filePath;
-                    const imagePath = property.imagePath;
-                    const fileBase64 =
-                      property.fileBase64 ||
-                      property.file_base64 ||
-                      property.fileData;
-                    const fileName =
-                      property.fileName ||
-                      property.file_name ||
-                      property.filename;
-
-                    console.log(
-                      `🔍 File check for proposal ${property.proposalId}:`,
-                      {
-                        filePath: filePath,
-                        imagePath: imagePath,
-                        hasFileBase64: !!fileBase64,
-                        fileName: fileName,
-                        allKeys: Object.keys(property),
-                        fullPdfUrl: filePath
-                          ? `${API_BASE_URL}/${filePath}`
-                          : null,
-                        fullImageUrl: imagePath
-                          ? `${API_BASE_URL}/${imagePath}`
-                          : null,
-                      },
-                    );
-
-                    // إذا كان هناك filePath (PDF) أو imagePath (صورة)
-                    if (filePath || imagePath || fileBase64) {
-                      const isImage = !!imagePath;
-                      const isPDF = !!filePath;
-                      const displayPath = filePath || imagePath;
-                      const displayName =
-                        fileName ||
-                        (displayPath
-                          ? displayPath.split("/").pop()
-                          : "Unknown file");
-
-                      return (
-                        <div className="user-property-file-preview">
-                          <div className="user-property-file-container">
-                            {fileBase64 ? (
-                              // عرض من base64 (الطريقة القديمة)
-                              <>
-                                {isPDF ||
-                                displayName.toLowerCase().endsWith(".pdf") ? (
-                                  <div className="user-property-pdf-wrapper">
-                                    <embed
-                                      src={`data:application/pdf;base64,${fileBase64}#toolbar=0&navpanes=0`}
-                                      type="application/pdf"
-                                      className="user-property-pdf-embed"
-                                    />
-                                    <div className="user-property-file-type-badge pdf">
-                                      <FaFilePdf />
-                                      PDF
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="user-property-image-wrapper">
-                                    <img
-                                      src={`data:image/*;base64,${fileBase64}`}
-                                      alt="Application document"
-                                      className="user-property-image-embed"
-                                      onLoad={() => {
-                                        console.log(
-                                          `✅ Base64 image loaded for proposal ${property.proposalId}`,
-                                        );
-                                      }}
-                                      onError={(e) => {
-                                        console.error(
-                                          `❌ Base64 image error for proposal ${property.proposalId}`,
-                                        );
-                                        e.target.style.display = "none";
-                                      }}
-                                    />
-                                    <div className="user-property-file-type-badge image">
-                                      <FaEye />
-                                      IMAGE
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              // عرض من مسار الملف (الطريقة الجديدة)
-                              <>
-                                {isPDF ? (
-                                  <div className="user-property-pdf-wrapper">
-                                    <embed
-                                      src={`${API_BASE_URL}/${filePath}`}
-                                      type="application/pdf"
-                                      className="user-property-pdf-embed"
-                                      onLoad={() => {
-                                        console.log(
-                                          `✅ PDF loaded from path for proposal ${property.proposalId}`,
-                                        );
-                                      }}
-                                      onError={() => {
-                                        console.error(
-                                          `❌ PDF load error for proposal ${property.proposalId}:`,
-                                          {
-                                            filePath: filePath,
-                                            fullUrl: `${API_BASE_URL}/${filePath}`,
-                                          },
-                                        );
-                                      }}
-                                    />
-                                    <div className="user-property-file-type-badge pdf">
-                                      <FaFilePdf />
-                                      PDF
-                                    </div>
-                                  </div>
-                                ) : isImage ? (
-                                  <div className="user-property-image-wrapper">
-                                    <img
-                                      src={`${API_BASE_URL}/${imagePath}`}
-                                      alt="Application document"
-                                      className="user-property-image-embed"
-                                      onLoad={() => {
-                                        console.log(
-                                          `✅ Image loaded from path for proposal ${property.proposalId}`,
-                                        );
-                                      }}
-                                      onError={(e) => {
-                                        console.error(
-                                          `❌ Image load error for proposal ${property.proposalId}:`,
-                                          {
-                                            src: e.target.src,
-                                            imagePath: imagePath,
-                                          },
-                                        );
-
-                                        const errorDiv =
-                                          document.createElement("div");
-                                        errorDiv.className =
-                                          "user-property-file-error";
-                                        errorDiv.innerHTML = `
-                                          <div class="user-property-file-error-icon">⚠️</div>
-                                          <p>Unable to load image</p>
-                                          <small>Path: ${imagePath}</small>
-                                        `;
-                                        e.target.parentElement.appendChild(
-                                          errorDiv,
-                                        );
-                                        e.target.style.display = "none";
-                                      }}
-                                    />
-                                    <div className="user-property-file-type-badge image">
-                                      <FaEye />
-                                      IMAGE
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </>
-                            )}
-
-                            <div className="user-property-file-overlay">
-                              <button
-                                onClick={() => {
-                                  if (fileBase64) {
-                                    // فتح من base64
-                                    openFileModal({
-                                      ...property,
-                                      fileBase64: fileBase64,
-                                      fileName: displayName,
-                                    });
-                                  } else {
-                                    // فتح من مسار
-                                    const fileUrl = `${API_BASE_URL}/${displayPath}`;
-                                    window.open(fileUrl, "_blank");
-                                  }
-                                }}
-                                className="user-property-file-view-btn"
-                              >
-                                <FaEye />
-                                View {isPDF ? "PDF" : "Image"}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="user-property-file-info">
-                            {isPDF ? (
-                              <FaFilePdf className="user-property-file-icon pdf" />
-                            ) : (
-                              <FaEye className="user-property-file-icon image" />
-                            )}
-                            <span className="user-property-file-name">
-                              {displayName}
-                            </span>
-                            <span className="user-property-file-type">
-                              {isPDF ? "PDF" : "IMAGE"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="user-property-file-empty">
-                          <div className="user-property-file-empty-icon">
-                            <FaFilePdf />
-                          </div>
-                          <p className="user-property-file-empty-text">
-                            No document available
-                          </p>
-                          <small className="user-property-file-debug">
-                            Debug: filePath={filePath || "null"}, imagePath=
-                            {imagePath || "null"}, fileBase64=
-                            {fileBase64 ? "exists" : "null"}
-                          </small>
-                        </div>
-                      );
-                    }
-                  })()}
                 </div>
 
                 {/* Property Details */}
@@ -860,21 +784,44 @@ const MyProperties = () => {
                     </div>
                   )}
 
+                  {/* Property Type */}
+                  <div className="user-property-detail-item">
+                    <div className="user-property-detail-icon">
+                      <FaTag />
+                    </div>
+                    <div className="user-property-detail-content">
+                      <span className="user-property-detail-label">Type</span>
+                      <span className="user-property-detail-value">
+                        {property.propertyType === 1 ? "Sale" : "Rent"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Payment Method (Installment/Cash) */}
+                  <div className="user-property-detail-item">
+                    <div className="user-property-detail-icon">
+                      <FaCreditCard />
+                    </div>
+                    <div className="user-property-detail-content">
+                      <span className="user-property-detail-label">
+                        Payment Method
+                      </span>
+                      <span className="user-property-detail-value">
+                        {property.isInstallment === 1 ? "Installment" : "Cash"}
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Offered Price */}
                   {(() => {
                     const offeredPrice =
                       property.offeredPrice ||
-                      property.Offeredprice ||
-                      property.offered_price ||
-                      property.price;
-
+                      property.Offeredprice ;
+              
                     console.log(
                       `💰 Price check for proposal ${property.proposalId}:`,
                       {
                         offeredPrice: property.offeredPrice,
-                        Offeredprice: property.Offeredprice,
-                        offered_price: property.offered_price,
-                        price: property.price,
                         finalPrice: offeredPrice,
                       },
                     );
@@ -951,18 +898,20 @@ const MyProperties = () => {
 
                 {/* Actions */}
                 <div className="user-property-actions">
-                  {property.rentalStatus === "Approved" && (
+                  {property.proposalStatus === 1 && (
                     <button
-                      onClick={() =>
-                        handleMessageClick(
-                          property.landlordId,
-                          property.landlordName,
-                        )
-                      }
-                      className="user-property-btn user-property-btn-primary"
+                      onClick={() => handlePayment(property)}
+                      className="user-property-btn user-property-btn-pay"
+                      disabled={paymentLoading}
                     >
-                      <FaEnvelope />
-                      Message Landlord
+                      {paymentLoading ? (
+                        <div className="btn-spinner"></div>
+                      ) : (
+                        <>
+                          <FaCreditCard />
+                          Initialize payment
+                        </>
+                      )}
                     </button>
                   )}
                   <button
@@ -1005,8 +954,123 @@ const MyProperties = () => {
           </div>
         )}
       </div>
+
+      {/* Card Selection Modal for Sale (Cash) */}
+      {showCardModal && (
+        <div className="subs-modal-overlay" onClick={closeCardModal}>
+          <div
+            className="subs-card-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="subs-card-modal-header">
+              <h3>Select Payment Card</h3>
+              <button className="subs-modal-close" onClick={closeCardModal}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="subs-card-modal-body">
+              <p className="subs-modal-subtitle">
+                Choose a card to complete your payment for Proposal #
+                {selectedProperty?.proposalId}
+              </p>
+
+              {loadingCards ? (
+                <div className="subs-cards-loading">
+                  <div className="subs-mini-spinner"></div>
+                  <span>Loading your cards...</span>
+                </div>
+              ) : paymentCards.length > 0 ? (
+                <div className="subs-cards-list">
+                  {paymentCards.map((card) => {
+                    const cardId = card.id || card.paymentCardId || card.PaymentCardId || card.cardId;
+                    return (
+                      <div
+                        key={cardId}
+                        className={`subs-card-item ${
+                          selectedCardId === cardId ? "selected" : ""
+                        }`}
+                        onClick={() => setSelectedCardId(cardId)}
+                      >
+                        <div className="subs-card-radio">
+                          <div className="radio-outer">
+                            {selectedCardId === cardId && (
+                              <div className="radio-inner"></div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="subs-card-info">
+                          <div className="subs-card-main">
+                            <FaCreditCard className="card-icon" />
+                            <span className="card-number">
+                              **** **** {card.maskedCardNumber || `**** ${card.lastFourDigits}`}
+                            </span>
+                          </div>
+                          <div className="subs-card-expiry">
+                            Expires: {card.expiryMonth}/{card.expiryYear}
+                          </div>
+                        </div>
+                        {selectedCardId === cardId && (
+                          <Check className="subs-card-check" size={20} />
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {selectedCardId && (
+                    <div className="subs-cvv-section">
+                      <label htmlFor="cvv">Security Code (CVV)</label>
+                      <input
+                        type="password"
+                        id="cvv"
+                        placeholder="***"
+                        maxLength="3"
+                        value={cvv}
+                        onChange={(e) =>
+                          setCvv(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="subs-cvv-input"
+                      />
+                      <p className="cvv-help">
+                        The 3-digit code on the back of your card
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="subs-no-cards">
+                  <p>No payment cards found.</p>
+                  <button
+                    onClick={() => navigate("/payment-methods")}
+                    className="subs-add-card-btn"
+                  >
+                    Add a New Card
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="subs-card-modal-footer">
+              <button className="subs-btn-cancel" onClick={closeCardModal}>
+                Cancel
+              </button>
+              <button
+                className="subs-btn-confirm"
+                disabled={!selectedCardId || cvv.length !== 3 || paymentLoading}
+                onClick={handleConfirmPayment}
+              >
+                {paymentLoading ? (
+                  <div className="subs-btn-spinner"></div>
+                ) : (
+                  "Confirm Payment"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default MyProperties;
+export default UserProposals;

@@ -21,7 +21,8 @@ import {
   FaShieldAlt,
   FaRocket,
   FaRegBookmark,
-  FaArrowRight
+  FaArrowRight,
+  FaFileContract
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/TenantDashboard.css";
@@ -674,9 +675,9 @@ const TenantDashboard = () => {
             </div>
             <div className="actions-grid enhanced">
               {[
-                { icon: FaSearch, label: "Find Properties", path: "/show-all-post", color: "blue", action: "find_properties", description: "Browse all listings" },
+                { icon: FaFileContract, label: "My Contracts", path: "/tenant/contracts", color: "blue", action: "my_contracts", description: "View and manage contracts" },
+                 { icon: FaFileAlt, label: "My Applications", path: "/UserProposals", color: "purple", action: "my_applications", description: "Track progress" },
                 { icon: FaBookmark, label: "Saved Homes", path: "/saved-posts", color: "pink", action: "saved_homes", description: "Your favorites" },
-                { icon: FaFileAlt, label: "My Applications", path: "/UserProperties", color: "purple", action: "my_applications", description: "Track progress" },
                 { icon: FaEnvelope, label: "Messages", path: "/messages", color: "green", action: "messages", description: "Chat with agents" },
               ].map((action, index) => (
                 <Link

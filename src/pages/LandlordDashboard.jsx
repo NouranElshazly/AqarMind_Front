@@ -468,6 +468,14 @@ const LandlordDashboard = () => {
             Add Property
           </button>
           <button
+            onClick={() => navigate("/tenant/contracts")}
+            className="btn btn-secondary"
+            style={{ marginLeft: "10px" }}
+          >
+            <FileText size={20} />
+            My Contracts
+          </button>
+          <button
             onClick={() => navigate("/landlord/manage-proposals")}
             className="btn btn-secondary"
             style={{ marginLeft: "10px" }}

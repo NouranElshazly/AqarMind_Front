@@ -569,7 +569,7 @@ const Navbar = () => {
           {
             icon: <DocumentIcon />,
             label: "Your Applications",
-            path: "/UserProperties",
+            path: "/UserProposals",
           },
         ];
 
@@ -718,7 +718,7 @@ const Navbar = () => {
                   )}
 
                   {user.role === "Tenant" && (
-                    <Link to="/UserProperties" className="dropdown-item">
+                    <Link to="/UserProposals" className="dropdown-item">
                       <div className="dropdown-item-icon">
                         <DocumentIcon />
                       </div>
@@ -1067,7 +1067,7 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/UserProperties"
+                  to="/UserProposals"
                   className="menu-card"
                   onClick={closeMenu}
                 >
