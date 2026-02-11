@@ -1719,58 +1719,44 @@ const ShowAllPosts = () => {
                 />
 
                 {/* 2. The Hover Overlay (Center) */}
-                <div className="property-overlay">
+                {/* <div className="property-overlay">
                   <button className="quick-view-btn">
                     <FaEye />
                     Quick View
                   </button>
-                </div>
-
-                {userRole !== "Admin" && (
-                  <button
-                    onClick={(e) => handleSavePost(post.postId, e)}
-                    className={`save-btn ${isPostSaved ? "saved" : ""}`}
-                  >
-                    {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
-                  </button>
-                )}
+                </div> */}
 
                 <div className="property-content">
+                  <div className="property-header">
+                    <div className="property-author">
+                      <FaUser />
+                      <span>{post.userName || post.user_name || "User"}</span>
+                    </div>
+                    <div className="property-date-top">
+                      <FaClock />
+                      {new Date(post.datePost).toLocaleDateString()}
+                    </div>
+                  </div>
                   <h3 className="property-title">{post.title}</h3>
-
+                  <p className="property-description">{post.description}</p>
                   <div className="property-price-location">
                     <span className="property-price">
                       ${post.price.toLocaleString()}
                     </span>
-                    <div className="property-location">
-                      <FaMapMarkerAlt />
-                      <span>{post.location}</span>
-                    </div>
                   </div>
-
-                  <p className="property-description">{post.description}</p>
-
                   <div className="property-footer">
-                    <div className="property-date">
-                      <FaClock />
-                      {new Date(post.datePost).toLocaleDateString()}
-                    </div>
-
                     {userRole !== "Admin" ? (
                       <div className="property-actions">
                         {/* Like Button */}
                         <button
                           onClick={(e) => handleLikePost(post.postId, e)}
-                          className={`action-btn like-btn ${
-                            hasUserLikedPost ? "liked" : ""
-                          }`}
+                          className={`action-btn like-btn ${hasUserLikedPost ? "liked" : ""}`}
                         >
                           {hasUserLikedPost ? <FaHeart /> : <FaRegHeart />}
                           <span>
                             {post.likes_count > 0 ? post.likes_count : "0"}
                           </span>
                         </button>
-
                         {/* Share Button */}
                         <button
                           onClick={(e) => handleSharePost(post, e)}
@@ -1778,16 +1764,12 @@ const ShowAllPosts = () => {
                         >
                           <FaShareAlt />
                         </button>
-
-                        {/* Comment Button */}
+                        {/* Save Button*/}
                         <button
-                          onClick={(e) => openCommentsModal(post, e)}
-                          className="action-btn comment-btn"
+                          onClick={(e) => handleSavePost(post.postId, e)}
+                          className={`action-btn ${isPostSaved ? "saved" : ""}`}
                         >
-                          <FaComment />
-                          <span>
-                            {post.commentCount > 0 ? post.commentCount : "0"}
-                          </span>
+                          {isPostSaved ? <FaBookmark /> : <FaRegBookmark />}
                         </button>
                       </div>
                     ) : null}
@@ -1820,15 +1802,23 @@ const ShowAllPosts = () => {
               <div className="comments-modal-body">
                 {/* Property Info */}
                 <div className="comment-form">
+                  <div className="property-header">
+                    <div className="property-author">
+                      <FaUser />
+                      <span>
+                        {selectedPost.userName }
+                      </span>
+                    </div>
+                    <div className="property-date-top">
+                      <FaClock />
+                      {new Date(selectedPost.datePost).toLocaleDateString()}
+                    </div>
+                  </div>
                   <h3 className="property-title">{selectedPost.title}</h3>
                   <div className="property-price-location">
                     <span className="property-price">
                       ${selectedPost.price?.toLocaleString()}
                     </span>
-                    <div className="property-location">
-                      <FaMapMarkerAlt />
-                      {selectedPost.location}
-                    </div>
                   </div>
                 </div>
 

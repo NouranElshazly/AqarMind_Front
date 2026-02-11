@@ -345,10 +345,6 @@ const SavedPosts = () => {
                     )}
 
                     <div className="property-overlay">
-                      <div className="property-price">
-                        <FaDollarSign />
-                        {property.price?.toLocaleString()}
-                      </div>
                       <div className="property-badge">
                         <FaHeart />
                         Saved
@@ -359,14 +355,6 @@ const SavedPosts = () => {
                   {/* Content Section */}
                   <div className="property-content">
                     <h3 className="property-title">{property.title}</h3>
-
-                    {property.location && (
-                      <div className="property-location">
-                        <FaMapMarkerAlt />
-                        {property.location}
-                      </div>
-                    )}
-
                     <p className="property-description">
                       {property.description?.length > 120
                         ? `${property.description.substring(0, 120)}...`
