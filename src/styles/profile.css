@@ -157,7 +157,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-primary);
 }
@@ -907,7 +907,6 @@
    ========================================== */
 
 .saved-cards-list {
-  margin-top: 2rem;
   margin-bottom: 1.5rem;
 }
 
@@ -1015,6 +1014,12 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 1rem;
+}
+
+.form-row-3 .form-label {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: flex-end;
 }
 
 @media (max-width: 600px) {

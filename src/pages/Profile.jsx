@@ -13,6 +13,7 @@ import {
 import API from "../services/api"; // Import API instance
 import API_BASE_URL from "../services/ApiConfig";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { toast } from "react-toastify";
 import "../styles/profile.css";
 import {
   FaCreditCard,
@@ -79,8 +80,6 @@ const Profile = () => {
     ExpiryYear: "",
     CVV: "",
   });
-  const [cardError, setCardError] = useState("");
-  const [cardSuccess, setCardSuccess] = useState("");
   const [savingCard, setSavingCard] = useState(false);
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
@@ -143,7 +142,7 @@ const Profile = () => {
       card.CardId;
 
     if (!cardId) {
-      setCardError("Error: Could not determine card ID.");
+      toast.error("Error: Could not determine card ID.");
       return;
     }
 
@@ -181,12 +180,7 @@ const Profile = () => {
 
     try {
       await deleteCard(userId, cardId);
-      setCardSuccess("Card deleted successfully");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setCardSuccess("");
-      }, 3000);
+      toast.success("Card deleted successfully");
 
       setIsDeleteModalOpen(false);
       setCardToDelete(null);
@@ -196,27 +190,13 @@ const Profile = () => {
       setSavedCards(previousCards);
 
       // Log detailed error for debugging
-      if (err.response) {
-        console.error(
-          "Error response:",
-          err.response.status,
-          err.response.data,
-        );
-        if (err.response.status === 404) {
-          setCardError("Card not found or already deleted.");
-        } else {
-          setCardError(
-            `Failed to delete card: ${err.response.data?.message || "Server error"}`,
-          );
-        }
-      } else {
-        setCardError("Failed to delete card. Please check your connection.");
-      }
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Failed to delete card. Please try again.";
 
-      // Clear error message after 3 seconds
-      setTimeout(() => {
-        setCardError("");
-      }, 3000);
+      toast.error(errorMessage);
 
       setIsDeleteModalOpen(false);
       setCardToDelete(null);
@@ -254,13 +234,11 @@ const Profile = () => {
       setSavedCards(updatedCards);
 
       await setDefaultCard(userId, cardId);
-      setCardSuccess("Default card updated successfully");
-      setTimeout(() => setCardSuccess(""), 3000);
+      toast.success("Default card updated successfully");
     } catch (err) {
       console.error("Failed to set default card:", err);
-      setCardError("Failed to set default card.");
+      toast.error("Failed to set default card");
       fetchUserCards(); // Revert to server state
-      setTimeout(() => setCardError(""), 3000);
     }
   };
 
@@ -660,7 +638,7 @@ const Profile = () => {
         ExpiryMonth: parseInt(cardData.ExpiryMonth),
         ExpiryYear: parseInt(cardData.ExpiryYear),
       });
-      setCardSuccess("Credit card added successfully");
+      toast.success("Credit card added successfully");
       setCardData({
         CardNumber: "",
         CardHolderName: "",
@@ -669,14 +647,12 @@ const Profile = () => {
         CVV: "",
       });
       setIsAddingCard(false);
-      // Clear success message after 3 seconds
-      setTimeout(() => setCardSuccess(""), 3000);
 
       // Refresh cards list
       fetchUserCards();
     } catch (err) {
       console.error(err);
-      setCardError(err.response?.data?.error || "Failed to add credit card");
+      toast.error(err.response?.data?.error || "Failed to add credit card");
     } finally {
       setSavingCard(false);
     }
@@ -984,16 +960,6 @@ const Profile = () => {
 
           {isAddingCard ? (
             <div className="profile-card-body">
-              {cardError && (
-                <div className="alert alert-error">
-                  <FaTimes /> {cardError}
-                </div>
-              )}
-              {cardSuccess && (
-                <div className="alert alert-success">
-                  <FaCheck /> {cardSuccess}
-                </div>
-              )}
               <form onSubmit={handleCardSubmit}>
                 <div className="form-grid">
                   <div className="form-group">
@@ -1089,15 +1055,9 @@ const Profile = () => {
               </form>
             </div>
           ) : (
-            <div className="profile-card-body">
-              {cardSuccess && (
-                <div className="alert alert-success">
-                  <FaCheck /> {cardSuccess}
-                </div>
-              )}
-
-              {/* Display Saved Cards */}
-              <div className="saved-cards-list">
+              <div className="profile-card-body">
+                {/* Display Saved Cards */}
+                <div className="saved-cards-list">
                 {loadingCards ? (
                   <div className="cards-loading">Loading cards...</div>
                 ) : savedCards.length > 0 ? (
@@ -1135,8 +1095,7 @@ const Profile = () => {
                               •••• •••• •••• {card.maskedCardNumber.slice(-4)}
                             </div>
                             <div className="card-expiry">
-                              Expires: {card.expiryMonth || card.ExpiryMonth}/
-                              {card.expiryYear || card.ExpiryYear}
+                              Expires: {card.expiryMonth }/{String(card.expiryYear ).slice(-2)}
                             </div>
                           </div>
                         </div>
