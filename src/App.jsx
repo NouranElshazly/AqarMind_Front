@@ -40,6 +40,8 @@ import AdminManageSubs from "./pages/AdminManageSubs"
 import SubsPlan from "./pages/SubsPlan";
 import ManageAds from "./pages/ManageAds";
 import ManageContracts from "./pages/ManageContracts";
+import TenantPaymentPlans from "./pages/TenantPaymentPlans";
+import PaymentPlanDetails from "./pages/PaymentPlanDetails";
 
 // Create DarkMode Context
 const DarkModeContext = createContext();
@@ -215,6 +217,8 @@ function App() {
               {/* Tenant Routes */}
               <Route path="/tenant/dashboard" element={<TenantDashboard />} />
               <Route path="/tenant/contracts" element={<ManageContracts />} />
+              <Route path="/tenant/payment-plans" element={<TenantPaymentPlans />} />
+              <Route path="/tenant/payment-plan/:planId" element={<PaymentPlanDetails />} />
               <Route path="/saved-posts" element={<SavedPosts />} />
               <Route path="/UserProposals" element={<UserProposals />} />
               <Route path="/contract-details/:contractId" element={<ContractDetails />} />

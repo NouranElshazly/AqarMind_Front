@@ -88,9 +88,10 @@ const LandlordProposalManage = () => {
           // Backend returned a message (e.g., "No posts found for this landlord.")
           setProposals([]);
         } else {
-          // Ensure we have an array
+          // Ensure we have an array and sort by proposalId (highest first) to show recent ones
           const data = Array.isArray(response.data) ? response.data : [];
-          setProposals(data);
+          const sortedData = [...data].sort((a, b) => b.proposalId - a.proposalId);
+          setProposals(sortedData);
         }
       } catch (err) {
         // Handle error responses

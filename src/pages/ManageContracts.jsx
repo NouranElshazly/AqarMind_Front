@@ -117,7 +117,7 @@ const ManageContracts = () => {
               <h1>My Contracts</h1>
               <p className="header-subtitle">
                 View and manage your contracts below.<br />
-                Track status, open details, and finalize your agreements.
+                Track status, open details, and manage your agreements.
               </p>
             </div>
           </div>

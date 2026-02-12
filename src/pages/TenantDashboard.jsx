@@ -5,6 +5,7 @@ import {
   FaHome,
   FaFileAlt,
   FaComments,
+  FaCreditCard,
   FaUser,
   FaSearch,
   FaEnvelope,
@@ -677,7 +678,7 @@ const TenantDashboard = () => {
               {[
                 { icon: FaFileContract, label: "My Contracts", path: "/tenant/contracts", color: "blue", action: "my_contracts", description: "View and manage contracts" },
                  { icon: FaFileAlt, label: "My Applications", path: "/UserProposals", color: "purple", action: "my_applications", description: "Track progress" },
-                { icon: FaBookmark, label: "Saved Homes", path: "/saved-posts", color: "pink", action: "saved_homes", description: "Your favorites" },
+                { icon: FaCreditCard, label: "Payment Plans", path: "/tenant/payment-plans", color: "orange", action: "payment_plans", description: "Manage your payments" },
                 { icon: FaEnvelope, label: "Messages", path: "/messages", color: "green", action: "messages", description: "Chat with agents" },
               ].map((action, index) => (
                 <Link

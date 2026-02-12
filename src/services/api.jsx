@@ -319,6 +319,18 @@ export const fetchRecentApplications = () =>
 export const fetchSavedPropertiesPreview = () =>
   API.get("/tenant/saved-properties/preview");
 
+export const getTenantProposals = (tenantId) =>
+  API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/proposals`);
+
+export const getTenantPaymentPlans = (tenantId) =>
+  API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/payment-plans`);
+
+export const getTenantPaymentPlanDetails = (tenantId, planId) =>
+  API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/payment-plan/${planId}`);
+
+export const payRemainingAmount = (paymentData) =>
+  API.post(`${API_BASE_URL}/api/payments/remaining/pay`, paymentData);
+
 // ==================== Landlord ====================
 export const fetchLandlordDashboard = () => API.get("/landlord/dashboard");
 export const fetchLandlordProperties = (status) =>
