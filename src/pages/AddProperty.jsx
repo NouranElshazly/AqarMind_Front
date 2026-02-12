@@ -281,7 +281,7 @@ const AddProperty = () => {
       }
 
       // Call API using axios directly with full URL
-      const apiUrl = `${API_BASE_URL}/api/Landlord/create-post/${userId}`;
+      const apiUrl = `${API_BASE_URL}/api/Landlord/create-post`;
       
 
       const response = await axios.post(apiUrl, submitData, {

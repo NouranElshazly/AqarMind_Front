@@ -284,7 +284,6 @@ const UserProposals = () => {
   const [error, setError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [paymentLoading, setPaymentLoading] = useState(false);
   // Card Selection Modal States
@@ -294,6 +293,8 @@ const UserProposals = () => {
   const [cvv, setCvv] = useState("");
   const [loadingCards, setLoadingCards] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [installmentMonths, setInstallmentMonths] = useState(360);
+  const [frequency, setFrequency] = useState(12);
   const navigate = useNavigate();
   const tenantId = getUserId();
   const token = getToken();
@@ -350,7 +351,9 @@ const UserProposals = () => {
 
         // تأكد من أن الـ response array
         if (Array.isArray(response.data)) {
-          setMyProperties(response.data);
+          // Sort by proposalId descending (recent first)
+          const sortedProposals = [...response.data].sort((a, b) => b.proposalId - a.proposalId);
+          setMyProperties(sortedProposals);
         } else {
           console.error("❌ Unexpected response format:", response.data);
           setMyProperties([]);
@@ -426,8 +429,8 @@ const UserProposals = () => {
   };
 
   const handlePayment = async (property) => {
-    // If Sale (Cash), open card selection modal
-    if (property.propertyType === 1 && property.isInstallment === 0) {
+    // If Sale (Cash or Installment) or Rent, open card selection modal
+    if (property.propertyType === 1 || property.propertyType === 0) {
       setSelectedProperty(property);
       setShowCardModal(true);
       await fetchPaymentCards();
@@ -501,50 +504,74 @@ const UserProposals = () => {
 
     try {
       const property = selectedProperty;
+      const isInstallment = property.isInstallment === 1;
+      const isRent = property.propertyType === 0;
+
       // Generate ExternalRef exactly as in SubsPlan
+      let opType = "";
+      if (isRent) {
+        opType = "RENT";
+      } else {
+        opType = isInstallment ? "SALEINST" : "SALECASH";
+      }
+
       const externalRef = getOrCreateExternalRef({
-        op: "SALECASH",
+        op: opType,
         a: tenantId,
         b: property.proposalId,
       });
 
-      console.log("🔑 ExternalRef for Sale (Cash):", externalRef);
+      console.log(`🔑 ExternalRef for ${opType}:`, externalRef);
 
       const payload = {
-        postId: property.postId,
         proposalId: property.proposalId,
         paymentCardId: selectedCardId,
         externalRef,
-        // Adding CVV just in case, though not in screenshot, to match "exact as in subsplan"
-        // But screenshot is more authoritative for the specific endpoint
-        cvv: cvv, 
+        cvv: cvv,
       };
 
-      console.log("🚀 Sending Sale (Cash) payment request:", payload);
+      // Add postId for sale payments
+      if (!isRent) {
+        payload.postId = property.postId;
+      }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/payments/sale/cash/${tenantId}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      // Add installment fields if needed
+      if (isInstallment) {
+        payload.installmentMonths = installmentMonths;
+        payload.frequency = frequency;
+      }
+
+      console.log(`🚀 Sending ${opType} payment request:`, payload);
+
+      let endpoint = "";
+      if (isRent) {
+        endpoint = `${API_BASE_URL}/api/payments/rent/start/${tenantId}`;
+      } else if (isInstallment) {
+        endpoint = `${API_BASE_URL}/api/payments/sale/installment/${tenantId}`;
+      } else {
+        endpoint = `${API_BASE_URL}/api/payments/sale/cash/${tenantId}`;
+      }
+
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (response.data && response.data.success) {
         clearExternalRef({
-          op: "SALECASH",
+          op: opType,
           a: tenantId,
           b: property.proposalId,
         });
 
         toast.success("Payment successful! 🎉");
         closeCardModal();
-        
+
         // Link to contract details page by the contractId or proposalId
-        const idToUse = response.data.contractId || property.contractId || property.proposalId;
+        const idToUse =
+          response.data.contractId || property.contractId || property.proposalId;
         navigate(`/contract-details/${idToUse}`);
       } else if (response.data && response.data.paymentUrl) {
         // If it returns a URL instead of success: true
@@ -555,7 +582,7 @@ const UserProposals = () => {
         );
       }
     } catch (err) {
-      console.error("❌ Sale (Cash) payment error:", err);
+      console.error("❌ Payment error:", err);
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data ||
@@ -629,19 +656,12 @@ const UserProposals = () => {
     }
   };
 
-  // Filter properties based on search and status
+  // Filter properties based on status
   const filteredProperties = myProperties.filter((property) => {
-    const matchesSearch =
-      property.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      property.landlordName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (property.offeredPrice || property.Offeredprice || property.offered_price)
-        ?.toString()
-        .includes(searchTerm) ||
-      property.proposalId?.toString().includes(searchTerm);
     const matchesStatus =
       statusFilter === "All" ||
       getProposalStatusLabel(property.proposalStatus) === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   if (loading) {
@@ -695,21 +715,6 @@ const UserProposals = () => {
 
       {/* Main Content */}
       <div className="user-properties-container">
-        {/* IF used search */}
-        {/* Search and Filter Bar */}
-        <div className="user-properties-controls">
-          <div className="user-properties-search">
-            <FaSearch className="user-properties-search-icon" />
-            <input
-              type="text"
-              placeholder="Search by phone, landlord, price, or application ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="user-properties-search-input"
-            />
-          </div>
-        </div>
-
         {/* Properties Grid */}
         {filteredProperties.length > 0 ? (
           <div className="user-properties-grid">
@@ -1036,6 +1041,44 @@ const UserProposals = () => {
                       </p>
                     </div>
                   )}
+
+                  {/* New fields for Sale (Installment) */}
+                  {selectedProperty?.propertyType === 1 &&
+                    selectedProperty?.isInstallment === 1 && (
+                      <div className="subs-installment-fields">
+                        <div className="subs-cvv-section">
+                          <label htmlFor="installmentMonths">
+                            Installment Months
+                          </label>
+                          <input
+                            type="number"
+                            id="installmentMonths"
+                            placeholder="360"
+                            value={installmentMonths}
+                            onChange={(e) =>
+                              setInstallmentMonths(parseInt(e.target.value) || 0)
+                            }
+                            className="subs-cvv-input"
+                          />
+                        </div>
+                        <div className="subs-cvv-section">
+                          <label htmlFor="frequency">Payment Frequency (Months)</label>
+                          <select
+                            id="frequency"
+                            value={frequency}
+                            onChange={(e) =>
+                              setFrequency(parseInt(e.target.value))
+                            }
+                            className="subs-cvv-input"
+                          >
+                            <option value={1}>Monthly (1)</option>
+                            <option value={3}>Quarterly (3)</option>
+                            <option value={6}>Semi-Annually (6)</option>
+                            <option value={12}>Annually (12)</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
                 </div>
               ) : (
                 <div className="subs-no-cards">

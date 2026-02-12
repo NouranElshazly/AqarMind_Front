@@ -786,8 +786,6 @@ const PropertyDetail = () => {
       // استدعاء الـ API
       const response = await axios.post(apiUrl, data, { headers });
 
-      toast.success("Application submitted successfully!");
-
       await recordHistoryEvent(userId, "apply", {
         post_id: postId,
         post_title: post.title || "N/A",
@@ -816,6 +814,10 @@ const PropertyDetail = () => {
         hasStableJob: false,
         dependents: 0,
       });
+
+      toast.success(response.data?.message || "Application submitted successfully!", {
+        duration: 3000,
+      });
     } catch (err) {
       if (err.response?.data?.errors) {
         console.error("Validation errors:", err.response.data.errors);
@@ -826,11 +828,7 @@ const PropertyDetail = () => {
         setError(errorMessages || "Validation failed.");
       } else {
         const errorMsg =
-          err.response?.data?.title ||
-          err.response?.data?.message ||
-          err.response?.data ||
-          "Failed to submit.";
-
+          err.response?.data?.error;
         setError(errorMsg);
       }
     }

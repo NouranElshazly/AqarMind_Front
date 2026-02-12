@@ -374,6 +374,11 @@
   line-height: 1.4;
 }
 
+.detail-value.contract-type {
+
+  font-weight: 700;
+}
+
 .landlord-name, .tenant-name {
   color: var(--brand-secondary);
   font-weight: 700;

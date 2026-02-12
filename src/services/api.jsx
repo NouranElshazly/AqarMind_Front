@@ -69,15 +69,15 @@ export const createProperty = (propertyData) => {
       formData.append(key, value);
     }
   });
-  return API.post(
-    `${API_BASE_URL}/api/Landlord/create-post/${landlordId}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
-  );
+  // return API.post(
+  //   `${API_BASE_URL}/api/Landlord/create-post`,
+  //   formData,
+  //   {
+  //     headers: {
+  //       "Content-Type": "multipart/form-data",
+  //     },
+  //   },
+  // );
 };
 
 export const updateProperty = (id, propertyData) => {

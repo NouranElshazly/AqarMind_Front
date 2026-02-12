@@ -159,7 +159,7 @@ const ManageContracts = () => {
                         {getContractTypeLabel(contract.type)}
                       </span>
                       <div className="property-title-subtitle">
-                        {contract.property?.title || "Property Title N/A"}
+                        {contract.property?.title }
                       </div>
                     </div>
                   </div>

@@ -145,8 +145,9 @@ const ContractDetails = () => {
     </div>
   );
 
-  const { contract, parties, property, signatures, ui } = data;
+  const { contract, parties, property, signatures, ui, paymentPlan } = data;
   const isSale = contract.type?.startsWith("Sale") || property.type === "Sale";
+  const isSaleInstallment = contract.type === "SaleInstallment";
   const myRole = ui?.myRole;
   const roleNumber =
     myRole?.toLowerCase() === "buyer" || myRole?.toLowerCase() === "tenant"
@@ -161,6 +162,7 @@ const ContractDetails = () => {
       ? Boolean(signatures.seller?.signed)
       : false;
   const nextActionText = ui?.nextAction?.trim();
+  const isFullySigned = signatures.buyer?.signed && signatures.seller?.signed;
 
   const handleSign = async () => {
     if (!contractId || !roleNumber || alreadySigned) return;
@@ -312,6 +314,12 @@ const ContractDetails = () => {
                 <span className="price-value">{(property.price || 0).toLocaleString()} EGP</span>
               </div>
               <div className="detail-card">
+                <span className="detail-label">Contract Type</span>
+                <span className="detail-value contract-type">
+                  {contract.type }
+                </span>
+              </div>
+              <div className="detail-card">
                 <span className="detail-label">Agreement Date</span>
                 <span className="detail-value">{formatDate(contract.createdAt)}</span>
               </div>
@@ -319,7 +327,57 @@ const ContractDetails = () => {
                 <span className="detail-label">Contract Version</span>
                 <span className="detail-value">v{contract.version}</span>
               </div>
+
+              {paymentPlan && (
+                <>
+                
+                  <div className="detail-card">
+                    <span className="detail-label">Periodic Amount</span>
+                    <span className="detail-value">{(paymentPlan.periodicAmount || 0).toLocaleString()} EGP</span>
+                  </div>
+                  <div className="detail-card">
+                    <span className="detail-label">Duration</span>
+                    <span className="detail-value">{paymentPlan.durationMonths} Months</span>
+                  </div>
+                  <div className="detail-card">
+                    <span className="detail-label">Frequency</span>
+                    <span className="detail-value">{paymentPlan.frequencyLabel}</span>
+                  </div>
+                  <div className="detail-card">
+                    <span className="detail-label">Payments Count</span>
+                    <span className="detail-value">{paymentPlan.paymentsCount} Payments</span>
+                  </div>
+                  <div className="detail-card">
+                    <span className="detail-label">Platform Fee</span>
+                    <span className="detail-value">{paymentPlan.platformFeePercent}%</span>
+                  </div>
+                  
+                  {paymentPlan.startDate && (
+                    <div className="detail-card">
+                      <span className="detail-label">Plan Start Date</span>
+                      <span className="detail-value">{formatDate(paymentPlan.startDate)}</span>
+                    </div>
+                  )}
+                  {paymentPlan.endDate && (
+                    <div className="detail-card">
+                      <span className="detail-label">Plan End Date</span>
+                      <span className="detail-value">{formatDate(paymentPlan.endDate)}</span>
+                    </div>
+                  )}
+                  {paymentPlan.totalAmount > 0 && (
+                    <div className="detail-card">
+                      <span className="detail-label">Total Plan Amount</span>
+                      <span className="detail-value">{(paymentPlan.totalAmount).toLocaleString()} EGP</span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
+            {nextActionText && nextActionText.toLowerCase() !== "none" && nextActionText.toLowerCase() !== "finalize" && (
+                  <span className="status-badge pending">
+                    Next Step: {nextActionText}
+                  </span>
+                )}
           </div>
 
           {/* Actions */}
@@ -327,38 +385,36 @@ const ContractDetails = () => {
             <button className="action-btn print" onClick={() => window.print()}>
               <FaPrint /> Print Contract
             </button>
-            {!alreadySigned && roleNumber && (
-              <button
-                className="action-btn-primary"
-                onClick={handleSign}
-                disabled={signLoading}
-                title={myRole ? `Sign as ${myRole}` : "Sign Contract"}
-              >
-                <FaFileSignature /> {signLoading ? "Signing..." : myRole ? `Sign as ${myRole}` : "Sign Contract"}
-              </button>
-            )}
-            {nextActionText && nextActionText.toLowerCase() !== "none" && nextActionText.toLowerCase() !== "finalize" && (
-              <button 
-                className="action-btn-primary"
-                onClick={() => {/* Handle action based on nextAction */}}
-              >
-                {nextActionText} <FaChevronRight />
-              </button>
-            )}
-            {signMessage && (
-              <span className="status-badge pending">{signMessage}</span>
-            )}
-            {paymentInfo?.finalizeAllowed && (
-              <button
-                className="action-btn pay"
-                onClick={handleFinalize}
-                disabled={finalizeLoading}
-              >
-                <FaCreditCard /> {finalizeLoading ? "Finalizing..." : "Finalize Payment"}
-              </button>
-            )}
-            {finalizeMessage && (
-              <span className="status-badge pending">{finalizeMessage}</span>
+            
+            {!isFullySigned && (
+              <>
+                {!alreadySigned && roleNumber && (
+                  <button
+                    className="action-btn-primary"
+                    onClick={handleSign}
+                    disabled={signLoading}
+                    title={myRole ? `Sign as ${myRole}` : "Sign Contract"}
+                  >
+                    <FaFileSignature /> {signLoading ? "Signing..." : myRole ? `Sign as ${myRole}` : "Sign Contract"}
+                  </button>
+                )}
+                
+                {signMessage && (
+                  <span className="status-badge pending">{signMessage}</span>
+                )}
+                {paymentInfo?.finalizeAllowed && (
+                  <button
+                    className="action-btn pay"
+                    onClick={handleFinalize}
+                    disabled={finalizeLoading}
+                  >
+                    <FaCreditCard /> {finalizeLoading ? "Finalizing..." : "Finalize Payment"}
+                  </button>
+                )}
+                {finalizeMessage && (
+                  <span className="status-badge pending">{finalizeMessage}</span>
+                )}
+              </>
             )}
           </div>
         </div>

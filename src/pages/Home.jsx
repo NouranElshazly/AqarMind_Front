@@ -134,7 +134,8 @@ const Home = () => {
         },
       });
 
-      const featured = res.data.slice(0, 6);
+      const sortedPosts = res.data.sort((a, b) => b.postId - a.postId);
+      const featured = sortedPosts.slice(0, 3);
       setFeaturedProperties(featured);
 
       // Initialize current image index for each property
