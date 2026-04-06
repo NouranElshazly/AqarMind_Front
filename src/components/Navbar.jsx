@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import AuthContext from "../context/AuthContext";
 import { logout as logoutApi } from "../services/api";
 import { useDarkMode } from "../App";
@@ -463,7 +464,10 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await logoutApi();
+      const response = await logoutApi();
+      if (response.data?.success) {
+        toast.success(response.data.message || "Logged out successfully");
+      }
     } catch (error) {
       console.error("Logout API failed:", error);
     }
