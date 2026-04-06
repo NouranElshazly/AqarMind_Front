@@ -2,7 +2,7 @@ import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://localhost:7119/api",
+  baseURL: import.meta.env.VITE_API_URL || `${API_BASE_URL}/api`,
   timeout: 10000,
   withCredentials: true,
 });
@@ -16,7 +16,7 @@ API.interceptors.request.use(
     }
     return req;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response Interceptor - handle errors + refresh token
@@ -51,19 +51,19 @@ API.interceptors.response.use(
       try {
         // POST empty - server reads HttpOnly Cookie automatically
         const { data } = await axios.post(
-          "https://localhost:7119/api/auth/refresh",
+          `${API.defaults.baseURL}/auth/refresh`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const newToken = data.token;
-localStorage.setItem("token", newToken);
-API.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        localStorage.setItem("token", newToken);
+        API.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
-// ✅ Keep profile in sync
-const profile = JSON.parse(localStorage.getItem("profile") || "{}");
-profile.token = newToken;
-localStorage.setItem("profile", JSON.stringify(profile));
+        // ✅ Keep profile in sync
+        const profile = JSON.parse(localStorage.getItem("profile") || "{}");
+        profile.token = newToken;
+        localStorage.setItem("profile", JSON.stringify(profile));
         processQueue(null, newToken);
 
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
@@ -83,8 +83,8 @@ localStorage.setItem("profile", JSON.stringify(profile));
     }
 
     return Promise.reject(error);
-  }
-);;
+  },
+);
 
 // ==================== Authentication ====================
 export const signIn = (formData) => API.post("/auth/login", formData);
@@ -585,5 +585,3 @@ export const submitRentalProposal = (postId, proposalData) => {
     },
   );
 };
-
-
