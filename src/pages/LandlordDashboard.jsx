@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import API from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
 import {
@@ -24,6 +25,8 @@ const LandlordDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all"); // all, pending, accepted, rejected
   const [currentImageIndexes, setCurrentImageIndexes] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
   const [properties, setProperties] = useState({
     all: [],
     pending: [],
@@ -38,6 +41,7 @@ const LandlordDashboard = () => {
   });
 
   const isDeletingRef = useRef(false);
+  const lastFetchRef = useRef(0); // ✅ add this line
 
   // Get userId from localStorage
   const getUserId = () => {
@@ -74,12 +78,12 @@ const LandlordDashboard = () => {
   // إعادة تحميل البيانات لما الصفحة ترجع تكون active
   useEffect(() => {
     const handleFocus = () => {
-      // Don't refresh if we are in the middle of a delete operation
-      if (isDeletingRef.current) {
-        return;
-      }
-      fetchProperties();
-    };
+  if (isDeletingRef.current) return;
+  const now = Date.now();
+  if (now - lastFetchRef.current < 5000) return; // ✅ max once every 5 seconds
+  lastFetchRef.current = now;
+  fetchProperties();
+};
 
     window.addEventListener("focus", handleFocus);
 
@@ -89,13 +93,16 @@ const LandlordDashboard = () => {
   }, []);
 
   const fetchProperties = async () => {
+    if (!userId) {
+      console.warn("No userId found, skipping property fetch.");
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
 
-      // Fetch all posts using the existing API
-      const allResponse = await API.get(
-        `${API_BASE_URL}/api/Landlord/get-my-posts/${userId}`,
-      );
+      // Fetch all posts using the main backend API
+      const allResponse = await API.get(`/Landlord/get-my-posts`);
       const allPosts = allResponse.data || [];
 
       const pendingPosts = allPosts.filter((p) => p.pendingStatus === 0);
@@ -166,7 +173,7 @@ const LandlordDashboard = () => {
           (p) => p.postId === postId,
         );
         if (!propertyToDelete) {
-          alert("Property not found");
+          toast.warn("Property not found");
           isDeletingRef.current = false;
           return;
         }
@@ -198,11 +205,13 @@ const LandlordDashboard = () => {
         // Make API call
         await API.delete(`${API_BASE_URL}/api/Landlord/delete-post/${postId}`);
 
-        console.log("Property deleted successfully");
+        toast.success("Property deleted successfully");
         isDeletingRef.current = false;
       } catch (error) {
         console.error("Error deleting property:", error);
-        alert("Failed to delete property");
+        const errorMessage =
+          error.response?.data?.error || "Failed to delete property";
+        toast.error(errorMessage);
 
         // Revert state on error by refetching
         fetchProperties();
@@ -286,19 +295,11 @@ const LandlordDashboard = () => {
 
     // Fallback to placeholder if no images
     if (allImages.length === 0) {
-      allImages = ["https://via.placeholder.com/400x300?text=No+Image"];
+      allImages = ["https://placehold.co/400x300/1e3a8a/ffffff?text=No+Image"];
     }
 
     const currentImageSrc = allImages[currentIndex] || allImages[0];
     const hasMultipleImages = allImages.length > 1;
-
-    console.log("🖼️ Property Images:", {
-      propertyId: property.postId,
-      totalImages: allImages.length,
-      currentIndex: currentIndex,
-      currentImageSrc: currentImageSrc,
-      hasMultipleImages: hasMultipleImages,
-    });
 
     return (
       <div className="property-card fade-in">
@@ -307,9 +308,16 @@ const LandlordDashboard = () => {
             src={currentImageSrc}
             alt={property.title || "Property"}
             onError={(e) => {
-              console.error("❌ Image failed to load:", currentImageSrc);
+              console.warn(
+                "⚠️ Image failed to load, using fallback:",
+                currentImageSrc,
+              );
+              console.info(
+                "💡 Tip: If this is a localhost SSL issue, visit https://localhost:7119/api/Landlord in a new tab and 'Accept the Risk'.",
+              );
+              e.target.onerror = null; // Prevent infinite loop
               e.target.src =
-                "https://via.placeholder.com/400x300?text=No+Image";
+                "https://placehold.co/400x300/1e3a8a/ffffff?text=Image+Unavailable";
             }}
           />
 
@@ -460,6 +468,7 @@ const LandlordDashboard = () => {
               Manage your properties and Proposals
             </p>
           </div>
+          <div className="dash-buttons">
           <button
             onClick={() => navigate("/landlord/add-property")}
             className="btn btn-primary"
@@ -483,93 +492,58 @@ const LandlordDashboard = () => {
             <FileText size={20} />
             Manage Proposals
           </button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="stats-grid">
-          <div
-            className={`stat-card ${activeTab === "all" ? "active" : ""}`}
-            onClick={() => setActiveTab("all")}
-          >
-            <div className="stat-icon stat-total">
-              <Home size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Total Properties Created</p>
-              <p className="stat-value">{stats.total}</p>
-            </div>
-          </div>
-
-          <div
-            className={`stat-card ${activeTab === "pending" ? "active" : ""}`}
-            onClick={() => setActiveTab("pending")}
-          >
-            <div className="stat-icon stat-pending">
-              <Clock size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Pending</p>
-              <p className="stat-value">{stats.pending}</p>
-            </div>
-          </div>
-
-          <div
-            className={`stat-card ${activeTab === "accepted" ? "active" : ""}`}
-            onClick={() => setActiveTab("accepted")}
-          >
-            <div className="stat-icon stat-approved">
-              <CheckCircle size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Accepted</p>
-              <p className="stat-value">{stats.accepted}</p>
-            </div>
-          </div>
-
-          <div
-            className={`stat-card ${activeTab === "rejected" ? "active" : ""}`}
-            onClick={() => setActiveTab("rejected")}
-          >
-            <div className="stat-icon stat-rejected">
-              <XCircle size={24} />
-            </div>
-            <div className="stat-info">
-              <p className="stat-label">Rejected</p>
-              <p className="stat-value">{stats.rejected}</p>
-            </div>
           </div>
         </div>
+
+      
       </div>
 
       {/* Tabs */}
       <div className="dashboard-tabs">
         <button
           className={`tab-button ${activeTab === "all" ? "active" : ""}`}
-          onClick={() => setActiveTab("all")}
+          onClick={() => {
+            setActiveTab("all");
+            setCurrentPage(1);
+          }}
         >
           <Home size={18} />
-          All Properties
+          All Properties 
+          <span className="tab-count">{stats.total}</span>
         </button>
+        
         <button
           className={`tab-button ${activeTab === "pending" ? "active" : ""}`}
-          onClick={() => setActiveTab("pending")}
+          onClick={() => {
+            setActiveTab("pending");
+            setCurrentPage(1);
+          }}
         >
           <Clock size={18} />
           Pending
+          <span className="tab-count">{stats.pending}</span>
         </button>
         <button
           className={`tab-button ${activeTab === "accepted" ? "active" : ""}`}
-          onClick={() => setActiveTab("accepted")}
+          onClick={() => {
+            setActiveTab("accepted");
+            setCurrentPage(1);
+          }}
         >
           <CheckCircle size={18} />
           Accepted
+          <span className="tab-count">{stats.accepted}</span>
         </button>
         <button
           className={`tab-button ${activeTab === "rejected" ? "active" : ""}`}
-          onClick={() => setActiveTab("rejected")}
+          onClick={() => {
+            setActiveTab("rejected");
+            setCurrentPage(1);
+          }}
         >
           <XCircle size={18} />
           Rejected
+          <span className="tab-count">{stats.rejected}</span>
         </button>
       </div>
 
@@ -578,11 +552,65 @@ const LandlordDashboard = () => {
         {properties[activeTab].length === 0 ? (
           <EmptyState tab={activeTab} />
         ) : (
-          <div className="properties-grid">
-            {properties[activeTab].map((property) => (
-              <PropertyCard key={property.postId} property={property} />
-            ))}
-          </div>
+          <>
+            <div className="properties-grid">
+              {properties[activeTab]
+                .slice(
+                  (currentPage - 1) * postsPerPage,
+                  currentPage * postsPerPage,
+                )
+                .map((property) => (
+                  <PropertyCard key={property.postId} property={property} />
+                ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {properties[activeTab].length > postsPerPage && (
+              <div className="pagination">
+                <button
+                  className="page-btn"
+                  disabled={currentPage === 1}
+                  onClick={() => {
+                    setCurrentPage((p) => p - 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                {[
+                  ...Array(
+                    Math.ceil(properties[activeTab].length / postsPerPage),
+                  ),
+                ].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    className={`page-btn ${currentPage === i + 1 ? "active" : ""}`}
+                    onClick={() => {
+                      setCurrentPage(i + 1);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  className="page-btn"
+                  disabled={
+                    currentPage ===
+                    Math.ceil(properties[activeTab].length / postsPerPage)
+                  }
+                  onClick={() => {
+                    setCurrentPage((p) => p + 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

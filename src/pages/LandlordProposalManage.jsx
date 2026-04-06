@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../services/api"; 
 import {
   FileText,
   User,
@@ -16,6 +17,7 @@ import {
 import ConfirmationModal from "../components/ConfirmationModal";
 import "../styles/LandlordProposalManage.css";
 
+
 const LandlordProposalManage = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ const LandlordProposalManage = () => {
     action: null,
     proposalId: null,
     confirmText: "Confirm",
-    confirmColor: "bg-blue-600" // Optional if modal supports it, but standard props are enough
+    confirmColor: "bg-blue-600", // Optional if modal supports it, but standard props are enough
   });
 
   // Helper for date formatting
@@ -68,16 +70,8 @@ const LandlordProposalManage = () => {
           throw new Error("User ID not found. Please log in.");
         }
 
-        // Direct API call as requested
-        const response = await axios.get(
-          `https://localhost:7119/api/Landlord/proposals`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-              "Content-Type": "application/json",
-            },
-          },
-        );
+        // With this
+        const response = await API.get(`/Landlord/proposals`);
 
         // Handle both array and message object responses
         if (
@@ -90,7 +84,9 @@ const LandlordProposalManage = () => {
         } else {
           // Ensure we have an array and sort by proposalId (highest first) to show recent ones
           const data = Array.isArray(response.data) ? response.data : [];
-          const sortedData = [...data].sort((a, b) => b.proposalId - a.proposalId);
+          const sortedData = [...data].sort(
+            (a, b) => b.proposalId - a.proposalId,
+          );
           setProposals(sortedData);
         }
       } catch (err) {
@@ -115,7 +111,7 @@ const LandlordProposalManage = () => {
       message: "Are you sure you want to accept this proposal?",
       action: "accept",
       proposalId: proposalId,
-      confirmText: "Accept"
+      confirmText: "Accept",
     });
     setModalOpen(true);
   };
@@ -126,7 +122,7 @@ const LandlordProposalManage = () => {
       message: "Are you sure you want to reject this proposal?",
       action: "reject",
       proposalId: proposalId,
-      confirmText: "Reject"
+      confirmText: "Reject",
     });
     setModalOpen(true);
   };
@@ -157,16 +153,16 @@ const LandlordProposalManage = () => {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       // Update local state to reflect change
       setProposals((prev) =>
         prev.map((p) =>
-          p.proposalId === proposalId ? { ...p, proposalStatus: newStatus } : p
-        )
+          p.proposalId === proposalId ? { ...p, proposalStatus: newStatus } : p,
+        ),
       );
-      
+
       setModalOpen(false);
     } catch (err) {
       console.error(`Error ${action}ing proposal:`, err);

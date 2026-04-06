@@ -4,8 +4,10 @@ import API_BASE_URL from "../services/ApiConfig";
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "https://localhost:7119/api",
   timeout: 10000,
+  withCredentials: true,
 });
 
+// Request Interceptor - attach token
 API.interceptors.request.use(
   (req) => {
     const token = localStorage.getItem("token");
@@ -14,26 +16,75 @@ API.interceptors.request.use(
     }
     return req;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error)
 );
+
+// Response Interceptor - handle errors + refresh token
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    error ? prom.reject(error) : prom.resolve(token);
+  });
+  failedQueue = [];
+};
 
 API.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response) {
-      if (error.response.status === 401) {
-        localStorage.removeItem("profile");
-        window.location.href = "/login?session_expired=true";
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return API(originalRequest);
+        });
       }
-      if (error.response.status === 403) {
-        window.location.href = "/?error=forbidden";
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // POST empty - server reads HttpOnly Cookie automatically
+        const { data } = await axios.post(
+          "https://localhost:7119/api/auth/refresh",
+          {},
+          { withCredentials: true }
+        );
+
+        const newToken = data.token;
+localStorage.setItem("token", newToken);
+API.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+
+// ✅ Keep profile in sync
+const profile = JSON.parse(localStorage.getItem("profile") || "{}");
+profile.token = newToken;
+localStorage.setItem("profile", JSON.stringify(profile));
+        processQueue(null, newToken);
+
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return API(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        localStorage.clear();
+        window.location.href = "/login?session_expired=true";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
+
+    if (error.response?.status === 403) {
+      window.location.href = "/?error=forbidden";
+    }
+
     return Promise.reject(error);
-  },
-);
+  }
+);;
 
 // ==================== Authentication ====================
 export const signIn = (formData) => API.post("/auth/login", formData);
