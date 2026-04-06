@@ -5,7 +5,6 @@ import '../styles/ScrollToTop.css';
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
 
-  // Show button when page is scrolled up to given distance
   const toggleVisibility = () => {
     if (window.pageYOffset > 300) {
       setIsVisible(true);
@@ -14,7 +13,6 @@ const ScrollToTop = () => {
     }
   };
 
-  // Set the scroll event listener
   useEffect(() => {
     window.addEventListener('scroll', toggleVisibility);
     return () => {
@@ -22,7 +20,6 @@ const ScrollToTop = () => {
     };
   }, []);
 
-  // Scroll to top smoothly
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -31,16 +28,16 @@ const ScrollToTop = () => {
   };
 
   return (
-    <div className={`scroll-to-top ${isVisible ? 'show' : ''}`}>
+    <>
       <button
         onClick={scrollToTop}
-        className="scroll-to-top-btn"
+        className={`scroll-to-top-btn ${isVisible ? 'show' : ''}`}
         aria-label="Scroll to top"
         title="العودة للأعلى"
       >
         <FaChevronUp />
       </button>
-    </div>
+    </>
   );
 };
 

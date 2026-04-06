@@ -535,14 +535,71 @@ const ShowAllPosts = () => {
   };
 
   // --- Data Fetching Hooks (بدون تغيير) ---
+  const fetchInteractionsInBackground = async (postsList) => {
+    if (!userId || postsList.length === 0) return;
+
+    // Sync with Flask first
+    try {
+      const postsToSync = postsList.map((p) => ({
+        postId: p.postId,
+        userId: p.userId,
+      }));
+      await axios.post(
+        "https://localhost:44357/api/posts/sync",
+        postsToSync,
+        { headers: getAuthHeaders() }
+      );
+      console.log("Successfully synced post owner data with comments service.");
+    } catch (syncErr) {
+      console.error("Failed to sync posts with comments service:", syncErr);
+    }
+
+    // Fetch likes and comments in background
+    const updatedPosts = await Promise.all(
+      postsList.map(async (post) => {
+        let likes_count = post.likes_count;
+        let likes = post.likes;
+        let commentCount = 0;
+
+        try {
+          const likeRes = await axios.get(
+            `https://localhost:44357/api/posts/${post.postId}/like-status`,
+            { headers: getAuthHeaders() }
+          );
+          likes_count = likeRes.data.likes_count;
+          likes = likeRes.data.liked_by_users || [];
+        } catch (err) {
+          console.warn(`Like status failed for post ${post.postId}:`, err.message);
+        }
+
+        try {
+          const commentRes = await axios.get(
+            `https://localhost:44357/api/comments/post/${post.postId}`,
+            { headers: getAuthHeaders() }
+          );
+          commentCount = calculateTotalComments(commentRes.data || []);
+        } catch (err) {
+          console.warn(`Comments failed for post ${post.postId}:`, err.message);
+        }
+
+        return { ...post, likes_count, likes, commentCount };
+      })
+    );
+
+    // Silently update UI
+    setPosts(updatedPosts);
+    setFilteredPosts(updatedPosts);
+  };
+
   useEffect(() => {
-    const fetchPostsAndInteractions = async () => {
+    const fetchPosts = async () => {
       setLoading(true);
       try {
         const res = await axios.get(`${API_BASE_URL}/api/Tenant/all-posts`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        let initialPosts = res.data.map((post) => ({
+
+        const initialPosts = res.data.map((post) => ({
           ...post,
           likes: post.likes || [],
           likes_count: post.likes_count || 0,
@@ -551,78 +608,14 @@ const ShowAllPosts = () => {
           commentCount: 0,
         }));
 
-        if (initialPosts.length > 0) {
-          const interactionPromises = initialPosts.map(async (post) => {
-            let likeData = { likes_count: post.likes_count, likes: post.likes };
-            let fetchedCommentCount = 0;
-            if (userId) {
-              try {
-                const likeRes = await axios.get(
-                  `https://localhost:44357/api/posts/${post.postId}/like-status`,
-                  { headers: getAuthHeaders() },
-                ); // بورت 44357
-                likeData = {
-                  likes_count: likeRes.data.likes_count,
-                  likes: likeRes.data.liked_by_users || [],
-                };
-              } catch (err) {
-                console.warn(
-                  `Failed to fetch like status for post ${post.postId}:`,
-                  err.message,
-                );
-              }
-            }
-            try {
-              const commentRes = await axios.get(
-                `https://localhost:44357/api/comments/post/${post.postId}`,
-                { headers: getAuthHeaders() },
-              ); // بورت 44357
-              fetchedCommentCount = calculateTotalComments(
-                commentRes.data || [],
-              );
-            } catch (err) {
-              console.warn(
-                `Failed to fetch comments for post ${post.postId}:`,
-                err.message,
-              );
-            }
-
-            return {
-              ...post,
-              likes_count: likeData.likes_count,
-              likes: Array.isArray(likeData.likes) ? likeData.likes : [],
-              commentCount: fetchedCommentCount,
-            };
-          });
-          initialPosts = await Promise.all(interactionPromises);
-        }
-
-        // Sync posts with Flask service (if needed)
-        try {
-          const postsToSync = initialPosts.map((p) => ({
-            postId: p.postId,
-            userId: p.userId,
-          }));
-          if (postsToSync.length > 0) {
-            await axios.post(
-              "https://localhost:44357/api/posts/sync",
-              postsToSync,
-              { headers: getAuthHeaders() },
-            ); // بورت 44357
-            console.log(
-              "Successfully synced post owner data with comments service (Flask).",
-            );
-          }
-        } catch (syncErr) {
-          console.error(
-            "Failed to sync posts with comments service (Flask):",
-            syncErr,
-          );
-        }
-
+        // ✅ Show posts immediately
         setPosts(initialPosts);
         setFilteredPosts(initialPosts);
         setMessage("");
+
+        // ✅ Load interactions silently in background
+        fetchInteractionsInBackground(initialPosts);
+
       } catch (err) {
         console.error("Failed to fetch posts:", err);
         setMessage("Failed to load posts or no posts available.");
@@ -632,10 +625,11 @@ const ShowAllPosts = () => {
         setLoading(false);
       }
     };
-    fetchPostsAndInteractions();
+
+    fetchPosts();
   }, [userId]);
 
-  // Fetch saved posts (بدون تغيير)
+  // Fetch saved posts 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const tenantUserId = localStorage.getItem("userId");

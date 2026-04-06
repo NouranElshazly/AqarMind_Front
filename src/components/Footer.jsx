@@ -50,17 +50,17 @@ const Footer = () => {
   const contactInfo = [
     {
       icon: "fas fa-envelope",
-      text: "hello@proptech.com",
+      text: "Ahmedelgamal0596@gmail.com",
       subtext: "Quick responses guaranteed"
     },
     {
       icon: "fas fa-phone",
-      text: "+1 (555) 123-4567",
+      text: "+20 109 453 2054",
       subtext: "24/7 Support available"
     },
     {
       icon: "fas fa-map-marker-alt",
-      text: "123 Luxury Avenue",
+      text: "6 October , Giza",
       subtext: "Metropolis, MP 12345"
     },
     {
@@ -182,33 +182,7 @@ const Footer = () => {
               ))}
             </div>
           </div>
-
-          {/* Newsletter */}
-          <div className="footer-element footer-column" style={{ transitionDelay: "600ms" }}>
-            <h4 className="footer-column-title">
-              <span className="footer-column-title-text">Stay Updated</span>
-            </h4>
-            <div className="footer-newsletter">
-              <p className="footer-newsletter-description">
-                Get exclusive access to premium listings and market insights before anyone else.
-              </p>
-
-              <div className="footer-newsletter-form">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="footer-newsletter-input"
-                />
-                <button className="footer-newsletter-button">
-                  Subscribe
-                </button>
-              </div>
-
-              <p className="footer-newsletter-privacy">
-                By subscribing, you agree to our Privacy Policy and consent to receive updates.
-              </p>
-            </div>
-          </div>
+          
         </div>
 
         {/* Footer Bottom */}
@@ -219,43 +193,12 @@ const Footer = () => {
               <p className="footer-copyright">
                 &copy; {new Date().getFullYear()} AqarMind. Crafted with excellence.
               </p>
-              <div className="footer-bottom-links">
-                <Link to="/privacy" className="footer-bottom-link">
-                  Privacy
-                </Link>
-                <Link to="/terms" className="footer-bottom-link">
-                  Terms
-                </Link>
-                <Link to="/cookies" className="footer-bottom-link">
-                  Cookies
-                </Link>
-              </div>
             </div>
-
-            {/* Scroll to Top */}
-            <button onClick={scrollToTop} className="scroll-to-top">
-              <div className="scroll-to-top-gradient" />
-              <span className="scroll-to-top-content">
-                Back to Top
-                <i className="fas fa-arrow-up scroll-to-top-icon" />
-              </span>
-            </button>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .footer-element {
-          opacity: 0;
-          transform: translateY(2rem);
-          transition: all 0.7s ease;
-        }
-
-        .footer-element.animate {
-          opacity: 1 !important;
-          transform: translateY(0) !important;
-        }
-      `}</style>
+     
     </footer>
   );
 };
