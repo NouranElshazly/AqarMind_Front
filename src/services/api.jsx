@@ -396,21 +396,18 @@ export default API;
 /* get current user complete profile (private )
  * Returns: fullName, email, phone, address, profilePhotoPath, nidPath, ownershipDocumentPath
  */
-export const getMyProfile = (userId) =>
-  API.get(`${API_BASE_URL}/api/Profile/me/${userId}`);
+export const getMyProfile = () => API.get("/Profile/me");
 
 /**
  * Get any user's public profile (public view)
  * Returns: fullName, profilePhotoPath, rate (for landlords only)
  * @param {number} userId - The ID of the user to view
  */
-export const getUserProfile = (userId) =>
-  API.get(`${API_BASE_URL}/api/Profile/${userId}`);
+export const getUserProfile = (userId) => API.get(`/Profile/${userId}`);
 
 /**
  * Update current user's profile information
  * All fields are optional - only send the fields you want to update
- * @param {number} userId - The ID of the current user
  * @param {Object} profileData - Profile data to update
  * @param {string} [profileData.username] - New username
  * @param {string} [profileData.email] - New email address
@@ -419,7 +416,7 @@ export const getUserProfile = (userId) =>
  * @param {File} [profileData.profilePhoto] - New profile photo file
  * @param {File} [profileData.nidFile] - New National ID document file
  */
-export const updateMyProfile = (userId, profileData) => {
+export const updateMyProfile = (profileData) => {
   const formData = new FormData();
 
   if (profileData.username) formData.append("username", profileData.username);
@@ -430,37 +427,24 @@ export const updateMyProfile = (userId, profileData) => {
     formData.append("profilePhoto", profileData.profilePhoto);
   if (profileData.nidFile) formData.append("nidFile", profileData.nidFile);
 
-  return API.put(`${API_BASE_URL}/api/Profile/me/${userId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  return API.put("/Profile/me", formData);
 };
 
 /**
  * Update user's password
  * Validates that new password is different from old password
- * @param {number} userId - The ID of the current user
  * @param {Object} passwordData - Password change data
  * @param {string} passwordData.oldPassword - Current password (required)
  * @param {string} passwordData.newPassword - New password (required)
  * @param {string} passwordData.confirmPassword - Confirm new password (required, must match newPassword)
  */
-export const updatePassword = (userId, passwordData) => {
+export const updatePassword = (passwordData) => {
   const formData = new FormData();
   formData.append("oldPassword", passwordData.oldPassword);
   formData.append("newPassword", passwordData.newPassword);
   formData.append("confirmPassword", passwordData.confirmPassword);
 
-  return API.put(
-    `${API_BASE_URL}/api/Profile/me/${userId}/password`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
-  );
+  return API.put("/Profile/me/password", formData);
 };
 
 // ======================= CreditCards API Functions =====================
@@ -474,7 +458,7 @@ export const updatePassword = (userId, passwordData) => {
  * @param {number} cardData.ExpiryYear - Expiry year
  * @param {string} cardData.CVV - Card security code
  */
-export const tokenizeCard = (userId, cardData) => {
+export const tokenizeCard = (cardData) => {
   const formData = new FormData();
   formData.append("CardNumber", cardData.CardNumber);
   formData.append("CardHolderName", cardData.CardHolderName);
@@ -483,7 +467,7 @@ export const tokenizeCard = (userId, cardData) => {
   formData.append("CVV", cardData.CVV);
 
   return API.post(
-    `${API_BASE_URL}/api/payments/cards/tokenize/${userId}`,
+    `${API_BASE_URL}/api/payments/cards/tokenize`,
     formData,
     {
       headers: {
@@ -497,8 +481,8 @@ export const tokenizeCard = (userId, cardData) => {
  * Get user's saved credit cards
  * @param {number} userId - The ID of the user
  */
-export const getUserCards = (userId) => {
-  return API.get(`${API_BASE_URL}/api/payments/cards/${userId}`);
+export const getUserCards = () => {
+  return API.get(`${API_BASE_URL}/api/payments/cards`);
 };
 
 /**
@@ -506,9 +490,9 @@ export const getUserCards = (userId) => {
  * @param {number} userId - The ID of the user
  * @param {number} paymentCardId - The ID of the card to delete
  */
-export const deleteCard = (userId, paymentCardId) => {
+export const deleteCard = ( paymentCardId) => {
   return API.delete(
-    `${API_BASE_URL}/api/payments/cards/${userId}/${paymentCardId}`,
+    `${API_BASE_URL}/api/payments/cards/${paymentCardId}`,
   );
 };
 
@@ -517,9 +501,9 @@ export const deleteCard = (userId, paymentCardId) => {
  * @param {number} userId - The ID of the user
  * @param {number} paymentCardId - The ID of the card to set as default
  */
-export const setDefaultCard = (userId, paymentCardId) => {
+export const setDefaultCard = (paymentCardId) => {
   return API.put(
-    `${API_BASE_URL}/api/payments/cards/${userId}/default/${paymentCardId}`,
+    `${API_BASE_URL}/api/payments/cards/default/${paymentCardId}`,
   );
 };
 
@@ -585,3 +569,33 @@ export const submitRentalProposal = (postId, proposalData) => {
     },
   );
 };
+
+
+
+// ======================= 2FA API Functions =====================
+/**
+ * Start 2FA setup process
+ * Returns: alreadyEnabled, secretBase32, otpAuthUri
+ */
+export const setup2FA = () => API.post("/Auth/2fa/setup");
+
+/**
+ * Enable 2FA after setup
+ * @param {string} code - The 6-digit verification code
+ */
+export const enable2FA = (code) => API.post("/Auth/2fa/enable", { code });
+
+/**
+ * Disable 2FA for the current user
+ * @param {string} code - The 6-digit verification code
+ */
+export const disable2FA = (code) => API.post("/Auth/disable", { code });
+
+/**
+ * Verify 2FA during login
+ * @param {string} twoFactorToken - The token received from the initial login attempt
+ * @param {string} code - The 6-digit verification code from the user
+ */
+export const verifyLogin2FA = (twoFactorToken, code) =>
+  API.post("/Auth/2fa/verify", { twoFactorToken, code });
+

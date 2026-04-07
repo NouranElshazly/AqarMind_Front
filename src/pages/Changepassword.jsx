@@ -91,8 +91,7 @@ const ChangePassword = () => {
     setLoading(true);
 
     try {
-      console.log('Updating password for userId:', userId);
-      await updatePassword(userId, {
+      await updatePassword({
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
         confirmPassword: formData.confirmPassword

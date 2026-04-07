@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import {
   getMyProfile,
   updateMyProfile,
@@ -8,6 +9,9 @@ import {
   getUserCards,
   deleteCard,
   setDefaultCard,
+  setup2FA,
+  enable2FA,
+  disable2FA,
   // upgradeToLandlord, // Moved to local function below
 } from "../services/api";
 import API from "../services/api"; // Import API instance
@@ -100,6 +104,14 @@ const Profile = () => {
   const [upgradeError, setUpgradeError] = useState("");
   const [upgradeSuccess, setUpgradeSuccess] = useState("");
 
+  // 2FA state
+  const [is2FASetupVisible, setIs2FASetupVisible] = useState(false);
+  const [twoFactorData, setTwoFactorData] = useState(null); // { secretBase32, otpAuthUri }
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isEnabling2FA, setIsEnabling2FA] = useState(false);
+  const [isDisabling2FA, setIsDisabling2FA] = useState(false);
+  const [isDisableInputVisible, setIsDisableInputVisible] = useState(false);
+
   // Get userId from localStorage
   const userId = localStorage.getItem("userId");
   const role = localStorage.getItem("role");
@@ -121,7 +133,7 @@ const Profile = () => {
   const fetchUserCards = async () => {
     setLoadingCards(true);
     try {
-      const response = await getUserCards(userId);
+      const response = await getUserCards();
       setSavedCards(response.data);
     } catch (err) {
       console.error("Failed to fetch cards:", err);
@@ -179,7 +191,7 @@ const Profile = () => {
     );
 
     try {
-      await deleteCard(userId, cardId);
+      await deleteCard(cardId);
       toast.success("Card deleted successfully");
 
       setIsDeleteModalOpen(false);
@@ -233,7 +245,7 @@ const Profile = () => {
       }));
       setSavedCards(updatedCards);
 
-      await setDefaultCard(userId, cardId);
+      await setDefaultCard(cardId);
       toast.success("Default card updated successfully");
     } catch (err) {
       console.error("Failed to set default card:", err);
@@ -246,7 +258,7 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      const response = await getMyProfile(userId);
+      const response = await getMyProfile();
 
       setProfile(response.data);
       setFormData({
@@ -354,7 +366,7 @@ const Profile = () => {
     }
 
     try {
-      await updatePassword(userId, passwordData);
+      await updatePassword(passwordData);
       setPasswordSuccess("Password updated successfully!");
 
       // Reset password form
@@ -520,12 +532,12 @@ const Profile = () => {
       const currentPreviewImage = previewImage;
       const hasUploadedImage = !!formData.profilePhoto;
 
-      await updateMyProfile(userId, updateData);
+      await updateMyProfile(updateData);
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
 
       // Refresh profile data
-      const response = await getMyProfile(userId);
+      const response = await getMyProfile();
 
       setProfile(response.data);
 
@@ -628,12 +640,10 @@ const Profile = () => {
 
   const handleCardSubmit = async (e) => {
     e.preventDefault();
-    setCardError("");
-    setCardSuccess("");
     setSavingCard(true);
 
     try {
-      await tokenizeCard(userId, {
+      await tokenizeCard({
         ...cardData,
         ExpiryMonth: parseInt(cardData.ExpiryMonth),
         ExpiryYear: parseInt(cardData.ExpiryYear),
@@ -655,6 +665,73 @@ const Profile = () => {
       toast.error(err.response?.data?.error || "Failed to add credit card");
     } finally {
       setSavingCard(false);
+    }
+  };
+
+  const handleSetup2FA = async () => {
+    try {
+      const response = await setup2FA();
+      if (response.data.alreadyEnabled) {
+        toast.info("2FA is already enabled on your account.");
+        // Refresh profile to update UI state
+        fetchProfile();
+      } else {
+        setTwoFactorData({
+          secretBase32: response.data.secretBase32,
+          otpAuthUri: response.data.otpAuthUri,
+        });
+        setIs2FASetupVisible(true);
+      }
+    } catch (err) {
+      console.error("2FA Setup Error:", err);
+      toast.error(err.response?.data?.message || "Failed to start 2FA setup");
+    }
+  };
+
+  const handleEnable2FA = async (e) => {
+    if (e) e.preventDefault();
+    if (twoFactorCode.length !== 6) {
+      toast.error("Please enter a 6-digit verification code");
+      return;
+    }
+
+    setIsEnabling2FA(true);
+    try {
+      await enable2FA(twoFactorCode);
+      toast.success("2FA has been enabled successfully!");
+      setIs2FASetupVisible(false);
+      setTwoFactorData(null);
+      setTwoFactorCode("");
+      // Refresh profile to reflect change
+      fetchProfile();
+    } catch (err) {
+      console.error("2FA Enable Error:", err);
+      toast.error(err.response?.data?.message || "Failed to enable 2FA");
+    } finally {
+      setIsEnabling2FA(false);
+    }
+  };
+
+  const handleDisable2FA = async (e) => {
+    if (e) e.preventDefault();
+    if (twoFactorCode.length !== 6) {
+      toast.error("Please enter a 6-digit verification code");
+      return;
+    }
+
+    setIsDisabling2FA(true);
+    try {
+      await disable2FA(twoFactorCode);
+      toast.success("2FA has been disabled.");
+      setIsDisableInputVisible(false);
+      setTwoFactorCode("");
+      // Refresh profile
+      fetchProfile();
+    } catch (err) {
+      console.error("Disable 2FA Error:", err);
+      toast.error(err.response?.data?.message || "Failed to disable 2FA");
+    } finally {
+      setIsDisabling2FA(false);
     }
   };
 
@@ -1113,6 +1190,147 @@ const Profile = () => {
               </p>
             </div>
           )}
+        </div>
+
+        <div className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-card-title">
+              <FaLock className="card-icon" />
+              <h2>Two-Factor Authentication (2FA)</h2>
+            </div>
+            <div className="profile-card-actions" style={{ display: "flex", gap: "1rem" }}>
+              {!profile?.isTwoFactorEnabled && !is2FASetupVisible && (
+                <button
+                  type="button"
+                  className="btn-edit"
+                  onClick={handleSetup2FA}
+                >
+                  <FaLock /> Setup 2FA
+                </button>
+              )}
+              
+              {!profile?.isTwoFactorEnabled && is2FASetupVisible && (
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => {
+                    setIs2FASetupVisible(false);
+                    setTwoFactorData(null);
+                    setTwoFactorCode("");
+                  }}
+                >
+                  <FaTimes /> Cancel Setup
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => {
+                  if (isDisableInputVisible) {
+                    setIsDisableInputVisible(false);
+                    setTwoFactorCode("");
+                  } else {
+                    setIsDisableInputVisible(true);
+                    setIs2FASetupVisible(false); // Hide setup if visible
+                  }
+                }}
+                disabled={isDisabling2FA}
+              >
+                {isDisableInputVisible ? "Cancel" : "Disable 2FA"}
+              </button>
+            </div>
+          </div>
+
+          <div className="profile-card-body">
+            {isDisableInputVisible ? (
+              <div className="two-factor-disable-container">
+                <form onSubmit={handleDisable2FA} className="two-factor-verify-form">
+                  <div className="form-group">
+                    <label className="form-label">Enter 6-digit Code to Disable 2FA</label>
+                    <input
+                      type="text"
+                      maxLength="6"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                      className="form-control"
+                      placeholder="000000"
+                      required
+                      style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                    />
+                  </div>
+                  <div className="profile-actions" style={{ justifyContent: "center" }}>
+                    <button type="submit" className="btn-cancel" disabled={isDisabling2FA}>
+                      {isDisabling2FA ? "Disabling..." : "Confirm Disable"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : profile?.isTwoFactorEnabled ? (
+              <div className="two-factor-enabled-container">
+                <div className="security-info success-text">
+                  <FaCheckCircle className="info-icon" />
+                  Two-factor authentication is currently enabled on your account.
+                </div>
+              </div>
+            ) : is2FASetupVisible && twoFactorData ? (
+              <div className="two-factor-setup-container">
+                <div className="two-factor-setup-header">
+                  <h3>Scan QR Code</h3>
+                  <p>Scan this QR code with your authenticator app, then enter the code below to enable.</p>
+                </div>
+
+                <div className="qr-code-display">
+                  <QRCodeSVG value={twoFactorData.otpAuthUri} size={200} />
+                  <div className="manual-entry-code">
+                    <span>Manual Entry Code:</span>
+                    <code>{twoFactorData.secretBase32}</code>
+                  </div>
+                </div>
+
+                <form onSubmit={handleEnable2FA} className="two-factor-verify-form">
+                  <div className="form-group">
+                    <label className="form-label">Verification Code</label>
+                    <input
+                      type="text"
+                      maxLength="6"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                      className="form-control"
+                      placeholder="000000"
+                      required
+                      style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                    />
+                  </div>
+                  <div className="profile-actions" style={{ justifyContent: "center" }}>
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => {
+                        setIs2FASetupVisible(false);
+                        setTwoFactorData(null);
+                        setTwoFactorCode("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-save"
+                      disabled={isEnabling2FA}
+                    >
+                      {isEnabling2FA ? "Enabling..." : "Enable 2FA"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <p className="security-info">
+                <FaLock className="info-icon" />
+                Add an extra layer of security to your account by enabling two-factor authentication.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Security Settings Card */}

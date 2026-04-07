@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import axios from "axios";
 import io from "socket.io-client";
 import API_BASE_URL from "../services/ApiConfig";
+import { verifyLogin2FA } from "../services/api";
 import "../styles/Login.css";
 
 // --- Face Login Modal Component ---
@@ -176,6 +178,14 @@ const Login = () => {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [showFaceModal, setShowFaceModal] = useState(false);
+
+  // 2FA login state
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorToken, setTwoFactorToken] = useState("");
+  const [isVerifying2FA, setIsVerifying2FA] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -237,6 +247,15 @@ const Login = () => {
       const res = await axios.post(`${API_BASE_URL}/api/Auth/login`, formData, {
         headers: { "Content-Type": "application/json" },
       });
+
+      // Check if 2FA is required
+      if (res.data.twoFactorRequired) {
+        setTwoFactorToken(res.data.twoFactorToken);
+        setPendingUser(res.data.user);
+        setShow2FAModal(true);
+        setIsLoading(false);
+        return;
+      }
 
       const { user, token } = res.data;
 
@@ -303,10 +322,67 @@ const Login = () => {
       }
     } catch (error) {
       console.error(error);
-      const errorMessage = error.response?.data?.error;
-      setMessage({ text: errorMessage, type: "error" });
+      const errorMessage = error.response?.data?.message || error.response?.data?.error;
+      setMessage({
+        text: errorMessage || "Login failed. Please check your credentials.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handle2FAVerify = async (e) => {
+    e.preventDefault();
+    if (twoFactorCode.length !== 6) {
+      setMessage({ text: "Please enter a 6-digit code", type: "error" });
+      return;
+    }
+
+    setIsVerifying2FA(true);
+    try {
+      const res = await verifyLogin2FA(twoFactorToken, twoFactorCode);
+      const { user: verifiedUser, token } = res.data;
+
+      const user = verifiedUser || pendingUser;
+
+      if (!user || !token) throw new Error("Invalid response from server");
+
+      const userId = user.userId || user.id || user.Id || user._id;
+      const role = user.role || "tenant";
+
+      const profileObject = {
+        user: { ...user, _id: userId },
+        token: token,
+      };
+
+      localStorage.setItem("role", role);
+      localStorage.setItem("profile", JSON.stringify(profileObject));
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("guestMode", "false");
+
+      toast.success("2FA Verified! Redirecting...");
+      setShow2FAModal(false);
+      setPendingUser(null);
+
+      setTimeout(() => {
+        navigate(
+          role === "admin"
+            ? "/admin/dashboard"
+            : role === "landlord"
+            ? "/landlord/dashboard"
+            : role === "Tenant"
+            ? "/tenant/dashboard"
+            : "/"
+        );
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Invalid 2FA code");
+    } finally {
+      setIsVerifying2FA(false);
     }
   };
 
@@ -329,12 +405,82 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      {/* Face ID Modal */}
       {showFaceModal && (
         <FaceLoginModal
           usernameOrEmail={formData.usernameOrEmail}
           onClose={() => setShowFaceModal(false)}
           onLoginSuccess={handleFaceLoginSuccess}
         />
+      )}
+
+      {/* 2FA Modal */}
+      {show2FAModal && (
+        <div className="face-modal-overlay">
+          <div className="face-modal-content two-factor-modal">
+            <button 
+              onClick={() => {
+                setShow2FAModal(false);
+                setTwoFactorCode("");
+              }} 
+              className="face-modal-close"
+            >
+              &times;
+            </button>
+
+            <div className="two-factor-icon-container">
+              <div className="two-factor-shield-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <path d="M12 8v4"></path>
+                  <path d="M12 16h.01"></path>
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="face-modal-title">Secure Verification</h3>
+            
+            <div className="two-factor-instruction">
+              Enter the 6-digit verification code from your authenticator app to sign in.
+            </div>
+
+            <form onSubmit={handle2FAVerify} className="login-form">
+              <div className="two-factor-input-group">
+                <input
+                  type="text"
+                  maxLength="6"
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  required
+                  className="two-factor-input"
+                  autoFocus
+                />
+                <div className="two-factor-input-focus-line"></div>
+              </div>
+
+              <div className="login-buttons" style={{ marginTop: "2rem" }}>
+                <button
+                  type="submit"
+                  disabled={isVerifying2FA}
+                  className="login-btn login-btn-primary two-factor-submit-btn"
+                >
+                  {isVerifying2FA ? (
+                    <div className="login-loading-spinner"></div>
+                  ) : (
+                    <>
+                      <span>Verify & Sign In</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14"></path>
+                        <path d="M12 5l7 7-7 7"></path>
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Animated background elements */}
