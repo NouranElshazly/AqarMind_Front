@@ -473,19 +473,6 @@ const PropertyDetail = () => {
     return () => clearTimeout(timer);
   }, [postId, userId]);
 
-  useEffect(() => {
-    if (!postId) return;
-    const checkSaved = async () => {
-      try {
-        const res = await API.get("/Tenant/My-saved-posts");
-        const savedIds = (res.data || []).map((p) => String(p.postId));
-        setSaved(savedIds.includes(String(postId)));
-      } catch (err) {
-        /* ignore */
-      }
-    };
-    checkSaved();
-  }, [postId]);
 
   const fetchCommentsModal = () => {
     if (!comments || comments.length === 0) {
