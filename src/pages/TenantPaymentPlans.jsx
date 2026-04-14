@@ -55,7 +55,7 @@ const TenantPaymentPlans = () => {
     setLoadingCards(true);
     setPaymentError(null);
     try {
-      const response = await getUserCards();
+      const response = await getUserCards(tenantId);
       setCards(response.data || []);
       if (response.data && response.data.length > 0) {
         const defaultCard = response.data.find(c => c.isDefault) || response.data[0];

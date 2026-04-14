@@ -1,5 +1,6 @@
 import { useState, useContext, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import axios from "axios";
 import io from "socket.io-client";
 import API_BASE_URL from "../services/ApiConfig";
@@ -192,7 +193,6 @@ const Register = () => {
   const [registeredUser, setRegisteredUser] = useState(null);
 
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [propertyDocument, setPropertyDocument] = useState(null);
   const [nationalId, setNationalId] = useState(null);
@@ -262,7 +262,6 @@ const Register = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setMessage({ text: "", type: "" });
 
     try {
       const form = new FormData();
@@ -292,15 +291,11 @@ const Register = () => {
           email: res.data.email || formData.email,
           userId: newUserId,
         });
-        validateForm;
-        setMessage({
-          text: "Account created! Proceeding to Face ID...",
-          type: "success",
-        });
+        toast.success("Account created! Proceeding to Face ID...");
         setIsLoading(false);
         setShowFaceModal(true);
       } else {
-        setMessage({ text: "Registration successful!", type: "success" });
+        toast.success("Registration successful!");
         setTimeout(() => navigate("/login"), 2000);
       }
     } catch (error) {
@@ -308,10 +303,7 @@ const Register = () => {
         ? Object.values(error.response.data.errors).flat().join(" - ")
         : error.response?.data?.message;
 
-      setMessage({
-        text: backendMessage || "Registration failed. Please try again.",
-        type: "error",
-      });
+      toast.error(backendMessage || "Registration failed. Please try again.");
       setIsLoading(false);
     }
   };
@@ -386,20 +378,6 @@ const Register = () => {
                 Fill in your details to get started
               </p>
             </div>
-
-            {message.text && (
-              <div
-                className={`register-message ${
-                  message.type === "success"
-                    ? "register-message-success"
-                    : message.type === "error"
-                    ? "register-message-error"
-                    : "register-message-info"
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="register-form" noValidate>
               {/* Name and Email Row */}

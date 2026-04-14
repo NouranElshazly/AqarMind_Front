@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API_BASE_URL from "../services/ApiConfig";
 // import { submitRentalProposal } from "../services/api";
+import API from "../services/api";
+import { toast } from "react-toastify";
 import axios from "axios";
 import {
   FaHeart,
@@ -472,15 +474,10 @@ const PropertyDetail = () => {
   }, [postId, userId]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const currentTenantId = localStorage.getItem("userId");
-    if (!token || !currentTenantId || !postId) return;
+    if (!postId) return;
     const checkSaved = async () => {
       try {
-        const res = await axios.get(
-          `${API_BASE_URL}/api/Tenant/My-saved-posts/${currentTenantId}`,
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        const res = await API.get("/Tenant/My-saved-posts");
         const savedIds = (res.data || []).map((p) => String(p.postId));
         setSaved(savedIds.includes(String(postId)));
       } catch (err) {
@@ -834,26 +831,25 @@ const PropertyDetail = () => {
     }
   };
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     const currentTenantId = localStorage.getItem("userId");
-    if (!token || !currentTenantId || !post) {
+    if (!currentTenantId || !post) {
       return;
     }
-    const headers = { Authorization: `Bearer ${token}` };
-    const saveUrl = `${API_BASE_URL}/api/Tenant/${currentTenantId}/save-post/${postId}`;
-    const cancelSaveUrl = `${API_BASE_URL}/api/Tenant/${currentTenantId}/cancel-save/${postId}`;
     const wasSaved = saved;
     if (wasSaved) {
       setSaved(false);
       try {
-        await axios.delete(cancelSaveUrl, { headers: headers });
+        const response = await API.delete(`/Tenant/cancel-save/${postId}`);
+        toast.success(response.data?.message || "Post unsaved successfully!");
       } catch (error) {
         setSaved(true);
+        toast.error(error.response?.data?.message || "Failed to unsave post");
       }
     } else {
       setSaved(true);
       try {
-        await axios.post(saveUrl, {}, { headers: headers });
+        const response = await API.post(`/Tenant/save-post/${postId}`, {});
+        toast.success(response.data?.message || "Post saved successfully!");
         const imageToSend =
           post.fileBase64 ||
           (post.fileBase64s && post.fileBase64s.length > 0
@@ -868,6 +864,7 @@ const PropertyDetail = () => {
         });
       } catch (error) {
         setSaved(false);
+        toast.error(error.response?.data?.message || "Failed to save post");
       }
     }
   };

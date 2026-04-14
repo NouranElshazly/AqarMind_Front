@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { toast } from "react-toastify";
+import API from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
 import {
   FaTrash,
@@ -101,14 +102,7 @@ const SavedPosts = () => {
   useEffect(() => {
     const fetchSavedProperties = async () => {
       try {
-        const res = await axios.get(
-          `${API_BASE_URL}/api/Tenant/My-saved-posts/${tenantId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        );
+        const res = await API.get("/Tenant/My-saved-posts");
         setSavedProperties(res.data);
       } catch (err) {
         setMessage("");
@@ -121,48 +115,33 @@ const SavedPosts = () => {
   }, []);
 
   const removeSavedProperty = async (propertyId, e) => {
-    if (e) e.stopPropagation();
-    try {
-      await axios.delete(
-        `${API_BASE_URL}/api/Tenant/${tenantId}/cancel-save/${propertyId}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
-      setSavedProperties(
-        savedProperties.filter((prop) => prop.postId !== propertyId),
-      );
-      setDeleteModal({ isOpen: false, propertyId: null, propertyTitle: "" });
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to remove saved property",
-      );
-    }
-  };
-
-  const removeAllSavedProperties = async () => {
-    try {
-      // حذف جميع البوستات المحفوظة واحداً تلو الآخر
-      const deletePromises = savedProperties.map((property) =>
-        axios.delete(
-          `${API_BASE_URL}/api/Tenant/${tenantId}/cancel-save/${property.postId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        ),
-      );
-
-      await Promise.all(deletePromises);
-      setSavedProperties([]);
-      setBulkDeleteModal(false);
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to remove all saved properties",
-      );
-    }
-  };
+     if (e) e.stopPropagation();
+     try {
+       const response = await API.delete(`/Tenant/cancel-save/${propertyId}`);
+       setSavedProperties(
+         savedProperties.filter((prop) => prop.postId !== propertyId),
+       );
+       setDeleteModal({ isOpen: false, propertyId: null, propertyTitle: "" });
+       toast.success(response.data?.message || "Property removed from saved");
+     } catch (err) {
+       toast.error(err.response?.data?.message || "Failed to remove saved property");
+     }
+   };
+ 
+   const removeAllSavedProperties = async () => {
+     try {
+       // حذف جميع البوستات المحفوظة واحداً تلو الآخر
+       const deletePromises = savedProperties.map((property) =>
+         API.delete(`/Tenant/cancel-save/${property.postId}`),
+       );
+       await Promise.all(deletePromises);
+       setSavedProperties([]);
+       setBulkDeleteModal(false);
+       toast.success("All saved properties removed successfully");
+     } catch (err) {
+       toast.error(err.response?.data?.message || "Failed to remove all saved properties");
+     }
+   };
 
   const openDeleteModal = (propertyId, propertyTitle, e) => {
     if (e) e.stopPropagation();

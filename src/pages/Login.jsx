@@ -41,7 +41,7 @@ const FaceLoginModal = ({ usernameOrEmail, onClose, onLoginSuccess }) => {
         setStatus("Scanning...");
       })
       .catch((err) => {
-        console.error(err);
+       
         setError("Camera access denied.");
       });
 
@@ -175,7 +175,6 @@ const Login = () => {
     password: "",
   });
 
-  const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [showFaceModal, setShowFaceModal] = useState(false);
 
@@ -190,7 +189,6 @@ const Login = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setMessage({ text: "", type: "" });
   };
 
   const handleFaceLoginSuccess = (pythonData) => {
@@ -224,7 +222,7 @@ const Login = () => {
       localStorage.setItem("landlordId", userId);
     }
 
-    setMessage({ text: "Face Verified! Redirecting...", type: "success" });
+    toast.success("Face Verified! Redirecting...");
 
     setTimeout(() => {
         navigate(
@@ -241,7 +239,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage({ text: "", type: "" });
 
     try {
       const res = await axios.post(`${API_BASE_URL}/api/Auth/login`, formData, {
@@ -285,30 +282,18 @@ const Login = () => {
         const landlordStatus = landlordData.flagWaitingUser;
 
         if (landlordStatus === 0) {
-          setMessage({
-            text: "Login successful! Redirecting...",
-            type: "success",
-          });
+          toast.success("Login successful! Redirecting...");
           setTimeout(() => {
             navigate("/landlord/dashboard");
             window.location.reload();
           }, 1500);
         } else if (landlordStatus === 1) {
-          setMessage({
-            text: "Your landlord account is pending approval.",
-            type: "info",
-          });
+          toast.info("Your landlord account is pending approval.");
         } else if (landlordStatus === 2) {
-          setMessage({
-            text: "Your landlord account has been rejected.",
-            type: "error",
-          });
+          toast.error("Your landlord account has been rejected.");
         }
       } else {
-        setMessage({
-          text: "Login successful! Redirecting...",
-          type: "success",
-        });
+        toast.success("Login successful! Redirecting...");
         setTimeout(() => {
           navigate(
             role === "admin"
@@ -321,12 +306,9 @@ const Login = () => {
         }, 1500);
       }
     } catch (error) {
-      console.error(error);
+      
       const errorMessage = error.response?.data?.message || error.response?.data?.error;
-      setMessage({
-        text: errorMessage || "Login failed. Please check your credentials.",
-        type: "error",
-      });
+      toast.error(errorMessage || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -335,7 +317,7 @@ const Login = () => {
   const handle2FAVerify = async (e) => {
     e.preventDefault();
     if (twoFactorCode.length !== 6) {
-      setMessage({ text: "Please enter a 6-digit code", type: "error" });
+      toast.error("Please enter a 6-digit code");
       return;
     }
 
@@ -379,7 +361,7 @@ const Login = () => {
         window.location.reload();
       }, 1000);
     } catch (err) {
-      console.error(err);
+      
       toast.error(err.response?.data?.message || "Invalid 2FA code");
     } finally {
       setIsVerifying2FA(false);
@@ -389,10 +371,7 @@ const Login = () => {
   const startFaceLogin = (e) => {
     e.preventDefault();
     if (!formData.usernameOrEmail) {
-      setMessage({
-        text: "Please enter your Username or Email first.",
-        type: "error",
-      });
+      toast.error("Please enter your Username or Email first.");
       return;
     }
     setShowFaceModal(true);
@@ -540,20 +519,6 @@ const Login = () => {
                 Enter your credentials to access your account
               </p>
             </div>
-
-            {message.text && (
-              <div
-                className={`login-message ${
-                  message.type === "success"
-                    ? "login-message-success"
-                    : message.type === "error"
-                    ? "login-message-error"
-                    : "login-message-info"
-                }`}
-              >
-                {message.text}
-              </div>
-            )}
 
             <div className="login-form">
               <div className="login-field">

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { approveLandlord, rejectLandlord } from "../services/api";
-import axios from "axios";
+import API, { approveLandlord, rejectLandlord } from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/PendingApprovals.css";
 import {
@@ -36,9 +35,7 @@ const PendingApprovals = () => {
     const fetchPendingLandlords = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `${API_BASE_URL}/api/admin/waitingLandlords`,
-        );
+        const response = await API.get("/admin/waitingLandlords");
         setPendingLandlords(response.data);
         setFilteredLandlords(response.data);
       } catch (err) {
@@ -65,18 +62,14 @@ const PendingApprovals = () => {
   }, [searchTerm, pendingLandlords]);
 
   const handleLandlordAction = async (userId, action) => {
-    console.log(`Attempting to ${action} landlord with User ID:`, userId);
     if (!userId) {
-      setError(`Invalid user ID. Cannot ${action}.`);
+      toast.error(`Invalid user ID. Cannot ${action}.`);
       return;
     }
-
     const originalLandlords = [...pendingLandlords];
-
     setPendingLandlords((prev) =>
       prev.filter((landlord) => landlord.userId !== userId),
     );
-
     try {
       if (action === "accept") {
         await approveLandlord(userId);
@@ -86,8 +79,7 @@ const PendingApprovals = () => {
       setSuccessMessage(`Landlord ${action}ed successfully!`);
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      console.error(`Error ${action}ing landlord:`, err);
-      setError(`Failed to ${action} landlord.`);
+      toast.error(`Failed to ${action} landlord.`);
       // Restore original list on error
       setPendingLandlords(originalLandlords);
       setTimeout(() => setError(null), 3000);
