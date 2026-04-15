@@ -26,6 +26,12 @@ import {
   FaFileContract
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
+import {
+  getUserHistory,
+  addHistory,
+  deleteHistoryItem,
+  clearUserHistory,
+} from "../services/pyapi";
 import "../styles/TenantDashboard.css";
 
 // Helper functions
@@ -91,10 +97,7 @@ const TenantDashboard = () => {
       const applications = applicationsResponse.data || [];
 
       // Get user's history for views
-      const historyResponse = await axios.get(
-        `http://localhost:5000/api/history/${userId}`,
-        { headers: getAuthHeaders() }
-      );
+      const historyResponse = await getUserHistory(userId);
 
       const userHistory = historyResponse.data || [];
 
@@ -216,17 +219,13 @@ const TenantDashboard = () => {
         setStats(prev => ({ ...prev, savedCount: prev.savedCount - 1 }));
         
         // Record unsave activity
-        await axios.post(
-          `http://localhost:5000/api/history/${userId}`,
-          {
-            activity_type: 'unsave',
-            details: {
-              post_id: propertyId,
-              post_title: featuredProperties.find(p => p.postId === propertyId)?.title
-            }
-          },
-          { headers: getAuthHeaders() }
-        );
+        await addHistory(userId, {
+          activity_type: 'unsave',
+          details: {
+            post_id: propertyId,
+            post_title: featuredProperties.find(p => p.postId === propertyId)?.title
+          }
+        });
 
       } else {
         // Save property
@@ -249,27 +248,20 @@ const TenantDashboard = () => {
 
         // Record save activity
         const property = featuredProperties.find(p => p.postId === propertyId);
-        await axios.post(
-          `http://localhost:5000/api/history/${userId}`,
-          {
-            activity_type: 'save',
-            details: {
-              post_id: propertyId,
-              post_title: property?.title,
-              post_price: property?.price,
-              post_location: property?.location,
-              post_image: property?.fileBase64
-            }
-          },
-          { headers: getAuthHeaders() }
-        );
+        await addHistory(userId, {
+          activity_type: 'save',
+          details: {
+            post_id: propertyId,
+            post_title: property?.title,
+            post_price: property?.price,
+            post_location: property?.location,
+            post_image: property?.fileBase64
+          }
+        });
       }
 
       // Refresh recent activity
-      const historyResponse = await axios.get(
-        `http://localhost:5000/api/history/${userId}`,
-        { headers: getAuthHeaders() }
-      );
+      const historyResponse = await getUserHistory(userId);
       
       const userHistory = historyResponse.data || [];
       const newActivity = userHistory
@@ -313,20 +305,16 @@ const TenantDashboard = () => {
     // Record view activity
     try {
       const property = featuredProperties.find(p => p.postId === propertyId);
-      await axios.post(
-        `http://localhost:5000/api/history/${userId}`,
-        {
-          activity_type: 'view',
-          details: {
-            post_id: propertyId,
-            post_title: property?.title,
-            post_price: property?.price,
-            post_location: property?.location,
-            post_image: property?.fileBase64
-          }
-        },
-        { headers: getAuthHeaders() }
-      );
+      await addHistory(userId, {
+        activity_type: 'view',
+        details: {
+          post_id: propertyId,
+          post_title: property?.title,
+          post_price: property?.price,
+          post_location: property?.location,
+          post_image: property?.fileBase64
+        }
+      });
 
       // Update views count
       setStats(prev => ({ ...prev, viewsCount: prev.viewsCount + 1 }));
@@ -348,17 +336,13 @@ const TenantDashboard = () => {
   const handleQuickAction = async (actionType) => {
     // Record quick action activity
     try {
-      await axios.post(
-        `http://localhost:5000/api/history/${userId}`,
-        {
-          activity_type: 'quick_action',
-          details: {
-            action: actionType,
-            timestamp: new Date().toISOString()
-          }
-        },
-        { headers: getAuthHeaders() }
-      );
+      await addHistory(userId, {
+        activity_type: 'quick_action',
+        details: {
+          action: actionType,
+          timestamp: new Date().toISOString()
+        }
+      });
     } catch (error) {
       console.error("Error recording quick action:", error);
     }

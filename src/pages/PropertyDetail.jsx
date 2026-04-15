@@ -13,7 +13,7 @@ import {
   likePost,
   getPostLikeStatus,
   recordPostView,
-  recordPostViews,
+  getPostViewsCount,
   addHistory,
 } from "../services/pyapi";
 import { toast } from "react-toastify";
@@ -426,34 +426,44 @@ const PropertyDetail = () => {
         if (isMounted) setPageError("Failed to load post details.");
       }
     };
-    const fetchInteractions = async () => {
-      try {
-        const viewRes = await axios.get(
-          `http://localhost:5000/api/posts/${postId}/views`,
-        );
-        if (isMounted) setViewCount(viewRes.data.unique_views);
-      } catch (viewErr) {
-        console.error("Failed to fetch view count:", viewErr);
-      }
-      try {
-        const likeRes = await axios.get(
-          `http://localhost:5000/api/posts/${postId}/like-status`,
-          { headers: getAuthHeaders() },
-        );
-        if (isMounted) setLikeStatus(likeRes.data);
-      } catch (likeErr) {
-        console.error("Failed to fetch like status:", likeErr);
-      }
-    };
 
     if (postId) {
       fetchPostData();
-      fetchInteractions();
     }
     return () => {
       isMounted = false;
     };
   }, [postId, userId]);
+
+  useEffect(() => {
+    const fetchInteractions = async () => {
+      if (!postId) return;
+      
+      // Fetch like status
+      getPostLikeStatus(postId)
+        .then((res) => {
+          setLikeStatus({
+            likes_count: res.data.likes_count,
+            user_has_liked: res.data.user_has_liked,
+          });
+        })
+        .catch((err) => console.error("Failed to fetch like status:", err));
+
+      // Fetch view count
+      getPostViewsCount(postId)
+        .then((res) => {
+          setViewCount(res.data.unique_views || 0);
+        })
+        .catch((err) => console.error("Failed to fetch view count:", err));
+
+      // Record a new view
+      recordPostView(postId).catch((err) =>
+        console.error("Failed to record view:", err),
+      );
+    };
+
+    fetchInteractions();
+  }, [postId]);
 
   useEffect(() => {
     if (post && postId) {
@@ -464,27 +474,6 @@ const PropertyDetail = () => {
   useEffect(() => {
     setCommentCount(calculateTotalComments(comments));
   }, [comments]);
-
-  useEffect(() => {
-    if (!postId || !userId) return;
-    const recordViewCount = async () => {
-      try {
-        const headers = getAuthHeaders();
-        if (!headers["User-Id"]) {
-          return;
-        }
-        await axios.post(
-          `http://localhost:5000/api/posts/${postId}/view`,
-          {},
-          { headers: headers },
-        );
-      } catch (err) {
-        console.error("Failed to record view count:", err);
-      }
-    };
-    const timer = setTimeout(recordViewCount, 1500);
-    return () => clearTimeout(timer);
-  }, [postId, userId]);
 
   const fetchCommentsModal = () => {
     if (!comments || comments.length === 0) {
@@ -971,6 +960,8 @@ const PropertyDetail = () => {
     }
   };
   const toPlainText = (v) => (Array.isArray(v) ? v.join(" ") : (v ?? ""));
+
+  // ==================== Like Post ====================
   const handleLikePost = async (e) => {
     e.stopPropagation();
     if (!userId || !post) {
@@ -989,11 +980,7 @@ const PropertyDetail = () => {
     }));
 
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/posts/${postId}/like`,
-        {},
-        { headers: getAuthHeaders() },
-      );
+      const response = await likePost(postId);
       const newLikeStatus = response.data;
 
       setLikeStatus({
