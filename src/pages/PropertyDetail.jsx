@@ -438,7 +438,7 @@ const PropertyDetail = () => {
   useEffect(() => {
     const fetchInteractions = async () => {
       if (!postId) return;
-      
+
       // Fetch like status
       getPostLikeStatus(postId)
         .then((res) => {
@@ -1738,45 +1738,6 @@ const PropertyDetail = () => {
       {/* Additional Content Sections */}
       <div className="property-content">
         <div className="property-grid">
-          {/* Statistics and Analytics Section */}
-          <div className="property-stats-section">
-            <h2 className="property-section-title">
-              <FaEye className="mr-3" />
-              Property Statistics
-            </h2>
-            <div className="property-stats-grid">
-              <div className="property-stat-card">
-                <div className="property-stat-icon">
-                  <FaEye />
-                </div>
-                <div className="property-stat-content">
-                  <div className="property-stat-value">{viewCount}</div>
-                  <div className="property-stat-label">Views</div>
-                </div>
-              </div>
-              <div className="property-stat-card">
-                <div className="property-stat-icon">
-                  <FaHeart />
-                </div>
-                <div className="property-stat-content">
-                  <div className="property-stat-value">
-                    {likeStatus.likes_count || 0}
-                  </div>
-                  <div className="property-stat-label">Likes</div>
-                </div>
-              </div>
-              <div className="property-stat-card">
-                <div className="property-stat-icon">
-                  <FaComment />
-                </div>
-                <div className="property-stat-content">
-                  <div className="property-stat-value">{commentCount}</div>
-                  <div className="property-stat-label">Comments</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Additional Features Section */}
           <div className="property-amenities-section">
             <h2 className="property-section-title">
@@ -1816,6 +1777,44 @@ const PropertyDetail = () => {
                   </span>
                 </div>
               )}
+            </div>
+          </div>
+          {/* Statistics and Analytics Section */}
+          <div className="property-stats-section">
+            <h2 className="property-section-title">
+              <FaEye className="mr-3" />
+              Property Statistics
+            </h2>
+            <div className="property-stats-grid">
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
+                  <FaEye />
+                </div>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">{viewCount}</div>
+                  <div className="property-stat-label">Views</div>
+                </div>
+              </div>
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
+                  <FaHeart />
+                </div>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">
+                    {likeStatus.likes_count || 0}
+                  </div>
+                  <div className="property-stat-label">Likes</div>
+                </div>
+              </div>
+              <div className="property-stat-card">
+                <div className="property-stat-icon">
+                  <FaComment />
+                </div>
+                <div className="property-stat-content">
+                  <div className="property-stat-value">{commentCount}</div>
+                  <div className="property-stat-label">Comments</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
