@@ -1457,6 +1457,534 @@ img {
 }
 
 /* ==========================================
+   COMMENTS MODAL - ENHANCED DESIGN
+   ========================================== */
+.comments-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.comments-modal-container {
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 50rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border-primary);
+  overflow: hidden;
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.comments-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--brand-secondary);
+  color: var(--text-white);
+}
+
+.comments-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-white);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.comments-modal-title-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.comments-modal-title-icon svg {
+  font-size: 1.125rem;
+  color: var(--brand-primary);
+}
+
+.comments-modal-close-btn {
+  color: var(--text-white);
+  opacity: 0.8;
+  transition: all 0.2s;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comments-modal-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+.comments-modal-close-btn svg {
+  font-size: 1.5rem;
+}
+
+.comments-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 2rem;
+  background: var(--bg-primary);
+}
+
+/* --- Enhanced Comment Item Styling --- */
+.comment-item-card {
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-card);
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.comment-item-card:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.comment-item-card.pinned {
+  background: linear-gradient(
+    135deg,
+    var(--bg-card) 0%,
+    rgba(251, 191, 36, 0.05) 100%
+  );
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+}
+
+.comment-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.comment-author-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comment-author-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--brand-secondary);
+  color: var(--text-white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.comment-author-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.comment-author-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.comment-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.comment-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.025em;
+}
+
+.comment-badge-you {
+  background: rgba(30, 58, 138, 0.1);
+  color: var(--brand-secondary);
+}
+
+.comment-badge-owner {
+  background: rgba(251, 191, 36, 0.1);
+  color: #92400e;
+}
+
+.comment-badge-pinned {
+  background: var(--brand-primary);
+  color: var(--brand-secondary);
+}
+
+.comment-timestamp {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.comment-content {
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+  word-break: break-word;
+}
+
+.comment-image-container {
+  margin-top: 1rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border-primary);
+  max-width: 100%;
+}
+
+.comment-image-container img {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.comment-image-container img:hover {
+  transform: scale(1.02);
+}
+
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.comment-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.comment-action-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--brand-secondary);
+}
+
+.comment-action-btn.liked {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.comment-action-btn.liked:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.comment-action-btn.pin-btn {
+  margin-left: auto;
+}
+
+.comment-action-btn.pinned-btn {
+  color: var(--brand-secondary);
+  background: var(--brand-primary);
+}
+
+.comment-replies-container {
+  margin-top: 1rem;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--border-primary);
+}
+
+.comments-textarea {
+  width: 100%;
+  padding: 1.25rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 1rem;
+  resize: none;
+  transition: all 0.3s;
+  min-height: 120px;
+  font-size: 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.comments-textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1);
+}
+
+.comments-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.comments-form-actions {
+  margin-top: 5px;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comments-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.comments-upload-btn:hover {
+  border-color: var(--brand-primary);
+  background: var(--bg-card);
+  color: var(--brand-secondary);
+}
+
+.dark .comments-upload-btn:hover {
+  color: var(--brand-primary);
+}
+
+.comments-upload-btn svg {
+  color: var(--brand-primary);
+  font-size: 1.125rem;
+}
+
+.comments-upload-btn-text {
+  font-size: 1rem;
+}
+
+.comments-upload-btn input[type="file"] {
+  display: none;
+}
+
+.comments-image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.comments-image-preview img {
+  height: 8rem;
+  border-radius: 1rem;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.comments-image-preview-remove {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background: #ef4444;
+  color: white;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.comments-image-preview-remove:hover {
+  background: #dc2626;
+}
+
+.comments-image-preview-remove svg {
+  font-size: 0.875rem;
+}
+
+.comments-submit-btn {
+  padding: 0.875rem 1.75rem;
+  background: var(--brand-secondary);
+  color: var(--text-white);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+}
+
+.comments-submit-btn:hover:not(:disabled) {
+  background: var(--brand-primary);
+  color: var(--brand-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.dark .comments-submit-btn {
+  background: var(--brand-primary);
+  color: var(--brand-secondary);
+}
+
+.comments-cancel-btn {
+  padding: 0.875rem 1.75rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+}
+
+.comments-cancel-btn:hover {
+  background: var(--bg-primary);
+  color: var(--error);
+  border-color: var(--error);
+  box-shadow: var(--shadow-sm);
+}
+
+.comment-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.dark .comments-submit-btn:hover:not(:disabled) {
+  background: var(--text-white);
+}
+
+.comments-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.comments-submit-btn svg {
+  font-size: 1rem;
+}
+
+.comments-submit-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comments-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-secondary);
+  border-radius: 1.5rem;
+  border: 2px dashed var(--border-primary);
+}
+
+.comments-empty-icon {
+  font-size: 3.5rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.comments-empty-title {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.comments-empty-text {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.comments-loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.comments-loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--brand-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.comments-loading-text {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ==========================================
    LOADING & ERROR STATES - ENHANCED
    ========================================== */
 .property-loading {
@@ -1576,6 +2104,19 @@ img {
 .property-error-btn:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-2xl);
+}
+
+/* ==========================================
+   MODAL OPEN STATE - HIDE ELEMENTS
+   ========================================== */
+body.modal-open-hide-elements {
+  overflow: hidden; /* Prevent scrolling when modal is open */
+}
+
+body.modal-open-hide-elements .navbar,
+body.modal-open-hide-elements .property-actions,
+body.modal-open-hide-elements .footer {
+  display: none !important;
 }
 
 /* ==========================================
@@ -4382,6 +4923,35 @@ img {
   font-weight: 700 !important;
   color: var(--text-primary) !important;
   font-size: 1.1rem !important;
+}
+
+.eligibility-field-input {
+  width: 100% !important;
+}
+
+.comment-badge-edited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid var(--border-primary);
+  transition: all 0.2s ease;
+}
+
+.comment-badge-edited:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.comment-badge-edited svg {
+  opacity: 0.8;
 }
 
 .eligibility-field-input {
