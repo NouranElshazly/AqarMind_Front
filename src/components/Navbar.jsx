@@ -443,7 +443,8 @@ const Navbar = () => {
   // Check role from localStorage for profile visibility
   const storedRole = localStorage.getItem("role");
   const shouldShowProfile =
-    storedRole && ["tenant", "landlord", "admin"].includes(storedRole.toLowerCase());
+    storedRole &&
+    ["tenant", "landlord", "admin"].includes(storedRole.toLowerCase());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -472,7 +473,7 @@ const Navbar = () => {
       console.error("Logout API failed:", error);
     }
     // Clear the ad shown flag on logout
-    sessionStorage.removeItem('adShown');
+    sessionStorage.removeItem("adShown");
     logout();
     setShowLogoutModal(false);
     setIsMenuOpen(false);
@@ -508,6 +509,7 @@ const Navbar = () => {
         label: "Browse Properties",
         path: "/show-all-post",
       },
+      { icon: <HistoryIcon />, label: "History", path: "/UserHistory" },
     ];
 
     // Role-specific items
@@ -569,7 +571,6 @@ const Navbar = () => {
           },
           { icon: <HeartIcon />, label: "Saved Posts", path: "/saved-posts" },
           { icon: <ChatIcon />, label: "Messages", path: "/messages" },
-          { icon: <HistoryIcon />, label: "History", path: "/UserHistory" },
           {
             icon: <DocumentIcon />,
             label: "Your Applications",
@@ -707,19 +708,17 @@ const Navbar = () => {
                     </div>
                   </Link>
 
-                  {user.role === "Tenant" && (
-                    <Link to="/UserHistory" className="dropdown-item">
-                      <div className="dropdown-item-icon">
-                        <HistoryIcon />
+                  <Link to="/UserHistory" className="dropdown-item">
+                    <div className="dropdown-item-icon">
+                      <HistoryIcon />
+                    </div>
+                    <div className="dropdown-item-content">
+                      <div className="dropdown-item-title">History</div>
+                      <div className="dropdown-item-description">
+                        Your activity timeline
                       </div>
-                      <div className="dropdown-item-content">
-                        <div className="dropdown-item-title">History</div>
-                        <div className="dropdown-item-description">
-                          Your activity timeline
-                        </div>
-                      </div>
-                    </Link>
-                  )}
+                    </div>
+                  </Link>
 
                   {user.role === "Tenant" && (
                     <Link to="/UserProposals" className="dropdown-item">
@@ -738,7 +737,10 @@ const Navbar = () => {
                   )}
 
                   {user.role === "Landlord" && (
-                    <Link to="/landlord/subscription-plans" className="dropdown-item">
+                    <Link
+                      to="/landlord/subscription-plans"
+                      className="dropdown-item"
+                    >
                       <div className="dropdown-item-icon">
                         <CreditCardIcon />
                       </div>

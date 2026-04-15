@@ -1,537 +1,450 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
-    FaTrash, FaSearch, FaFilter, FaSave, FaCommentDots, FaHeart,
-    FaEye, FaPaperPlane, FaCheckCircle, FaHistory, FaTimes, FaBookmark, FaRegBookmark,
-    FaUserTie, FaMapMarkerAlt, FaDollarSign,
-    FaExclamationTriangle, FaImage, FaClock, FaCalendarAlt
-} from 'react-icons/fa';
-import '../styles/UserHistory.css';
+  FaTrash,
+  FaSearch,
+  FaFilter,
+  FaCommentDots,
+  FaHeart,
+  FaEye,
+  FaPaperPlane,
+  FaCheckCircle,
+  FaHistory,
+  FaTimes,
+  FaBookmark,
+  FaMapMarkerAlt,
+  FaDollarSign,
+  FaExclamationTriangle,
+  FaImage,
+  FaClock,
+  FaArrowLeft,
+} from "react-icons/fa";
+import {
+  getUserHistory,
+  deleteHistoryItem,
+  clearUserHistory,
+} from "../services/pyapi";
+import "../styles/UserHistory.css";
 
 // --- دوال المساعدة ---
-const decodeJWT = (token) => { 
-    try { 
-        const base64Url = token.split(".")[1]; 
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); 
-        const jsonPayload = decodeURIComponent(atob(base64).split("").map(function (c) { 
-            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2); 
-        }).join("")); 
-        return JSON.parse(jsonPayload); 
-    } catch (error) { 
-        console.error("Error decoding JWT token:", error); 
-        return null; 
-    }
+const getUserInfo = () => {
+  const userId = localStorage.getItem("userId");
+  const userName = localStorage.getItem("userName");
+  const role = localStorage.getItem("role");
+  if (!userId) return null;
+  return { userId, userName: userName || "User", role: role || "user" };
 };
 
-const getUserInfoFromToken = () => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
-    if (!token || !userId) return null;
-    try {
-      const decoded = decodeJWT(token);
-      if(!decoded) return null;
-      return { 
-          userId: userId, 
-          userName: decoded.name || decoded.sub || "User", 
-          role: decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || localStorage.getItem("role"), 
-      };
-    } catch(error) { return null; }
-};
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    const userInfo = getUserInfoFromToken();
-    return { 
-        Authorization: `Bearer ${token}`, 
-        "User-Name": userInfo?.userName || "User", 
-        "User-Id": userInfo?.userId || "", 
-        "User-Role": userInfo?.role || "user", 
-        "Content-Type": "application/json", 
-    };
-};
-
-// --- مودال تأكيد الحذف ---
+// --- مودال تأكيد الحذف (تصميم محسّن) ---
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
-    if (!isOpen) return null;
-    
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-gray-200 transform animate-scaleIn" 
-                 onClick={(e) => e.stopPropagation()}>
-                <div className="p-6">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                            <FaExclamationTriangle className="h-6 w-6 text-red-600" />
-                        </div>
-                        <div className="ml-4">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                {title || "Delete Confirmation"}
-                            </h3>
-                            <div className="mt-2">
-                                <p className="text-sm text-gray-500">
-                                    {message || "Are you sure? This action cannot be undone."}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex gap-3">
-                    <button 
-                        onClick={onClose}
-                        className="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        onClick={() => { onConfirm(); onClose(); }}
-                        className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm"
-                    >
-                        Confirm Delete
-                    </button>
-                </div>
-            </div>
+  if (!isOpen) return null;
+
+  return (
+    <div className="history-modal-overlay" onClick={onClose}>
+      <div
+        className="history-modal-container"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="history-modal-body">
+          <div className="history-modal-icon">
+            <FaExclamationTriangle />
+          </div>
+          <h3 className="history-modal-title">
+            {title || "Delete Confirmation"}
+          </h3>
+          <p className="history-modal-text">
+            {message || "Are you sure? This action cannot be undone."}
+          </p>
         </div>
-    );
+        <div className="history-modal-footer">
+          <button onClick={onClose} className="modal-btn modal-btn-cancel">
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="modal-btn modal-btn-delete"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // --- المكون الرئيسي ---
 const UserHistory = () => {
-    const [historyItems, setHistoryItems] = useState([]);
-    const [filterType, setFilterType] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
-    const userInfo = getUserInfoFromToken();
+  const [historyItems, setHistoryItems] = useState([]);
+  const [filterType, setFilterType] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const userInfo = getUserInfo();
 
-    const API_HISTORY_URL = 'http://localhost:5000/api/history';
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalConfig, setModalConfig] = useState({ title: '', message: '', onConfirm: () => {} });
+  // جلب الهيستوري
+  const fetchHistory = useCallback(async () => {
+    if (!userInfo?.userId) {
+      setError("Please log in to view your history.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getUserHistory(userInfo.userId);
+      setHistoryItems(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+      setError("Could not load your history. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userInfo?.userId]);
 
-    // دالة جلب الهيستوري
-    const fetchHistory = useCallback(async () => {
-        if (!userInfo?.userId) {
-            setError("Please log in to view your history.");
-            setLoading(false);
-            setHistoryItems([]);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await axios.get(`${API_HISTORY_URL}/${userInfo.userId}`, { headers: getAuthHeaders() });
-            setHistoryItems(response.data || []);
-        } catch (err) {
-            console.error("Failed to fetch history:", err);
-            setError("Could not load your history. Please try again later.");
-            setHistoryItems([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [userInfo?.userId]);
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
-    useEffect(() => {
-        fetchHistory();
-    }, [fetchHistory]);
+  // فلترة وبحث
+  const filteredAndSearchedItems = useMemo(() => {
+    return historyItems.filter((item) => {
+      const typeMatch =
+        filterType === "all" || item.activity_type === filterType;
+      let searchMatch = true;
+      if (searchTerm.trim()) {
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        searchMatch =
+          item.details?.post_title?.toLowerCase().includes(lowerSearchTerm) ||
+          item.details?.query?.toLowerCase().includes(lowerSearchTerm) ||
+          item.details?.comment_preview
+            ?.toLowerCase()
+            .includes(lowerSearchTerm) ||
+          item.details?.post_location?.toLowerCase().includes(lowerSearchTerm);
+      }
+      return typeMatch && searchMatch;
+    });
+  }, [historyItems, filterType, searchTerm]);
 
-    // فلترة وبحث الهيستوري
-    const filteredAndSearchedItems = useMemo(() => {
-        return historyItems.filter(item => {
-            const typeMatch = filterType === 'all' || item.activity_type === filterType;
-            let searchMatch = true;
-            if (searchTerm.trim()) {
-                const lowerSearchTerm = searchTerm.toLowerCase();
-                searchMatch = (
-                    item.details?.post_title?.toLowerCase().includes(lowerSearchTerm) ||
-                    item.details?.query?.toLowerCase().includes(lowerSearchTerm) ||
-                    item.details?.comment_preview?.toLowerCase().includes(lowerSearchTerm) ||
-                    item.details?.post_location?.toLowerCase().includes(lowerSearchTerm)
-                );
-            }
-            return typeMatch && searchMatch;
-        });
-    }, [historyItems, filterType, searchTerm]);
+  // دوال الحذف
+  const performActualDelete = async (itemId) => {
+    if (!userInfo?.userId || !itemId) return;
+    const originalItems = [...historyItems];
+    setHistoryItems((prev) => prev.filter((item) => item._id !== itemId));
+    try {
+      await deleteHistoryItem(userInfo.userId, itemId);
+    } catch (err) {
+      console.error("Failed to delete history item:", err);
+      setHistoryItems(originalItems);
+    }
+  };
 
-    // دوال الحذف
-    const performActualDelete = async (itemId) => {
-        if (!userInfo?.userId || !itemId) return;
-        const originalItems = [...historyItems];
-        setHistoryItems(prev => prev.filter(item => item._id !== itemId));
-        try {
-            await axios.delete(`${API_HISTORY_URL}/${userInfo.userId}/${itemId}`, { headers: getAuthHeaders() });
-        } catch (err) {
-            console.error("Failed to delete history item:", err);
-            setError("Failed to delete item. Please try again.");
-            setHistoryItems(originalItems);
-        }
-    };
+  const performActualDeleteAll = async () => {
+    if (!userInfo?.userId || historyItems.length === 0) return;
+    const originalItems = [...historyItems];
+    setHistoryItems([]);
+    try {
+      await clearUserHistory(userInfo.userId);
+    } catch (err) {
+      console.error("Failed to delete all history:", err);
+      setHistoryItems(originalItems);
+    }
+  };
 
-    const performActualDeleteAll = async () => {
-        if (!userInfo?.userId || historyItems.length === 0) return;
-        const originalItems = [...historyItems];
-        setHistoryItems([]);
-        try {
-            await axios.delete(`${API_HISTORY_URL}/${userInfo.userId}`, { headers: getAuthHeaders() });
-        } catch (err) {
-            console.error("Failed to delete all history:", err);
-            setError("Failed to clear history. Please try again.");
-            setHistoryItems(originalItems);
-        }
-    };
+  const handleDeleteItem = (itemId) => {
+    setModalConfig({
+      title: "Delete Activity",
+      message:
+        "Are you sure you want to delete this activity? This cannot be undone.",
+      onConfirm: () => performActualDelete(itemId),
+    });
+    setIsModalOpen(true);
+  };
 
-    const handleDeleteItem = (itemId) => {
-        setModalConfig({
-            title: "Delete History Item",
-            message: "Are you sure you want to delete this specific activity? This action cannot be undone.",
-            onConfirm: () => performActualDelete(itemId)
-        });
-        setIsModalOpen(true);
-    };
+  const handleDeleteAll = () => {
+    if (historyItems.length === 0) return;
+    setModalConfig({
+      title: "Clear History",
+      message: "Are you sure you want to clear your entire activity history?",
+      onConfirm: performActualDeleteAll,
+    });
+    setIsModalOpen(true);
+  };
 
-    const handleDeleteAll = () => {
-        if (historyItems.length === 0) return;
-        setModalConfig({
-            title: "Clear All History",
-            message: "Are you sure you want to clear your entire history? This action cannot be undone.",
-            onConfirm: performActualDeleteAll
-        });
-        setIsModalOpen(true);
-    };
+  // عرض عنصر الهيستوري
+  const renderHistoryItem = (item, index) => {
+    let icon = <FaHistory />;
+    let textPrefix = `Activity:`;
+    let link = null;
+    let themeColor = "var(--brand-secondary)";
 
-    // دالة عرض عنصر الهيستوري
-    const renderHistoryItem = (item, index) => {
-        let icon = <FaHistory className="text-gray-400"/>;
-        let textPrefix = `Unknown activity:`;
-        let link = null;
+    const postTitle = item.details?.post_title || "N/A";
+    const postId = item.details?.post_id;
+    const postPrice = item.details?.post_price;
+    const postLocation = item.details?.post_location;
+    const commentPreview = item.details?.comment_preview;
+    const commentHasImage = item.details?.has_image;
 
-        const postTitle = item.details?.post_title || 'N/A';
-        const postId = item.details?.post_id;
-        const postPrice = item.details?.post_price;
-        const postLocation = item.details?.post_location;
-        const commentPreview = item.details?.comment_preview;
-        const commentHasImage = item.details?.has_image;
+    if (postId) link = `/properties/${postId}`;
 
-        if (postId) {
-            link = `/properties/${postId}`;
-        }
-
-        const PostDetails = () => (
-            <div>
-                {link ? (
-                    <Link to={link} className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors duration-200 truncate block">
-                        {postTitle}
-                    </Link>
-                ) : (
-                    <span className="text-lg font-semibold text-gray-900 truncate block">
-                        {postTitle}
-                    </span>
-                )}
-                <div className="flex items-center text-sm text-gray-600 mt-1 flex-wrap gap-3">
-                    {postLocation && (
-                        <span className="flex items-center text-xs bg-gray-100 px-2 py-1 rounded-full">
-                            <FaMapMarkerAlt className="mr-1 text-gray-500" /> 
-                            {postLocation}
-                        </span>
-                    )}
-                    {postPrice != null && (
-                        <span className="flex items-center font-semibold text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
-                            <FaDollarSign className="mr-1"/> 
-                            {Number(postPrice).toLocaleString()}
-                        </span>
-                    )}
-                </div>
-            </div>
-        );
-
-        switch (item.activity_type) {
-            case 'save': 
-                icon = <FaBookmark className="text-blue-500" />; 
-                textPrefix = 'Saved post'; 
-                break;
-            case 'comment': 
-                icon = <FaCommentDots className="text-purple-500" />; 
-                textPrefix = 'Commented on'; 
-                break;
-            case 'like': 
-                icon = <FaHeart className="text-red-500" />; 
-                textPrefix = 'Liked post'; 
-                break;
-            case 'search': 
-                icon = <FaSearch className="text-orange-500" />; 
-                textPrefix = 'Searched for'; 
-                link = null; 
-                break;
-            case 'view': 
-                icon = <FaEye className="text-indigo-500" />; 
-                textPrefix = 'Viewed post'; 
-                break;
-            case 'apply': 
-                icon = <FaPaperPlane className="text-green-500" />; 
-                textPrefix = 'Applied for'; 
-                break;
-            case 'accepted': 
-                icon = <FaCheckCircle className="text-teal-500" />; 
-                textPrefix = 'Application accepted'; 
-                break;
-            default: 
-                textPrefix = `Activity: ${item.activity_type}`;
-        }
-
-        const IconLinkWrapper = ({ children }) => {
-            if (link) { 
-                return (
-                    <Link to={link} className="block transform hover:scale-105 transition-transform duration-200">
-                        {children}
-                    </Link>
-                ); 
-            }
-            return <>{children}</>;
-        };
-
-        return (
-            <div 
-                key={item._id} 
-                className="relative bg-white p-6 border-b border-gray-100 group hover:bg-gray-50 transition-all duration-300 animate-fadeInUp"
-                style={{ animationDelay: `${index * 50}ms` }}
-            >
-                <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 min-w-0 flex-grow">
-                        {/* Icon */}
-                        <IconLinkWrapper>
-                            <div className="flex-shrink-0 w-14 h-14 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl group-hover:from-gray-100 group-hover:to-gray-200 transition-all duration-300 shadow-sm">
-                                <span className="text-2xl">
-                                    {icon}
-                                </span>
-                            </div>
-                        </IconLinkWrapper>
-
-                        {/* Details */}
-                        <div className="flex-grow min-w-0">
-                            {/* Activity Type */}
-                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                <span className="flex items-center gap-1.5">
-                                    {icon} 
-                                    <span>{textPrefix}</span>
-                                </span>
-                            </div>
-
-                            {/* Post/Search Details */}
-                            <div className="mb-2">
-                                {item.activity_type !== 'search' ? (
-                                    <PostDetails />
-                                ) : (
-                                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors duration-200">
-                                        "{item.details?.query || 'N/A'}"
-                                    </h3>
-                                )}
-                            </div>
-
-                            {/* Comment Details */}
-                            {item.activity_type === 'comment' && (
-                                <div className="text-gray-600 text-sm mb-2 bg-purple-50 rounded-lg p-3 border border-purple-100">
-                                    <span className='font-semibold text-purple-700'>Comment: </span>
-                                    {commentPreview ? (
-                                        <span className="text-gray-700" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                                            "{commentPreview}"
-                                            {commentHasImage && (
-                                                <span className="text-purple-500 ml-1">
-                                                    (+<FaImage className="inline ml-1 text-xs"/>)
-                                                </span>
-                                            )}
-                                        </span>
-                                    ) : commentHasImage ? (
-                                        <span className="flex items-center gap-1.5 text-purple-600">
-                                            <FaImage />
-                                            <span>Image Comment</span>
-                                        </span>
-                                    ) : (
-                                        <span className="text-gray-400">(Empty comment)</span>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Time */}
-                            <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
-                                <FaClock className="text-xs" />
-                                {new Date(item.timestamp).toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Delete Button */}
-                    <div className="flex items-start flex-shrink-0 ml-4">
-                        <button
-                            onClick={() => handleDeleteItem(item._id)}
-                            className="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all duration-200 transform hover:scale-110"
-                            title="Delete this item"
-                        >
-                            <FaTrash />
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    if (!userInfo && !loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center border border-gray-200">
-                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <FaExclamationTriangle className="text-3xl text-red-600" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-4">Authentication Required</h1>
-                    <p className="text-gray-600 mb-6">Please log in to view your activity history.</p>
-                    <button 
-                        onClick={() => navigate('/login')} 
-                        className="w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-                    >
-                        Login to Continue
-                    </button>
-                </div>
-            </div>
-        );
+    switch (item.activity_type) {
+      case "save":
+        icon = <FaBookmark />;
+        textPrefix = "Saved";
+        themeColor = "#3b82f6";
+        break;
+      case "comment":
+        icon = <FaCommentDots />;
+        textPrefix = "Commented";
+        themeColor = "#8b5cf6";
+        break;
+      case "like":
+        icon = <FaHeart />;
+        textPrefix = "Liked";
+        themeColor = "#ef4444";
+        break;
+      case "search":
+        icon = <FaSearch />;
+        textPrefix = "Searched";
+        themeColor = "var(--brand-primary)";
+        link = null;
+        break;
+      case "view":
+        icon = <FaEye />;
+        textPrefix = "Viewed";
+        themeColor = "var(--brand-secondary)";
+        break;
+      case "apply":
+        icon = <FaPaperPlane />;
+        textPrefix = "Applied";
+        themeColor = "#10b981";
+        break;
+      case "accepted":
+        icon = <FaCheckCircle />;
+        textPrefix = "Accepted";
+        themeColor = "#059669";
+        break;
+      default:
+        textPrefix = item.activity_type;
     }
 
     return (
-        <div className="user-history-container">
-            <ConfirmModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onConfirm={modalConfig.onConfirm}
-                title={modalConfig.title}
-                message={modalConfig.message}
-            />
-
-            <div className="history-wrapper">
-                {/* Header */}
-                <div className="history-header">
-                    <div className="history-icon">
-                        <FaHistory className="text-3xl text-white" />
-                    </div>
-                    <h1 className="history-title">
-                        Activity History
-                    </h1>
-                    <p className="history-subtitle">
-                        Track your journey through properties, searches, and interactions
-                    </p>
-                </div>
-
-                {error && (
-                    <div className="error-alert">
-                        <div className="error-content">
-                            <FaExclamationTriangle className="error-icon" />
-                            <p className="error-text">{error}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Filter and Search Card */}
-                <div className="filter-search-card">
-                    <div className="filter-grid">
-                        <div className="search-group">
-                            <FaSearch className="search-icon" />
-                            <input
-                                type="text"
-                                placeholder="Search in your history..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="search-input"
-                            />
-                        </div>
-                        
-                        <div className="filter-group">
-                            <FaFilter className="filter-icon" />
-                            <select
-                                    value={filterType}
-                                    onChange={(e) => setFilterType(e.target.value)}
-                                    className="filter-select"
-                                >
-                                    <option value="all">All Activities</option>
-                                    <option value="view">Viewed Properties</option>
-                                    <option value="like">Likes</option>
-                                    <option value="save">Saved Posts</option>
-                                    <option value="comment">Comments</option>
-                                    <option value="apply">Applications</option>
-                                    <option value="search">Searches</option>
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <FaTimes className="text-gray-400 rotate-45 transform" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-2">
-                            <button
-                                onClick={handleDeleteAll}
-                                disabled={historyItems.length === 0 || loading}
-                                className="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-2xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-                            >
-                                <FaTrash className="text-lg" />
-                                Clear All
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-                        <div className="text-sm text-gray-600">
-                            Showing <span className="font-semibold text-gray-800">{filteredAndSearchedItems.length}</span> of{' '}
-                            <span className="font-semibold text-gray-800">{historyItems.length}</span> activities
-                        </div>
-                        {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm('')}
-                                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors duration-200"
-                            >
-                                Clear search
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* History List */}
-                <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 animate-fadeInUp">
-                    {loading ? (
-                        <div className="p-16 text-center">
-                            <div className="inline-block w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-                            <p className="text-gray-500 text-lg font-medium">Loading your history...</p>
-                        </div>
-                    ) : filteredAndSearchedItems.length > 0 ? (
-                        <div className="divide-y divide-gray-100">
-                            {filteredAndSearchedItems.map((item, index) => renderHistoryItem(item, index))}
-                        </div>
-                    ) : (
-                        <div className="p-16 text-center">
-                            <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <FaHistory className="text-5xl text-gray-400" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-700 mb-4">
-                                {historyItems.length === 0 ? "Your history is empty" : "No matching activities"}
-                            </h3>
-                            <p className="text-gray-500 text-lg max-w-md mx-auto mb-8">
-                                {historyItems.length === 0 
-                                    ? "Start exploring properties and your activities will appear here"
-                                    : "Try adjusting your search terms or filters"
-                                }
-                            </p>
-                            {historyItems.length === 0 && (
-                                <button
-                                    onClick={() => navigate('/properties')}
-                                    className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl"
-                                >
-                                    Browse Properties
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+      <div
+        key={item._id}
+        className="history-card-item animate-fadeInUp"
+        style={{ animationDelay: `${index * 50}ms` }}
+      >
+        <div className="history-card-content">
+          <div className="history-item-left">
+            {/* Icon */}
+            <div
+              className="history-item-icon-wrapper"
+              style={{ "--item-color": themeColor }}
+            >
+              {icon}
             </div>
 
- 
+            {/* Details */}
+            <div className="history-item-details">
+              <div className="history-item-type" style={{ color: themeColor }}>
+                {textPrefix}
+              </div>
+
+              <div className="history-item-main">
+                {item.activity_type !== "search" ? (
+                  <div className="history-item-post">
+                    {link ? (
+                      <Link to={link} className="history-post-link">
+                        {postTitle}
+                      </Link>
+                    ) : (
+                      <span className="history-post-title">{postTitle}</span>
+                    )}
+                    <div className="history-post-meta">
+                      {postLocation && (
+                        <span className="history-meta-badge">
+                          <FaMapMarkerAlt /> {postLocation}
+                        </span>
+                      )}
+                      {postPrice != null && (
+                        <span className="history-meta-badge price">
+                          <FaDollarSign /> {Number(postPrice).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <h3 className="history-search-query">
+                    "{item.details?.query || "N/A"}"
+                  </h3>
+                )}
+              </div>
+
+              {item.activity_type === "comment" && (
+                <div className="history-comment-preview">
+                  <span className="comment-label">Comment: </span>
+                  <span className="comment-text">
+                    {commentPreview ? `"${commentPreview}"` : "(Empty comment)"}
+                    {commentHasImage && (
+                      <FaImage className="inline-image-icon" />
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <div className="history-item-time">
+                <FaClock />
+                {new Date(item.timestamp).toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleDeleteItem(item._id)}
+            className="history-delete-btn"
+            title="Delete activity"
+          >
+            <FaTrash />
+          </button>
+        </div>
+      </div>
     );
+  };
+
+  if (!userInfo && !loading) {
+    return (
+      <div className="history-auth-required">
+        <div className="auth-card">
+          <div className="auth-icon-wrapper">
+            <FaExclamationTriangle />
+          </div>
+          <h1>Login Required</h1>
+          <p>Please log in to view your activity history.</p>
+          <button onClick={() => navigate("/login")} className="auth-login-btn">
+            Login Now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleBack = () => {
+    if (userInfo?.role === "Admin") navigate("/admin/dashboard");
+    else if (userInfo?.role === "Landlord") navigate("/landlord/dashboard");
+    else navigate("/tenant/dashboard");
+  };
+
+  return (
+    <div className="user-history-container">
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+      />
+
+      <div className="history-wrapper">
+        <div className="history-header-section">
+          <div className="header-navigation">
+            <button onClick={handleBack} className="header-back-btn">
+              <FaArrowLeft /> Back to Dashboard
+            </button>
+          </div>
+          <div className="header-top">
+            <div className="header-title-group">
+              <div className="header-icon-main">
+                <FaHistory />
+              </div>
+              <div>
+                <h1 className="header-title">My Activity</h1>
+                <p className="header-subtitle">
+                  Manage and track your property journey
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleDeleteAll}
+              disabled={historyItems.length === 0 || loading}
+              className="header-clear-btn"
+            >
+              <FaTrash /> Clear All
+            </button>
+          </div>
+
+          <div className="header-controls">
+            <div className="search-box">
+              <FaSearch className="search-icon-svg" />
+              <input
+                type="text"
+                placeholder="Search history..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="filter-box">
+              <FaFilter className="filter-icon-svg" />
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="all">All Activities</option>
+                <option value="view">Views</option>
+                <option value="like">Likes</option>
+                <option value="save">Saves</option>
+                <option value="comment">Comments</option>
+                <option value="apply">Applications</option>
+                <option value="search">Searches</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="header-stats">
+            Showing <strong>{filteredAndSearchedItems.length}</strong> of{" "}
+            {historyItems.length} activities
+          </div>
+        </div>
+
+        <div className="history-list-section">
+          {loading ? (
+            <div className="history-loading">
+              <div className="loading-spinner"></div>
+              <p>Loading your history...</p>
+            </div>
+          ) : filteredAndSearchedItems.length === 0 ? (
+            <div className="history-empty">
+              <div className="empty-icon-wrapper">
+                <FaHistory />
+              </div>
+              <h3>No activities found</h3>
+              <p>
+                {searchTerm || filterType !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Your history is currently empty"}
+              </p>
+            </div>
+          ) : (
+            <div className="history-items-grid">
+              {filteredAndSearchedItems.map((item, index) =>
+                renderHistoryItem(item, index),
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default UserHistory;

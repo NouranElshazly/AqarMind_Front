@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import withDarkMode from "../components/withDarkMode";
+import { addHistory } from "../services/pyapi";
 import "../styles/ShowAllPosts.css";
 
 import {
@@ -91,25 +92,13 @@ const convertImageToBase64 = (file) => {
   });
 };
 
-// --- دالة تسجيل الهيستوري (بورت 44357) ---
-const API_HISTORY_URL = "https://localhost:44357/api/history";
+// --- دالة تسجيل الهيستوري (باستخدام pyapi) ---
 const recordHistoryEvent = async (userId, activityType, details) => {
-  if (!userId || !activityType || !details) {
-    console.warn("History not recorded: Missing data");
-    return;
-  }
+  if (!userId || !activityType || !details) return;
   try {
-    await axios.post(
-      `${API_HISTORY_URL}/${userId}`,
-      { activity_type: activityType, details: details },
-      { headers: getAuthHeaders() },
-    );
-    console.log(`History recorded: ${activityType}`, details);
+    await addHistory(userId, { activity_type: activityType, details });
   } catch (error) {
-    console.error(
-      `Failed to record history event (${activityType}):`,
-      error.response?.data || error.message,
-    );
+    console.error(`Failed to record history event (${activityType}):`, error);
   }
 };
 

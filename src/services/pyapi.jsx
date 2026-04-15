@@ -56,17 +56,16 @@ export const likeComment = (commentId) =>
 export const pinComment = (commentId) =>
   PY_API.post(`/api/comments/${commentId}/pin`);
 
-// ==================== User History ====================
+// ==================== History ====================
 export const addHistory = (userId, historyData) =>
-  PY_API.post(`/api/history/${userId}/`, historyData);
+  PY_API.post(`/api/history/${userId}`, historyData);
 
-export const getUserHistory = (userId) =>
-  PY_API.get(`/api/history/${userId}/`);
+export const getUserHistory = (userId) => PY_API.get(`/api/history/${userId}`);
 
-export const deleteAllHistory = (userId) =>
-  PY_API.delete(`/api/history/${userId}/`);
+export const deleteHistoryItem = (userId, itemId) =>
+  PY_API.delete(`/api/history/${userId}/${itemId}`);
 
-export const deleteHistoryItem = (userId, historyItemId) =>
-  PY_API.delete(`/api/history/${userId}/${historyItemId}/`);
+export const clearUserHistory = (userId) =>
+  PY_API.delete(`/api/history/${userId}`);
 
 export default PY_API;

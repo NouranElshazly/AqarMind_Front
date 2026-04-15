@@ -117,23 +117,13 @@ const convertImageToBase64 = (file) => {
   });
 };
 
-// --- دالة تسجيل الهيستوري (بدون تغيير) ---
-const API_HISTORY_URL = "http://localhost:5000/api/history";
+// --- دالة تسجيل الهيستوري (باستخدام pyapi) ---
 const recordHistoryEvent = async (userId, activityType, details) => {
-  if (!userId || !activityType || !details) {
-    return;
-  }
+  if (!userId || !activityType || !details) return;
   try {
-    await axios.post(
-      `${API_HISTORY_URL}/${userId}`,
-      { activity_type: activityType, details: details },
-      { headers: getAuthHeaders() },
-    );
+    await addHistory(userId, { activity_type: activityType, details });
   } catch (error) {
-    console.error(
-      `Failed to record history event (${activityType}):`,
-      error.response?.data || error.message,
-    );
+    console.error(`Failed to record history event (${activityType}):`, error);
   }
 };
 
