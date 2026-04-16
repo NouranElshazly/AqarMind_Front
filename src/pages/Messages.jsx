@@ -21,10 +21,10 @@ import {
 } from "react-icons/fa";
 import { IoMdSend, IoMdClose, IoMdArrowDown } from "react-icons/io";
 import { BiArrowBack } from "react-icons/bi";
-import '../styles/Messages.css';
+import "../styles/Messages.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_FLASK || "http://localhost:5000";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_FLASK || "http://localhost:5002";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5002";
 
 const getUserInfoFromToken = () => {
   const profileString = localStorage.getItem("profile");
@@ -71,30 +71,20 @@ const decodeJWT = (token) => {
 };
 
 const ConfirmationDialog = ({ message, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-    <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all animate-scaleIn">
-      <div className="flex justify-center mb-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center">
-          <FaTrash className="text-red-600 text-2xl" />
+  <div className="modal-overlay">
+    <div className="modal-container">
+      <div className="modal-icon-container">
+        <div className="modal-icon-bg">
+          <FaTrash className="modal-icon-red" />
         </div>
       </div>
-      <h3 className="text-xl font-bold text-gray-800 text-center mb-2">
-        Delete Conversation
-      </h3>
-      <p className="text-gray-600 text-center mb-8 leading-relaxed">
-        {message}
-      </p>
-      <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          className="flex-1 px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-semibold transition-all duration-200 hover:shadow-md active:scale-95"
-        >
+      <h3 className="modal-title">Delete Conversation</h3>
+      <p className="modal-description">{message}</p>
+      <div className="modal-footer">
+        <button onClick={onCancel} className="btn-cancel">
           Cancel
         </button>
-        <button
-          onClick={() => onConfirm("everyone")}
-          className="flex-1 px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl text-white font-semibold transition-all duration-200 hover:shadow-lg active:scale-95"
-        >
+        <button onClick={() => onConfirm("everyone")} className="btn-delete">
           Delete for Everyone
         </button>
       </div>
@@ -103,46 +93,43 @@ const ConfirmationDialog = ({ message, onConfirm, onCancel }) => (
 );
 
 const MediaPreviewDialog = ({ file, onSend, onCancel, fileType, duration }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-    <div className="bg-white rounded-3xl max-w-2xl w-full mx-4 shadow-2xl overflow-hidden transform transition-all animate-scaleIn">
-      <div className="flex items-center justify-between p-5 bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500">
-        <div className="flex items-center gap-3">
-          {fileType === "image" && <FaImage className="text-white text-xl" />}
-          {fileType === "video" && <FaVideo className="text-white text-xl" />}
+  <div className="modal-overlay">
+    <div className="media-preview-container">
+      <div className="media-preview-header">
+        <div className="header-content">
+          {fileType === "image" && <FaImage className="header-icon" />}
+          {fileType === "video" && <FaVideo className="header-icon" />}
           {(fileType === "audio" || fileType === "voice") && (
-            <FaMicrophone className="text-white text-xl" />
+            <FaMicrophone className="header-icon" />
           )}
-          {fileType === "file" && <FaFile className="text-white text-xl" />}
-          <h3 className="text-white font-bold text-lg">
+          {fileType === "file" && <FaFile className="header-icon" />}
+          <h3 className="header-title">
             Preview{" "}
             {fileType === "image"
               ? "Image"
               : fileType === "video"
-              ? "Video"
-              : fileType === "audio"
-              ? "Audio"
-              : fileType === "voice"
-              ? "Voice Message"
-              : "File"}
+                ? "Video"
+                : fileType === "audio"
+                  ? "Audio"
+                  : fileType === "voice"
+                    ? "Voice Message"
+                    : "File"}
           </h3>
         </div>
-        <button
-          onClick={onCancel}
-          className="text-white hover:bg-white/20 p-2 rounded-full transition-all duration-200 active:scale-90"
-        >
-          <IoMdClose className="text-2xl" />
+        <button onClick={onCancel} className="close-btn">
+          <IoMdClose />
         </button>
       </div>
-      <div className="p-6 max-h-[500px] overflow-auto bg-gradient-to-b from-gray-50 to-white">
+      <div className="media-preview-body">
         {fileType === "image" && (
           <img
             src={URL.createObjectURL(file)}
             alt="Preview"
-            className="w-full rounded-2xl shadow-lg"
+            className="preview-image"
           />
         )}
         {fileType === "video" && (
-          <video controls className="w-full rounded-2xl shadow-lg">
+          <video controls className="preview-video">
             <source
               src={URL.createObjectURL(file)}
               type={`video/${file.name.split(".").pop()}`}
@@ -150,35 +137,35 @@ const MediaPreviewDialog = ({ file, onSend, onCancel, fileType, duration }) => (
           </video>
         )}
         {(fileType === "audio" || fileType === "voice") && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-teal-50 via-emerald-50 to-cyan-50 rounded-2xl border border-teal-100 shadow-sm">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
-                <FaMicrophone className="text-white text-xl" />
+          <div className="voice-preview-container">
+            <div className="voice-preview-card">
+              <div className="voice-icon-bg">
+                <FaMicrophone className="voice-icon" />
               </div>
               <div>
-                <p className="font-bold text-gray-800">Voice Message</p>
+                <p className="voice-info-title">Voice Message</p>
                 {duration > 0 && (
-                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                  <p className="voice-duration">
+                    <span className="duration-dot"></span>
                     Duration: {duration} seconds
                   </p>
                 )}
               </div>
             </div>
-            <audio controls className="w-full rounded-xl shadow-sm">
+            <audio controls className="audio-player">
               <source src={URL.createObjectURL(file)} type="audio/webm" />
             </audio>
           </div>
         )}
         {fileType === "file" && (
-          <div className="flex items-center gap-5 p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200 shadow-sm">
-            <div className="w-16 h-16 bg-gradient-to-br from-gray-300 to-gray-400 rounded-2xl flex items-center justify-center shadow-md">
-              <FaFile className="text-white text-2xl" />
+          <div className="file-preview-card">
+            <div className="file-icon-bg">
+              <FaFile className="file-icon" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-800 truncate">{file.name}</p>
-              <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
-                <span className="px-2 py-0.5 bg-gray-200 rounded-full text-xs font-medium">
+            <div className="file-info-details">
+              <p className="file-info-name">{file.name}</p>
+              <p className="file-info-size">
+                <span className="size-badge">
                   {(file.size / (1024 * 1024)).toFixed(2)} MB
                 </span>
               </p>
@@ -186,18 +173,12 @@ const MediaPreviewDialog = ({ file, onSend, onCancel, fileType, duration }) => (
           </div>
         )}
       </div>
-      <div className="flex gap-3 p-5 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
-        <button
-          onClick={onCancel}
-          className="flex-1 px-5 py-3 bg-white hover:bg-gray-100 rounded-xl text-gray-700 font-semibold transition-all duration-200 hover:shadow-md active:scale-95 border border-gray-200"
-        >
+      <div className="media-preview-footer">
+        <button onClick={onCancel} className="btn-cancel">
           Cancel
         </button>
-        <button
-          onClick={onSend}
-          className="flex-1 px-5 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 rounded-xl text-white font-semibold transition-all duration-200 hover:shadow-lg active:scale-95 flex items-center justify-center gap-2"
-        >
-          <IoMdSend className="text-lg" />
+        <button onClick={onSend} className="btn-primary">
+          <IoMdSend />
           Send
         </button>
       </div>
@@ -206,58 +187,44 @@ const MediaPreviewDialog = ({ file, onSend, onCancel, fileType, duration }) => (
 );
 
 const VoiceRecorderDialog = ({ onStop, onCancel, recordingTime }) => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-    <div className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-2xl transform transition-all animate-scaleIn">
-      <div className="p-8 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center relative">
-            <FaMicrophone className="text-red-600 text-3xl" />
-            <span className="absolute inset-0 rounded-full bg-red-500 opacity-20 animate-ping"></span>
+  <div className="modal-overlay">
+    <div className="modal-container">
+      <div className="voice-recorder-body">
+        <div className="recorder-icon-container">
+          <div className="recorder-icon-bg">
+            <FaMicrophone className="recorder-icon" />
+            <span className="recorder-ping"></span>
           </div>
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-6">
-          Recording in Progress
-        </h3>
-        <div className="flex justify-center items-center gap-2 my-8 h-16">
+        <h3 className="recorder-title">Recording...</h3>
+        <div className="visualizer-container">
           {[...Array(7)].map((_, i) => (
             <div
               key={i}
-              className="w-1.5 bg-gradient-to-t from-teal-500 to-emerald-500 rounded-full animate-pulse shadow-sm"
+              className="visualizer-bar"
               style={{
-                height: `${20 + Math.sin(i) * 20}px`,
                 animationDelay: `${i * 0.15}s`,
-                animationDuration: "0.8s",
               }}
             />
           ))}
         </div>
-        <div className="text-5xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent mb-3">
+        <div className="recorder-timer">
           {Math.floor(recordingTime / 60)}:
           {(recordingTime % 60).toString().padStart(2, "0")}
         </div>
-        <p className="text-sm text-gray-500 mb-8">
-          Click stop button to finish recording
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-semibold transition-all duration-200 hover:shadow-md active:scale-95"
-          >
-            <IoMdClose className="text-lg" /> Cancel
+        <p className="recorder-hint">Click stop button to finish recording</p>
+        <div className="modal-footer">
+          <button onClick={onCancel} className="btn-cancel">
+            <IoMdClose /> Cancel
           </button>
-          <button
-            onClick={onStop}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl text-white font-semibold transition-all duration-200 hover:shadow-lg active:scale-95"
-          >
-            <FaStop className="text-lg" /> Stop
+          <button onClick={onStop} className="btn-stop">
+            <FaStop /> Stop
           </button>
         </div>
       </div>
     </div>
   </div>
 );
-
-// Reply Preview Component
 
 // Reply Preview Component - Updated with click handler
 const ReplyPreview = ({ replyTo, onCancel, onScrollToMessage }) => {
@@ -267,7 +234,6 @@ const ReplyPreview = ({ replyTo, onCancel, onScrollToMessage }) => {
     if (replyTo.messageType === "text") {
       return replyTo.content;
     }
-
     switch (replyTo.messageType) {
       case "image":
         return "🖼️ Image";
@@ -282,32 +248,28 @@ const ReplyPreview = ({ replyTo, onCancel, onScrollToMessage }) => {
   };
 
   return (
-    <div className="bg-gray-50 border-r-4 border-teal-500 rounded-lg p-3 mb-3 mx-4">
-      <div className="flex justify-between items-start mb-1">
-        <div
-          className="flex items-center gap-2 cursor-pointer hover:text-teal-700 transition-colors"
-          onClick={() => onScrollToMessage(replyTo.messageId)}
-        >
-          <FaReply className="text-teal-500 text-sm" />
-          <span className="text-sm font-medium text-teal-600">
-            {replyTo.senderId === localStorage.getItem("userId")
-              ? "You"
-              : replyTo.senderName}
-          </span>
+    <div className="input-reply-wrapper">
+      <div className="input-reply-container">
+        <div className="reply-preview-accent"></div>
+        <div className="input-reply-body">
+          <div className="input-reply-header">
+            <span className="input-reply-name">
+              {replyTo.senderId === localStorage.getItem("userId")
+                ? "You"
+                : replyTo.senderName}
+            </span>
+            <button onClick={onCancel} className="input-reply-close">
+              <IoMdClose />
+            </button>
+          </div>
+          <p
+            className="input-reply-text"
+            onClick={() => onScrollToMessage(replyTo.messageId)}
+          >
+            {renderReplyContent()}
+          </p>
         </div>
-        <button
-          onClick={onCancel}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <IoMdClose className="text-lg" />
-        </button>
       </div>
-      <p
-        className="text-sm text-gray-600 truncate cursor-pointer hover:text-gray-800 transition-colors"
-        onClick={() => onScrollToMessage(replyTo.messageId)}
-      >
-        {renderReplyContent()}
-      </p>
     </div>
   );
 };
@@ -323,24 +285,19 @@ const EditMessageDialog = ({ message, onSave, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-      <div className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-2xl transform transition-all animate-scaleIn">
-        <div className="p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">
-            Edit Message
-          </h3>
+    <div className="modal-overlay">
+      <div className="modal-container">
+        <div className="edit-modal-body">
+          <h3 className="edit-modal-title">Edit Message</h3>
           <textarea
             value={editedContent}
             onChange={(e) => setEditedContent(e.target.value)}
-            className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            className="edit-textarea"
             placeholder="Edit your message..."
             autoFocus
           />
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={onCancel}
-              className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-semibold transition-all duration-200"
-            >
+          <div className="edit-modal-footer">
+            <button onClick={onCancel} className="btn-cancel">
               Cancel
             </button>
             <button
@@ -348,7 +305,7 @@ const EditMessageDialog = ({ message, onSave, onCancel }) => {
               disabled={
                 !editedContent.trim() || editedContent === message.content
               }
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold transition-all duration-200"
+              className="btn-save"
             >
               Save
             </button>
@@ -401,93 +358,86 @@ const MessageMenu = ({
       ref={menuRef}
       role="menu"
       aria-label="Message actions"
-      className={`absolute ${position === "right" ? "right-0" : "left-0"} ${
-        verticalPos === "below" ? "top-full mt-2" : "bottom-full mb-2"
-      }
-      bg-white/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200 overflow-hidden
-      z-50 min-w-48 max-w-[90vw] transform transition-all duration-150`}
+      className="message-menu-container"
       style={{
-        boxShadow:
-          "0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04)",
+        [position === "right" ? "right" : "left"]: 0,
+        [verticalPos === "below" ? "top" : "bottom"]: "100%",
+        [verticalPos === "below" ? "marginTop" : "marginBottom"]: "0.5rem",
       }}
     >
       {/* Caret arrow */}
       <span
-        className={`absolute ${position === "right" ? "right-6" : "left-6"} ${
-          verticalPos === "below" ? "-top-2" : "-bottom-2"
-        } w-0 h-0 
-        border-l-8 border-r-8 ${
-          verticalPos === "below" ? "border-b-8" : "border-t-8"
-        } border-l-transparent border-r-transparent ${
-          verticalPos === "below" ? "border-b-white" : "border-t-white"
-        } drop-shadow-sm`}
+        className={`menu-caret ${
+          verticalPos === "below" ? "menu-caret-below" : "menu-caret-above"
+        }`}
+        style={{
+          [position === "right" ? "right" : "left"]: "1.5rem",
+        }}
       />
 
-      <div className="divide-y divide-gray-100">
+      <div className="menu-list">
         {/* Reply */}
-        <button
-          onClick={onReply}
-          role="menuitem"
-          className="w-full px-4 py-2.5 text-sm text-left flex items-center gap-3 hover:bg-gray-50 active:scale-[0.99] transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-teal-100 flex items-center justify-center">
-            <FaReply className="text-teal-600 text-sm" />
+        <button onClick={onReply} role="menuitem" className="menu-item">
+          <div className="menu-item-icon-bg bg-teal-light">
+            <FaReply className="text-teal-dark" />
           </div>
-          <div>
-            <div className="font-medium text-gray-800">Reply</div>
-            <div className="text-xs text-gray-500">Reply to this message</div>
+          <div className="menu-item-info">
+            <div className="menu-item-title">Reply</div>
+            <div className="menu-item-subtitle">Reply to this message</div>
           </div>
         </button>
 
+        <div className="menu-divider" />
+
         {/* Edit (only mine + text) */}
         {isMyMessage && message.messageType === "text" && (
-          <button
-            onClick={onEdit}
-            role="menuitem"
-            className="w-full px-4 py-2.5 text-sm text-left flex items-center gap-3 hover:bg-gray-50 active:scale-[0.99] transition-colors"
-          >
-            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
-              <FaEdit className="text-blue-600 text-sm" />
-            </div>
-            <div>
-              <div className="font-medium text-gray-800">Edit</div>
-              <div className="text-xs text-gray-500">Edit your message</div>
-            </div>
-          </button>
+          <>
+            <button onClick={onEdit} role="menuitem" className="menu-item">
+              <div className="menu-item-icon-bg bg-blue-light">
+                <FaEdit className="text-blue-dark" />
+              </div>
+              <div className="menu-item-info">
+                <div className="menu-item-title">Edit</div>
+                <div className="menu-item-subtitle">Edit your message</div>
+              </div>
+            </button>
+            <div className="menu-divider" />
+          </>
         )}
 
         {/* Delete for me */}
         <button
           onClick={() => onDelete("me")}
           role="menuitem"
-          className="w-full px-4 py-2.5 text-sm text-left flex items-center gap-3 hover:bg-gray-50 active:scale-[0.99] transition-colors"
+          className="menu-item"
         >
-          <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center">
-            <FaTrash className="text-orange-600 text-sm" />
+          <div className="menu-item-icon-bg bg-orange-light">
+            <FaTrash className="text-orange-dark" />
           </div>
-          <div>
-            <div className="font-medium text-gray-800">Delete for me</div>
-            <div className="text-xs text-gray-500">Remove from your view</div>
+          <div className="menu-item-info">
+            <div className="menu-item-title">Delete for me</div>
+            <div className="menu-item-subtitle">Remove from your view</div>
           </div>
         </button>
 
         {/* Delete for everyone (only mine) */}
         {isMyMessage && (
-          <button
-            onClick={() => onDelete("everyone")}
-            role="menuitem"
-            className="w-full px-4 py-2.5 text-sm text-left flex items-center gap-3 hover:bg-gray-50 active:scale-[0.99] transition-colors"
-          >
-            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
-              <FaTrash className="text-red-600 text-sm" />
-            </div>
-            <div>
-              <div className="font-medium text-gray-800">
-                Delete for everyone
+          <>
+            <div className="menu-divider" />
+            <button
+              onClick={() => onDelete("everyone")}
+              role="menuitem"
+              className="menu-item"
+            >
+              <div className="menu-item-icon-bg bg-red-light">
+                <FaTrash className="text-red-dark" />
               </div>
-              <div className="text-xs text-gray-500">Remove for all users</div>
-            </div>
-          </button>
+              <div className="menu-item-info">
+                <div className="menu-item-title">Delete for everyone</div>
+                <div className="menu-item-subtitle">Remove for all users</div>
+              </div>
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -520,10 +470,12 @@ const Messages = () => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [userName, setUserName] = useState("");
   const [userNamesMap, setUserNamesMap] = useState({});
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // New states for reply and edit features
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
+  const [editContent, setEditContent] = useState("");
   const [showEditDialog, setShowEditDialog] = useState(false);
 
   const navigate = useNavigate();
@@ -546,7 +498,7 @@ const Messages = () => {
   // Function to scroll to a specific message
   const scrollToMessage = (messageId) => {
     const messageElement = document.querySelector(
-      `[data-message-id="${messageId}"]`
+      `[data-message-id="${messageId}"]`,
     );
     if (messageElement) {
       messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -624,83 +576,93 @@ const Messages = () => {
   };
 
   // Scroll to bottom function
-  const scrollToBottom = (behavior = "smooth") => {
+  const scrollToBottom = (behavior = "smooth", force = false) => {
     if (messagesContainerRef.current) {
-      const { scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isNearBottom =
-        scrollHeight - clientHeight - messagesContainerRef.current.scrollTop <
-        100;
+      const container = messagesContainerRef.current;
+      const { scrollHeight, clientHeight, scrollTop } = container;
+      // Show if we're forced or already near the bottom
+      const isNearBottom = scrollHeight - clientHeight - scrollTop < 250;
 
-      if (isNearBottom) {
-        messagesEndRef.current?.scrollIntoView({ behavior });
+      if (force || isNearBottom) {
+        requestAnimationFrame(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: behavior,
+          });
+        });
       }
     }
   };
 
   // Jump to the latest message (bottom) smoothly
-  const jumpToLatest = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+  const jumpToLatest = () => scrollToBottom("smooth", true);
+
+  // أضف هذه الدالة بعد الدوال المساعدة الأخرى
+  const formatMessageDate = (timestamp) => {
+    if (!timestamp) return "";
+
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // إعادة تعيين الوقت للمقارنة
+    const messageDay = new Date(
+      messageDate.getFullYear(),
+      messageDate.getMonth(),
+      messageDate.getDate(),
+    );
+    const todayDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const yesterdayDay = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate(),
+    );
+
+    if (messageDay.getTime() === todayDay.getTime()) {
+      return "Today";
+    } else if (messageDay.getTime() === yesterdayDay.getTime()) {
+      return "Yesterday";
     } else {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      return messageDate.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
     }
   };
 
+  // دالة لتجميع الرسائل حسب التاريخ
+  const groupMessagesByDate = (messages) => {
+    const groups = {};
 
-  // أضف هذه الدالة بعد الدوال المساعدة الأخرى
-const formatMessageDate = (timestamp) => {
-  if (!timestamp) return '';
-  
-  const messageDate = new Date(timestamp);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  // إعادة تعيين الوقت للمقارنة
-  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
-  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const yesterdayDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
-  
-  if (messageDay.getTime() === todayDay.getTime()) {
-    return 'Today';
-  } else if (messageDay.getTime() === yesterdayDay.getTime()) {
-    return 'Yesterday';
-  } else {
-    return messageDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    messages.forEach((message) => {
+      const date = new Date(message.timestamp);
+      const dateKey = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+      ).toISOString();
+
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(message);
     });
-  }
-};
 
-// دالة لتجميع الرسائل حسب التاريخ
-const groupMessagesByDate = (messages) => {
-  const groups = {};
-  
-  messages.forEach(message => {
-    const date = new Date(message.timestamp);
-    const dateKey = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString();
-    
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
-    }
-    groups[dateKey].push(message);
-  });
-  
-  return groups;
-};
-
+    return groups;
+  };
 
   const fetchConversations = async () => {
     if (!userId) return;
     try {
       const res = await axios.get(
-        `${API_BASE}/api/Message/${userId}/conversations`
+        `${API_BASE}/api/Message/${userId}/conversations`,
       );
       const conversationsData = res.data || [];
       console.log("Raw API conversations response:", conversationsData);
@@ -715,7 +677,7 @@ const groupMessagesByDate = (messages) => {
       setUserNamesMap((prev) => ({ ...prev, ...nameUpdates }));
       console.log(
         "Data being set to conversations state:",
-        updatedConversations
+        updatedConversations,
       );
 
       setConversations(updatedConversations);
@@ -731,7 +693,7 @@ const groupMessagesByDate = (messages) => {
     if (!rid || !userId) return;
     try {
       const res = await axios.get(
-        `${API_BASE}/api/Message/${userId}/conversation/${rid}`
+        `${API_BASE}/api/Message/${userId}/conversation/${rid}`,
       );
       setMessages(res.data || []);
       if (res.data?.length > 0) {
@@ -782,7 +744,7 @@ const groupMessagesByDate = (messages) => {
         const sortedConversations = [...convs].sort(
           (a, b) =>
             new Date(b.lastMessage?.timestamp || b.createdAt || 0) -
-            new Date(a.lastMessage?.timestamp || a.createdAt || 0)
+            new Date(a.lastMessage?.timestamp || a.createdAt || 0),
         );
 
         const latestConv = sortedConversations[0];
@@ -820,7 +782,7 @@ const groupMessagesByDate = (messages) => {
         if (String(message.receiverId) === String(userId)) {
           axios
             .post(
-              `${API_BASE}/api/Message/${userId}/mark-read/${message.senderId}`
+              `${API_BASE}/api/Message/${userId}/mark-read/${message.senderId}`,
             )
             .catch(console.error);
         }
@@ -839,7 +801,7 @@ const groupMessagesByDate = (messages) => {
               };
             }
             return msg;
-          })
+          }),
         );
         setTimeout(() => fetchConversations(), 100);
       }
@@ -856,8 +818,8 @@ const groupMessagesByDate = (messages) => {
         prev.map((m) =>
           String(m.id || m._id) === String(updatedMessage.id)
             ? updatedMessage
-            : m
-        )
+            : m,
+        ),
       );
       fetchConversations();
     });
@@ -868,8 +830,8 @@ const groupMessagesByDate = (messages) => {
         prev.map((m) =>
           String(m.id || m._id) === String(updatedMessage.id)
             ? updatedMessage
-            : m
-        )
+            : m,
+        ),
       );
       fetchConversations();
     });
@@ -898,7 +860,7 @@ const groupMessagesByDate = (messages) => {
     s.on("conversation_deleted", (data) => {
       if (data) {
         setConversations((prev) =>
-          prev.filter((conv) => conv.conversationId !== data.conversationId)
+          prev.filter((conv) => conv.conversationId !== data.conversationId),
         );
         if (selectedConversation?.conversationId === data.conversationId) {
           setReceiverId(null);
@@ -955,7 +917,7 @@ const groupMessagesByDate = (messages) => {
   useEffect(() => {
     if (receiverId) {
       const sel = conversations.find(
-        (c) => String(c.userId) === String(receiverId)
+        (c) => String(c.userId) === String(receiverId),
       );
       setSelectedConversation(sel || null);
       fetchMessages(receiverId);
@@ -973,29 +935,59 @@ const groupMessagesByDate = (messages) => {
     };
   }, [receiverId, socket, conversations, socketConnected]);
 
+  // Track previous messages length to decide whether to scroll
+  const prevMessagesLengthRef = useRef(0);
+
   // Force scroll to bottom on initial load of messages in a conversation
   useEffect(() => {
-    if (!selectedConversation || messages.length === 0) return;
+    if (!selectedConversation || messages.length === 0) {
+      prevMessagesLengthRef.current = 0;
+      return;
+    }
     const container = messagesContainerRef.current;
     if (!container) return;
+
+    const isNewMessageAdded = messages.length > prevMessagesLengthRef.current;
+    const lastMessage = messages[messages.length - 1];
+    const isMyMessage = String(lastMessage?.senderId) === String(userId);
 
     if (!didInitialScrollRef.current) {
       // Force-scroll to the bottom without animation on first load
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
       });
       didInitialScrollRef.current = true;
-    } else {
-      // For subsequent updates, keep your near-bottom behavior
-      scrollToBottom("smooth");
+    } else if (isNewMessageAdded) {
+      // For new messages, only scroll if it's my own message or I'm already at the bottom
+      scrollToBottom("smooth", isMyMessage);
     }
-  }, [selectedConversation, messages]);
+
+    prevMessagesLengthRef.current = messages.length;
+  }, [selectedConversation, messages, userId]);
 
   // Reset the initial scroll flag when switching conversations
   useEffect(() => {
     didInitialScrollRef.current = false;
+    setShowScrollButton(false);
   }, [receiverId, selectedConversation]);
+
+  // Handle scroll events to show/hide the scroll down button
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // Show button if we are more than 300px away from the bottom
+      const isAwayFromBottom = scrollHeight - clientHeight - scrollTop > 300;
+      setShowScrollButton(isAwayFromBottom);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [receiverId]);
 
   const handleTyping = (typing) => {
     if (!socket || !socketConnected || !receiverId) return;
@@ -1060,7 +1052,7 @@ const groupMessagesByDate = (messages) => {
         : null,
     };
     setMessages((prev) => [...prev, optimisticMessage]);
-    scrollToBottom();
+    scrollToBottom("smooth", true);
 
     try {
       const payload = {
@@ -1077,11 +1069,11 @@ const groupMessagesByDate = (messages) => {
 
       const res = await axios.post(
         `${API_BASE}/api/Message/${userId}/create-message/${receiverId}`,
-        payload
+        payload,
       );
 
       setMessages((prev) =>
-        prev.map((msg) => (msg.id === tempId ? res.data : msg))
+        prev.map((msg) => (msg.id === tempId ? res.data : msg)),
       );
       fetchConversations();
 
@@ -1121,7 +1113,7 @@ const groupMessagesByDate = (messages) => {
       message.messageType === "text"
     ) {
       setEditingMessage(message);
-      setShowEditDialog(true);
+      setEditContent(message.content);
       setActiveMessageMenu(null);
     }
   };
@@ -1135,7 +1127,7 @@ const groupMessagesByDate = (messages) => {
         `${API_BASE}/api/message/${
           editingMessage.id || editingMessage._id
         }/edit?userId=${userId}`,
-        { content: newContent }
+        { content: newContent },
       );
 
       // Update local state
@@ -1149,12 +1141,12 @@ const groupMessagesByDate = (messages) => {
                 isEdited: true,
                 editedAt: new Date().toISOString(),
               }
-            : msg
-        )
+            : msg,
+        ),
       );
 
-      setShowEditDialog(false);
       setEditingMessage(null);
+      setEditContent("");
     } catch (err) {
       console.error("Edit message error", err);
       alert("Failed to edit message");
@@ -1209,7 +1201,7 @@ const groupMessagesByDate = (messages) => {
 
       await axios.post(
         `${API_BASE}/api/Message/${userId}/create-message/${receiverId}`,
-        payload
+        payload,
       );
 
       // Clear reply after sending
@@ -1264,7 +1256,7 @@ const groupMessagesByDate = (messages) => {
         const audioFile = new File(
           [audioBlob],
           `voice-message-${Date.now()}.webm`,
-          { type: "audio/webm" }
+          { type: "audio/webm" },
         );
         setSelectedFile(audioFile);
         setFileType("voice");
@@ -1275,7 +1267,7 @@ const groupMessagesByDate = (messages) => {
     } catch (err) {
       console.error("Error starting recording:", err);
       alert(
-        "Cannot access microphone. Please make sure you have given permission."
+        "Cannot access microphone. Please make sure you have given permission.",
       );
     }
   };
@@ -1301,11 +1293,11 @@ const groupMessagesByDate = (messages) => {
     setActiveMessageMenu(null);
     try {
       await axios.delete(
-        `${API_BASE}/api/message/${messageId}?userId=${userId}&scope=${scope}`
+        `${API_BASE}/api/message/${messageId}?userId=${userId}&scope=${scope}`,
       );
       if (scope === "me") {
         setMessages((prev) =>
-          prev.filter((msg) => String(msg.id || msg._id) !== String(messageId))
+          prev.filter((msg) => String(msg.id || msg._id) !== String(messageId)),
         );
       }
     } catch (err) {
@@ -1318,7 +1310,7 @@ const groupMessagesByDate = (messages) => {
     const convId = conversationToDelete.conversationId;
     try {
       await axios.delete(
-        `${API_BASE}/api/conversation/${convId}?userId=${userId}&scope=${scope}`
+        `${API_BASE}/api/conversation/${convId}?userId=${userId}&scope=${scope}`,
       );
     } catch (err) {
       console.error("Delete conversation error", err);
@@ -1346,7 +1338,7 @@ const groupMessagesByDate = (messages) => {
   };
 
   const filteredConversations = conversations.filter((conv) =>
-    (conv.userName || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.userName || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const formatLastSeen = (timestamp) => {
@@ -1375,9 +1367,9 @@ const groupMessagesByDate = (messages) => {
     return (
       <span>
         {msg.isRead ? (
-          <FaCheckDouble className="text-blue-500 text-xs" />
+          <FaCheckDouble className="read-receipt" />
         ) : (
-          <FaCheck className="text-gray-400 text-xs" />
+          <FaCheck className="status-icon-gray" />
         )}
       </span>
     );
@@ -1387,15 +1379,15 @@ const groupMessagesByDate = (messages) => {
     if (!contactStatus) return "Loading...";
     if (isTyping && typingUserId === receiverId) {
       return (
-        <span className="flex items-center gap-1 text-teal-600">
-          <span className="flex gap-1">
-            <span className="w-1 h-1 bg-teal-600 rounded-full animate-bounce"></span>
+        <span className="flex-row-center-gap-1 text-navy">
+          <span className="flex-row-center-gap-1">
+            <span className="w-1 h-1 bg-navy rounded-full animate-bounce"></span>
             <span
-              className="w-1 h-1 bg-teal-600 rounded-full animate-bounce"
+              className="w-1 h-1 bg-navy rounded-full animate-bounce"
               style={{ animationDelay: "0.1s" }}
             ></span>
             <span
-              className="w-1 h-1 bg-teal-600 rounded-full animate-bounce"
+              className="w-1 h-1 bg-navy rounded-full animate-bounce"
               style={{ animationDelay: "0.2s" }}
             ></span>
           </span>
@@ -1411,7 +1403,7 @@ const groupMessagesByDate = (messages) => {
   const renderMediaMessage = (msg) => {
     if (msg.isDeleted) {
       return (
-        <div className="flex items-center gap-2 text-gray-500 italic">
+        <div className="flex-row-center-gap-2 text-gray-500 italic">
           <FaBan />
           <span>This message was deleted</span>
         </div>
@@ -1444,19 +1436,19 @@ const groupMessagesByDate = (messages) => {
 
       return (
         <div
-          className="bg-gray-100 border-r-3 border-teal-400 rounded-lg p-2 mb-2 text-sm cursor-pointer hover:bg-gray-200 transition-colors"
+          className="reply-preview-box"
           onClick={() => reply.messageId && scrollToMessage(reply.messageId)}
           title="Jump to original message"
         >
-          <div className="flex items-center gap-1 mb-1">
-            <FaReply className="text-teal-500 text-xs" />
-            <span className="font-medium text-teal-600 text-xs">
+          <div className="reply-preview-accent"></div>
+          <div className="reply-preview-content">
+            <div className="reply-preview-name">
               {reply.senderId === userId ? "You" : reply.senderName}
-            </span>
+            </div>
+            <p className="reply-preview-text truncate">
+              {renderReplyContent()}
+            </p>
           </div>
-          <p className="text-gray-600 text-xs truncate">
-            {renderReplyContent()}
-          </p>
         </div>
       );
     };
@@ -1469,11 +1461,46 @@ const groupMessagesByDate = (messages) => {
       return null;
     };
 
+    const isEditing =
+      editingMessage &&
+      String(editingMessage.id || editingMessage._id) ===
+        String(msg.id || msg._id);
+
+    if (isEditing) {
+      return (
+        <div className="inline-edit-container">
+          <textarea
+            className="inline-edit-textarea"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            autoFocus
+          />
+          <div className="inline-edit-actions">
+            <button
+              className="btn-inline-cancel"
+              onClick={() => {
+                setEditingMessage(null);
+                setEditContent("");
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-inline-save"
+              onClick={() => handleSaveEdit(editContent)}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (msg.messageType === "text" || !msg.file_url) {
       return (
         <div>
           {renderReplyPreview()}
-          <div className="flex items-center">
+          <div className="flex-row-center">
             <span>{msg.content}</span>
             {renderEditedIndicator()}
           </div>
@@ -1489,7 +1516,7 @@ const groupMessagesByDate = (messages) => {
             <img
               src={`${API_BASE}${msg.file_url}`}
               alt="Image"
-              className="max-w-xs md:max-w-sm rounded-lg cursor-pointer"
+              className="chat-image-attachment"
               onClick={() =>
                 window.open(`${API_BASE}${msg.file_url}`, "_blank")
               }
@@ -1500,7 +1527,7 @@ const groupMessagesByDate = (messages) => {
         return (
           <div>
             {renderReplyPreview()}
-            <video controls className="max-w-xs md:max-w-sm rounded-lg">
+            <video controls className="chat-video-attachment">
               <source src={`${API_BASE}${msg.file_url}`} />
             </video>
           </div>
@@ -1511,8 +1538,8 @@ const groupMessagesByDate = (messages) => {
         return (
           <div className="w-60 md:w-72">
             {renderReplyPreview()}
-            <div className="flex items-center gap-3 p-2">
-              <FaMicrophone className="text-teal-600 text-lg" />
+            <div className="flex-row-center-gap-3 p-2">
+              <FaMicrophone className="text-navy text-lg" />
               <div className="flex-1">
                 <span className="text-sm font-medium">Voice Message</span>
                 {duration > 0 && (
@@ -1534,7 +1561,7 @@ const groupMessagesByDate = (messages) => {
             <a
               href={`${API_BASE}${msg.file_url}`}
               download
-              className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-row-center-gap-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <FaFile className="text-gray-500 text-2xl" />
               <div>
@@ -1584,35 +1611,17 @@ const groupMessagesByDate = (messages) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-teal-50 to-emerald-50">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-xl text-teal-700 font-semibold">Loading...</p>
+      <div className="loading-screen">
+        <div className="loading-screen-content">
+          <div className="loading-screen-spinner"></div>
+          <p className="loading-screen-text">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen max-w-7xl mx-auto bg-white shadow-2xl overflow-hidden">
-      <style jsx>{`
-        .highlight-message {
-          background-color: rgba(59, 130, 246, 0.1) !important;
-          border: 2px solid rgba(59, 130, 246, 0.3) !important;
-          border-radius: 8px !important;
-          animation: highlight-pulse 2s ease-in-out;
-        }
-
-        @keyframes highlight-pulse {
-          0%,
-          100% {
-            background-color: rgba(59, 130, 246, 0.1);
-          }
-          50% {
-            background-color: rgba(59, 130, 246, 0.2);
-          }
-        }
-      `}</style>
+    <div className="messages-page-container">
       {conversationToDelete && (
         <ConfirmationDialog
           message={`Are you sure you want to delete conversation with ${conversationToDelete.userName}?`}
@@ -1653,55 +1662,47 @@ const groupMessagesByDate = (messages) => {
       )}
 
       <div
-        className={`w-full md:w-96 border-r border-gray-200 flex flex-col bg-white transition-transform duration-300 ${
-          receiverId ? "hidden md:flex" : "flex"
+        className={`sidebar-container ${
+          receiverId ? "hidden-on-mobile" : "is-visible"
         }`}
       >
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-500 to-emerald-500 shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg ring-2 ring-white/30">
+        <div className="sidebar-top-bar">
+          <div className="sidebar-user-profile">
+            <div className="sidebar-avatar-circle">
               <FaUser className="text-white text-lg" />
             </div>
-            <span className="text-white font-semibold">{userName}</span>
+            <span className="sidebar-user-name-text">{userName}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="connection-status-chip">
             <span
-              className={`text-xs font-medium px-2 py-1 rounded-full ${
-                socketConnected
-                  ? "bg-green-400/20 text-white"
-                  : "bg-red-400/20 text-white"
+              className={`status-indicator-dot ${
+                socketConnected ? "online" : "offline"
               }`}
-            >
-              <span
-                className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                  socketConnected ? "bg-green-400" : "bg-red-400"
-                } animate-pulse`}
-              ></span>
-              {socketConnected ? "Connected" : "Disconnected"}
-            </span>
+            ></span>
+            {socketConnected ? "Connected" : "Disconnected"}
           </div>
         </div>
-        <div className="p-3 bg-gray-50 border-b border-gray-200">
-          <div className="flex items-center bg-white rounded-xl px-4 py-2.5 shadow-sm border border-gray-200 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent transition-all">
-            <FaSearch className="text-gray-400 mr-3 text-sm" />
+        <div className="sidebar-search-area">
+          <div className="search-input-wrapper">
+            <FaSearch className="search-icon-small" />
             <input
               type="text"
               placeholder="Search or start new conversation"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 outline-none text-sm bg-transparent"
+              className="sidebar-search-input"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white">
+        <div className="conversations-scroll-list">
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => (
               <div
                 key={conv.conversationId}
-                className={`flex items-center px-4 py-3 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:bg-gradient-to-r hover:from-teal-50 hover:to-emerald-50 ${
+                className={`conversation-entry ${
                   selectedConversation?.userId === conv.userId
-                    ? "bg-gradient-to-r from-teal-50 to-emerald-50 border-l-4 border-l-teal-500"
+                    ? "is-active"
                     : ""
                 }`}
                 onClick={() => {
@@ -1710,72 +1711,68 @@ const groupMessagesByDate = (messages) => {
                   setReplyingTo(null); // Clear reply when switching conversations
                 }}
               >
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-md mr-3">
+                <div className="entry-avatar-wrapper">
+                  <div className="entry-avatar-circle">
                     <FaUser className="text-white text-lg" />
                   </div>
-                  {conv.isOnline && (
-                    <div className="absolute bottom-0 right-2 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
+                  {conv.isOnline && <div className="entry-online-badge"></div>}
                   {conv.unreadCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white">
-                      <span className="text-white text-xs font-bold">
+                    <div className="entry-unread-badge">
+                      <span className="unread-count-text">
                         {conv.unreadCount}
                       </span>
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-gray-800 truncate text-sm">
-                      {conv.userName}
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
+                <div className="entry-details">
+                  <div className="entry-header-row">
+                    <span className="entry-user-name">{conv.userName}</span>
+                    <span className="entry-time-text">
                       {conv.lastMessage &&
                         new Date(conv.lastMessage.timestamp).toLocaleTimeString(
                           [],
                           {
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
+                          },
                         )}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="entry-preview-row">
                     {conv.lastMessage && (
                       <>
                         {conv.lastMessage.senderId === Number(userId) && (
-                          <span className="flex-shrink-0">
+                          <span className="message-status">
                             {renderMessageStatus(conv.lastMessage)}
                           </span>
                         )}
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="entry-preview-text">
                           {renderPreviewText(conv)}
                         </p>
                       </>
                     )}
                   </div>
                 </div>
-                <div
-                  className="ml-2 p-2 hover:bg-red-100 rounded-full transition-colors"
+                <button
+                  className="entry-delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     setConversationToDelete(conv);
                   }}
                 >
-                  <FaTrash className="text-red-500 text-sm cursor-pointer" />
-                </div>
+                  <FaTrash className="delete-icon-red" />
+                </button>
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-4">
+            <div className="empty-conversations">
+              <div className="empty-icon-wrapper">
                 <FaSearch className="text-gray-400 text-3xl" />
               </div>
-              <p className="text-gray-500 font-medium">
+              <p className="empty-title-text">
                 {searchTerm ? "No matching conversations" : "No conversations"}
               </p>
-              <p className="text-gray-400 text-sm mt-2">
+              <p className="empty-subtitle-text">
                 {searchTerm
                   ? "Try a different search"
                   : "Start a new conversation"}
@@ -1784,55 +1781,56 @@ const groupMessagesByDate = (messages) => {
           )}
         </div>
       </div>
+
       {receiverId ? (
-        <div className="flex-1 flex flex-col bg-gradient-to-b from-gray-50 to-gray-100">
-          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm">
-            <div className="flex items-center gap-3">
+        <div className="chat-main-container is-visible">
+          <div className="chat-top-header">
+            <div className="chat-user-meta">
               <BiArrowBack
-                className="text-gray-600 text-2xl cursor-pointer hover:text-teal-600 transition-colors md:hidden"
+                className="chat-back-icon"
                 onClick={() => {
                   setReceiverId(null);
                   setSelectedConversation(null);
                   setReplyingTo(null); // Clear reply when leaving conversation
                 }}
               />
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-md">
+              <div className="chat-header-avatar-wrapper">
+                <div className="chat-header-avatar-circle">
                   <FaUser className="text-white" />
                 </div>
                 {contactStatus?.isOnline && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                  <div className="chat-header-online-dot"></div>
                 )}
               </div>
-              <div>
-                <span className="block font-semibold text-gray-800">
+              <div className="chat-header-user-info">
+                <span className="chat-header-name">
                   {selectedConversation?.userName || "Conversation"}
                 </span>
-                <span className="text-xs text-gray-600">
+                <span className="chat-header-presence">
                   {renderContactStatus()}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="chat-header-actions">
               {selectedConversation && (
                 <>
                   {selectedConversation.blockedByMe ? (
                     <button
-                      className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm transition-colors"
+                      className="btn-block-action unblock"
                       onClick={() => handleUnblockUser(receiverId)}
                     >
                       Unblock
                     </button>
                   ) : (
                     <button
-                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                      className="btn-block-action block"
                       onClick={() => handleBlockUser(receiverId)}
                     >
                       Block
                     </button>
                   )}
                   {selectedConversation.blockedByOther && (
-                    <span className="text-xs text-red-500 font-medium">
+                    <span className="blocked-by-other-text">
                       You are blocked
                     </span>
                   )}
@@ -1850,125 +1848,140 @@ const groupMessagesByDate = (messages) => {
             />
           )}
 
-         <div
-  ref={messagesContainerRef}
-  className="flex-1 overflow-y-auto p-4"
-  style={{
-    backgroundImage:
-      "url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png')",
-    backgroundColor: "#e5ddd5",
-  }}
->
-  {messages.length > 0 ? (
-    <div className="flex flex-col gap-2">
-      {(() => {
-        const groupedMessages = groupMessagesByDate(messages);
-        const sortedDates = Object.keys(groupedMessages).sort((a, b) => new Date(a) - new Date(b));
-        
-        return sortedDates.flatMap(dateKey => {
-          const dateMessages = groupedMessages[dateKey];
-          const sortedMessages = dateMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-          
-          return [
-            // تاريخ المجموعة
-            <div key={`date-${dateKey}`} className="flex justify-center my-4">
-              <div className="bg-black/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                <span className="text-white text-xs font-medium">
-                  {formatMessageDate(dateKey)}
-                </span>
-              </div>
-            </div>,
-            
-            // رسائل المجموعة
-            ...sortedMessages.map((msg) => (
-              <div
-                key={msg.id || msg._id}
-                data-message-id={msg.id || msg._id}
-                className={`flex ${
-                  String(msg.senderId) === String(userId)
-                    ? "justify-end"
-                    : "justify-start"
-                } group relative transition-all duration-300`}
-              >
-                <div className="flex items-end gap-2 max-w-full">
-                  <div
-                    className={`max-w-md px-4 py-2 rounded-lg shadow-md ${
-                      String(msg.senderId) === String(userId)
-                        ? "bg-gradient-to-r from-teal-100 to-emerald-100 rounded-tr-none"
-                        : "bg-white rounded-tl-none"
-                    }`}
-                  >
-                    <div className="text-sm text-gray-800 break-words">
-                      {renderMediaMessage(msg)}
-                    </div>
-                    <div className="flex items-center justify-end gap-1 mt-1">
-                      <span className="text-xs text-gray-500">
-                        {new Date(msg.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      {renderMessageStatus(msg)}
-                    </div>
-                  </div>
+          <div ref={messagesContainerRef} className="chat-messages-scroll-area">
+            {messages.length > 0 ? (
+              <div className="messages-list-inner">
+                {(() => {
+                  const groupedMessages = groupMessagesByDate(messages);
+                  const sortedDates = Object.keys(groupedMessages).sort(
+                    (a, b) => new Date(a) - new Date(b),
+                  );
 
-                  {!msg.isDeleted && (
-                    <div className="relative">
-                      <button
-                        onClick={() =>
-                          setActiveMessageMenu(
-                            activeMessageMenu === (msg.id || msg._id)
-                              ? null
-                              : msg.id || msg._id
-                          )
-                        }
-                        className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white hover:shadow-md transition-all duration-200 hover:scale-110"
+                  return sortedDates.flatMap((dateKey) => {
+                    const dateMessages = groupedMessages[dateKey];
+                    const sortedMessages = dateMessages.sort(
+                      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+                    );
+
+                    return [
+                      // تاريخ المجموعة
+                      <div
+                        key={`date-${dateKey}`}
+                        className="date-separator-row"
                       >
-                        <FaEllipsisV className="text-gray-600 text-sm" />
-                      </button>
+                        <div className="date-separator-badge">
+                          <span className="date-separator-text">
+                            {formatMessageDate(dateKey)}
+                          </span>
+                        </div>
+                      </div>,
 
-                      {activeMessageMenu === (msg.id || msg._id) && (
-                        <MessageMenu
-                          message={msg}
-                          onReply={() => handleReply(msg)}
-                          onEdit={() => handleEdit(msg)}
-                          onDelete={(scope) =>
-                            handleDeleteMessage(msg.id || msg._id, scope)
-                          }
-                          onClose={() => setActiveMessageMenu(null)}
-                          position={
+                      // رسائل المجموعة
+                      ...sortedMessages.map((msg) => (
+                        <div
+                          key={msg.id || msg._id}
+                          data-message-id={msg.id || msg._id}
+                          className={`message-item-row ${
                             String(msg.senderId) === String(userId)
-                              ? "right"
-                              : "left"
-                          }
-                        />
-                      )}
-                    </div>
-                  )}
+                              ? "is-sent"
+                              : "is-received"
+                          }`}
+                        >
+                          <div className="message-bubble-container">
+                            <div
+                              className={`message-bubble-main ${
+                                String(msg.senderId) === String(userId)
+                                  ? "sent"
+                                  : "received"
+                              }`}
+                            >
+                              <div className="message-body-text">
+                                {renderMediaMessage(msg)}
+                              </div>
+                              <div className="message-footer-info">
+                                <span className="message-timestamp-text">
+                                  {new Date(msg.timestamp).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    },
+                                  )}
+                                </span>
+                                {renderMessageStatus(msg)}
+                              </div>
+                            </div>
+
+                            {!msg.isDeleted && (
+                              <div className="options-wrapper">
+                                <button
+                                  onClick={() =>
+                                    setActiveMessageMenu(
+                                      activeMessageMenu === (msg.id || msg._id)
+                                        ? null
+                                        : msg.id || msg._id,
+                                    )
+                                  }
+                                  className="message-options-trigger"
+                                >
+                                  <FaEllipsisV className="text-gray-600 text-sm" />
+                                </button>
+
+                                {activeMessageMenu === (msg.id || msg._id) && (
+                                  <MessageMenu
+                                    message={msg}
+                                    onReply={() => handleReply(msg)}
+                                    onEdit={() => handleEdit(msg)}
+                                    onDelete={(scope) =>
+                                      handleDeleteMessage(
+                                        msg.id || msg._id,
+                                        scope,
+                                      )
+                                    }
+                                    onClose={() => setActiveMessageMenu(null)}
+                                    position={
+                                      String(msg.senderId) === String(userId)
+                                        ? "right"
+                                        : "left"
+                                    }
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )),
+                    ];
+                  });
+                })()}
+                <div ref={messagesEndRef} />
+              </div>
+            ) : (
+              <div className="empty-messages">
+                <div className="empty-content">
+                  <div className="empty-icon">
+                    <FaUser className="text-gray-400 text-3xl" />
+                  </div>
+                  <p className="empty-title">No messages yet</p>
+                  <p className="empty-subtitle">Start the conversation now!</p>
                 </div>
               </div>
-            ))
-          ];
-        });
-      })()}
-      <div ref={messagesEndRef} />
-    </div>
-  ) : (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <div className="w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center mb-4 mx-auto shadow-lg">
-          <FaUser className="text-gray-400 text-3xl" />
-        </div>
-        <p className="text-gray-600 font-medium">No messages yet</p>
-        <p className="text-gray-400 text-sm mt-1">
-          Start the conversation now!
-        </p>
-      </div>
-    </div>
-  )}
-</div>
-          <div className="p-3 bg-white border-t border-gray-200 shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
+            )}
+          </div>
+
+          {/* Floating Scroll Down Button */}
+          {showScrollButton && (
+            <button
+              className="scroll-down-floating-btn"
+              onClick={jumpToLatest}
+              title="Scroll to bottom"
+            >
+              <IoMdArrowDown />
+            </button>
+          )}
+
+          <div className="chat-bottom-input-bar">
+            <div className="chat-input-toolbar">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -1977,7 +1990,7 @@ const groupMessagesByDate = (messages) => {
                 style={{ display: "none" }}
               />
               <button
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className="toolbar-action-btn"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={
                   selectedConversation?.blockedByMe ||
@@ -1985,7 +1998,7 @@ const groupMessagesByDate = (messages) => {
                 }
                 title="Send image"
               >
-                <FaImage className="text-gray-600" />
+                <FaImage />
               </button>
               <input
                 type="file"
@@ -1995,7 +2008,7 @@ const groupMessagesByDate = (messages) => {
                 style={{ display: "none" }}
               />
               <button
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className="toolbar-action-btn"
                 onClick={() => videoInputRef.current?.click()}
                 disabled={
                   selectedConversation?.blockedByMe ||
@@ -2003,12 +2016,10 @@ const groupMessagesByDate = (messages) => {
                 }
                 title="Send video"
               >
-                <FaVideo className="text-gray-600" />
+                <FaVideo />
               </button>
               <button
-                className={`p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 relative ${
-                  recording ? "bg-red-100" : ""
-                }`}
+                className={`toolbar-action-btn ${recording ? "recording" : ""}`}
                 onClick={startRecording}
                 disabled={
                   selectedConversation?.blockedByMe ||
@@ -2032,7 +2043,7 @@ const groupMessagesByDate = (messages) => {
                 style={{ display: "none" }}
               />
               <button
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                className="toolbar-action-btn"
                 onClick={() => audioInputRef.current?.click()}
                 disabled={
                   selectedConversation?.blockedByMe ||
@@ -2040,90 +2051,64 @@ const groupMessagesByDate = (messages) => {
                 }
                 title="Send audio file"
               >
-                <FaPaperclip className="text-gray-600" />
+                <FaPaperclip />
               </button>
             </div>
-            <div className="flex justify-end w-full mb-2">
-              <button
-                onClick={jumpToLatest}
-                className="w-8 h-8 flex items-center justify-center rounded-full bg-teal-100 text-teal-700 hover:bg-teal-200 shadow-sm transition-colors"
-                title="Jump to latest message"
-              >
-                <IoMdArrowDown className="text-lg" />
-              </button>
-            </div>
-            <form
-              onSubmit={handleSendMessage}
-              className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-200 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent transition-all"
-            >
-              <input
-                type="text"
-                ref={messageInputRef}
-                value={newMessage}
-                onChange={onMessageChange}
-                placeholder={
-                  selectedConversation?.blockedByMe
-                    ? "Cannot send messages - You blocked this user"
-                    : selectedConversation?.blockedByOther
-                    ? "Cannot send messages - You are blocked"
-                    : "Type a message..."
-                }
-                className="flex-1 outline-none text-sm bg-transparent disabled:cursor-not-allowed"
-                disabled={
-                  selectedConversation?.blockedByMe ||
-                  selectedConversation?.blockedByOther
-                }
-              />
+
+            <form className="chat-input-form" onSubmit={handleSendMessage}>
+              <div className="input-field-wrapper">
+                <input
+                  ref={messageInputRef}
+                  type="text"
+                  placeholder={
+                    selectedConversation?.blockedByMe
+                      ? "Cannot send messages - You blocked this user"
+                      : selectedConversation?.blockedByOther
+                        ? "Cannot send messages - You are blocked"
+                        : "Type a message..."
+                  }
+                  value={newMessage}
+                  onChange={onMessageChange}
+                  className="chat-text-input"
+                  disabled={
+                    selectedConversation?.blockedByMe ||
+                    selectedConversation?.blockedByOther
+                  }
+                />
+              </div>
               <button
                 type="submit"
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center shadow-md hover:shadow-lg hover:from-teal-600 hover:to-emerald-600 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="chat-send-btn"
                 disabled={
                   !newMessage.trim() ||
                   selectedConversation?.blockedByMe ||
                   selectedConversation?.blockedByOther
                 }
               >
-                <IoMdSend className="text-white text-xl" />
+                <IoMdSend className="chat-send-icon" />
               </button>
             </form>
             {uploading && (
-              <div className="flex items-center justify-center gap-2 mt-2 text-sm text-teal-600">
-                <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="uploading-status">
+                <div className="uploading-spinner"></div>
                 Uploading file...
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="flex-1 hidden md:flex items-center justify-center bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50">
-          <div className="text-center max-w-md px-8">
-            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <FaUser className="text-white text-7xl" />
+        <div className="chat-empty-view">
+          <div className="chat-empty-content">
+            <div className="chat-empty-icon-wrapper">
+              <FaUser className="chat-empty-icon" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
-              Nestino Web
-            </h2>
-            <p className="text-gray-600 leading-relaxed text-lg mb-4">
-              Welcome to Nestino Web
+            <h2 className="chat-empty-title">Aqar Mind</h2>
+            <p className="chat-empty-description">
+              Welcome to Aqar Mind webchat
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="chat-empty-hint">
               Select a conversation to start messaging
             </p>
-            <div className="mt-6 flex items-center justify-center gap-2 text-sm">
-              <span>Connection status:</span>
-              <span
-                className={`font-medium ${
-                  socketConnected ? "text-green-600" : "text-red-600"
-                } flex items-center gap-1`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    socketConnected ? "bg-green-500" : "bg-red-500"
-                  } animate-pulse`}
-                ></span>
-                {socketConnected ? "Connected" : "Disconnected"}
-              </span>
-            </div>
           </div>
         </div>
       )}

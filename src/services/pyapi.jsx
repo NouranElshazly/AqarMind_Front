@@ -3,6 +3,7 @@ import axios from "axios";
 // Python backend API URLs
 const PY_API_BASE_URL = "http://localhost:5001";
 const PY_API_5000_BASE_URL = "http://localhost:5000";
+const PY_API_5002_BASE_URL = "http://localhost:5002";
 
 const PY_API = axios.create({
   baseURL: PY_API_BASE_URL,
@@ -11,6 +12,11 @@ const PY_API = axios.create({
 
 const PY_API_5000 = axios.create({
   baseURL: PY_API_5000_BASE_URL,
+  timeout: 10000,
+});
+
+const PY_API_5002 = axios.create({
+  baseURL: PY_API_5002_BASE_URL,
   timeout: 10000,
 });
 
@@ -39,6 +45,9 @@ PY_API.interceptors.request.use(attachHeadersPort5001, (error) =>
   Promise.reject(error),
 );
 PY_API_5000.interceptors.request.use(attachHeadersPort5000, (error) =>
+  Promise.reject(error),
+);
+PY_API_5002.interceptors.request.use(attachHeadersPort5000, (error) =>
   Promise.reject(error),
 );
 
@@ -94,4 +103,58 @@ export const deleteHistoryItem = (userId, itemId) =>
 export const clearUserHistory = (userId) =>
   PY_API.delete(`/api/history/${userId}`);
 
+// ==================== Chat ====================
+
+// Files & Uploads
+export const getFile = (filename) => PY_API_5002.get(`/api/files/${filename}`);
+export const uploadFile = (formData) =>
+  PY_API_5002.post("/api/upload-file", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+export const uploadFileChunk = (chunkData) =>
+  PY_API_5002.post("/api/upload-file-chunk", chunkData);
+
+// Messages & Conversations
+export const getConversations = (userId) =>
+  PY_API_5002.get(`/api/Message/${userId}/conversations`);
+export const getConversationMessages = (userId, otherId) =>
+  PY_API_5002.get(`/api/Message/${userId}/conversation/${otherId}`);
+export const createMessage = (userId, otherId, messageData) =>
+  PY_API_5002.post(
+    `/api/Message/${userId}/create-message/${otherId}`,
+    messageData,
+  );
+export const editMessage = (messageId, content) =>
+  PY_API_5002.put(`/api/message/${messageId}/edit`, { content });
+export const getSingleMessage = (messageId) =>
+  PY_API_5002.get(`/api/message/${messageId}`);
+export const deleteMessage = (messageId) =>
+  PY_API_5002.delete(`/api/message/${messageId}`);
+export const markMessagesRead = (userId, otherId) =>
+  PY_API_5002.post(`/api/Message/${userId}/mark-read/${otherId}`);
+export const deleteConversation = (conversationId) =>
+  PY_API_5002.delete(`/api/conversation/${conversationId}`);
+
+// Users & Status
+export const createChatUser = (username) =>
+  PY_API_5002.post("/api/user", { username });
+export const loginChatUser = (username) =>
+  PY_API_5002.post("/api/user/login", { username });
+export const getAllChatUsers = () => PY_API_5002.get("/api/users");
+export const getUserStatus = (userId) =>
+  PY_API_5002.get(`/api/user/${userId}/status`);
+export const updateLastSeen = (userId) =>
+  PY_API_5002.post(`/api/user/${userId}/update-last-seen`);
+
+// Blocking
+export const blockUser = (blockerId, blockedId) =>
+  PY_API_5002.post(`/api/block/${blockerId}/${blockedId}`);
+export const unblockUser = (blockerId, blockedId) =>
+  PY_API_5002.post(`/api/unblock/${blockerId}/${blockedId}`);
+export const getBlockStatus = (userId, otherId) =>
+  PY_API_5002.get(`/api/block/status/${userId}/${otherId}`);
+export const getBlockedList = (userId) =>
+  PY_API_5002.get(`/api/block/list/${userId}`);
+
+export { PY_API_5002 };
 export default PY_API;
