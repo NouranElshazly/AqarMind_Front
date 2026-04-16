@@ -50,9 +50,8 @@
 /* Stats Grid */
 .stats-grid {
   display: flex;
-  flex-direction:column;
+  flex-direction: column;
   gap: 1rem;
-  background-color: tan;
 }
 
 .stat-card {
@@ -64,7 +63,6 @@
   border-radius: 1rem;
   border: 2px solid var(--border-primary);
   transition: all 0.3s ease;
-  background-color: tan;
 }
 
 .stat-card:hover {
@@ -128,7 +126,6 @@
   font-weight: 800;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
-  
 }
 
 .stat-value {
