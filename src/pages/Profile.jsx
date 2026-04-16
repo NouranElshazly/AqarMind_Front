@@ -486,12 +486,16 @@ const Profile = () => {
       // Direct API call within the component
       const formData = new FormData();
       formData.append("OwnershipDoc", upgradeFile);
-      
-      const response = await API.post(`${API_BASE_URL}/api/Tenant/upgrade-to-landlord/${userId}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+
+      const response = await API.post(
+        `${API_BASE_URL}/api/Tenant/upgrade-to-landlord/${userId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       setUpgradeSuccess(response.data?.message);
       setTimeout(() => {
@@ -501,9 +505,7 @@ const Profile = () => {
       }, 3000);
     } catch (err) {
       console.error("Upgrade error:", err);
-      setUpgradeError(
-        err.response?.data?.error
-      );
+      setUpgradeError(err.response?.data?.error);
     } finally {
       setIsUpgrading(false);
     }
@@ -671,9 +673,13 @@ const Profile = () => {
   const handleSetup2FA = async () => {
     try {
       const response = await setup2FA();
-      if (response.data.alreadyEnabled) {
+      // Handle inconsistency: setup2FA returns 'alreadyEnabled' but profile uses 'twoFactorEnabled'
+      const isAlreadyEnabled = response.data.alreadyEnabled || response.data.twoFactorEnabled;
+
+      if (isAlreadyEnabled) {
         toast.info("2FA is already enabled on your account.");
-        // Refresh profile to update UI state
+        // Ensure profile state is updated for UI consistency
+        setProfile((prev) => ({ ...prev, twoFactorEnabled: true }));
         fetchProfile();
       } else {
         setTwoFactorData({
@@ -826,7 +832,9 @@ const Profile = () => {
             <h1 className="private-profile-name">
               {profile?.fullName}
               <FaCrown
-                className={profile?.isPro ? "pro-member-icon" : "regular-member-icon"}
+                className={
+                  profile?.isPro ? "pro-member-icon" : "regular-member-icon"
+                }
                 title={profile?.isPro ? "Pro Member" : "Regular Member"}
               />
             </h1>
@@ -1132,9 +1140,9 @@ const Profile = () => {
               </form>
             </div>
           ) : (
-              <div className="profile-card-body">
-                {/* Display Saved Cards */}
-                <div className="saved-cards-list">
+            <div className="profile-card-body">
+              {/* Display Saved Cards */}
+              <div className="saved-cards-list">
                 {loadingCards ? (
                   <div className="cards-loading">Loading cards...</div>
                 ) : savedCards.length > 0 ? (
@@ -1172,7 +1180,8 @@ const Profile = () => {
                               •••• •••• •••• {card.maskedCardNumber.slice(-4)}
                             </div>
                             <div className="card-expiry">
-                              Expires: {card.expiryMonth }/{String(card.expiryYear ).slice(-2)}
+                              Expires: {card.expiryMonth}/
+                              {String(card.expiryYear).slice(-2)}
                             </div>
                           </div>
                         </div>
@@ -1198,86 +1207,115 @@ const Profile = () => {
               <FaLock className="card-icon" />
               <h2>Two-Factor Authentication (2FA)</h2>
             </div>
-            <div className="profile-card-actions" style={{ display: "flex", gap: "1rem" }}>
-              {!profile?.isTwoFactorEnabled && !is2FASetupVisible && (
-                <button
-                  type="button"
-                  className="btn-edit"
-                  onClick={handleSetup2FA}
-                >
-                  <FaLock /> Setup 2FA
-                </button>
-              )}
-              
-              {!profile?.isTwoFactorEnabled && is2FASetupVisible && (
+            <div
+              className="profile-card-actions"
+              style={{ display: "flex", gap: "1rem" }}
+            >
+              {profile?.twoFactorEnabled ? (
+                // If 2FA is enabled, show Disable button
                 <button
                   type="button"
                   className="btn-cancel"
                   onClick={() => {
-                    setIs2FASetupVisible(false);
-                    setTwoFactorData(null);
-                    setTwoFactorCode("");
+                    if (isDisableInputVisible) {
+                      setIsDisableInputVisible(false);
+                      setTwoFactorCode("");
+                    } else {
+                      setIsDisableInputVisible(true);
+                      setIs2FASetupVisible(false);
+                    }
                   }}
+                  disabled={isDisabling2FA}
                 >
-                  <FaTimes /> Cancel Setup
+                  {isDisableInputVisible ? "Cancel" : "Disable 2FA"}
                 </button>
+              ) : (
+                // If 2FA is disabled, show Setup button
+                <>
+                  {!is2FASetupVisible ? (
+                    <button
+                      type="button"
+                      className="btn-edit"
+                      onClick={handleSetup2FA}
+                    >
+                      <FaLock /> Setup 2FA
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => {
+                        setIs2FASetupVisible(false);
+                        setTwoFactorData(null);
+                        setTwoFactorCode("");
+                      }}
+                    >
+                      <FaTimes /> Cancel Setup
+                    </button>
+                  )}
+                </>
               )}
-
-              <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => {
-                  if (isDisableInputVisible) {
-                    setIsDisableInputVisible(false);
-                    setTwoFactorCode("");
-                  } else {
-                    setIsDisableInputVisible(true);
-                    setIs2FASetupVisible(false); // Hide setup if visible
-                  }
-                }}
-                disabled={isDisabling2FA}
-              >
-                {isDisableInputVisible ? "Cancel" : "Disable 2FA"}
-              </button>
             </div>
           </div>
 
           <div className="profile-card-body">
             {isDisableInputVisible ? (
               <div className="two-factor-disable-container">
-                <form onSubmit={handleDisable2FA} className="two-factor-verify-form">
+                <form
+                  onSubmit={handleDisable2FA}
+                  className="two-factor-verify-form"
+                >
                   <div className="form-group">
-                    <label className="form-label">Enter 6-digit Code to Disable 2FA</label>
+                    <label className="form-label">
+                      Enter 6-digit Code to Disable 2FA
+                    </label>
                     <input
                       type="text"
                       maxLength="6"
                       value={twoFactorCode}
-                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) =>
+                        setTwoFactorCode(e.target.value.replace(/\D/g, ""))
+                      }
                       className="form-control"
                       placeholder="000000"
                       required
-                      style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                      style={{
+                        textAlign: "center",
+                        fontSize: "1.5rem",
+                        letterSpacing: "0.5rem",
+                      }}
                     />
                   </div>
-                  <div className="profile-actions" style={{ justifyContent: "center" }}>
-                    <button type="submit" className="btn-cancel" disabled={isDisabling2FA}>
+                  <div
+                    className="profile-actions"
+                    style={{ justifyContent: "center" }}
+                  >
+                    <button
+                      type="submit"
+                      className="btn-cancel"
+                      disabled={isDisabling2FA}
+                    >
                       {isDisabling2FA ? "Disabling..." : "Confirm Disable"}
                     </button>
                   </div>
                 </form>
               </div>
-            ) : profile?.isTwoFactorEnabled ? (
+            ) : profile?.twoFactorEnabled ? (
               <div className="two-factor-enabled-container">
                 <div className="security-info success-text">
                   <FaCheckCircle className="info-icon" />
-                  Two-factor authentication is currently enabled on your account.
+                  Two-factor authentication is currently enabled on your
+                  account.
                 </div>
               </div>
             ) : is2FASetupVisible && twoFactorData ? (
               <div className="two-factor-setup-container">
                 <div className="two-factor-setup-header">
                   <h3>Scan QR Code</h3>
-                  <p>Scan this QR code with your authenticator app, then enter the code below to enable.</p>
+                  <p>
+                    Scan this QR code with your authenticator app, then enter
+                    the code below to enable.
+                  </p>
                 </div>
 
                 <div className="qr-code-display">
@@ -1288,21 +1326,33 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <form onSubmit={handleEnable2FA} className="two-factor-verify-form">
+                <form
+                  onSubmit={handleEnable2FA}
+                  className="two-factor-verify-form"
+                >
                   <div className="form-group">
                     <label className="form-label">Verification Code</label>
                     <input
                       type="text"
                       maxLength="6"
                       value={twoFactorCode}
-                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ""))}
+                      onChange={(e) =>
+                        setTwoFactorCode(e.target.value.replace(/\D/g, ""))
+                      }
                       className="form-control"
                       placeholder="000000"
                       required
-                      style={{ textAlign: "center", fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                      style={{
+                        textAlign: "center",
+                        fontSize: "1.5rem",
+                        letterSpacing: "0.5rem",
+                      }}
                     />
                   </div>
-                  <div className="profile-actions" style={{ justifyContent: "center" }}>
+                  <div
+                    className="profile-actions"
+                    style={{ justifyContent: "center" }}
+                  >
                     <button
                       type="button"
                       className="btn-cancel"
@@ -1327,7 +1377,8 @@ const Profile = () => {
             ) : (
               <p className="security-info">
                 <FaLock className="info-icon" />
-                Add an extra layer of security to your account by enabling two-factor authentication.
+                Add an extra layer of security to your account by enabling
+                two-factor authentication.
               </p>
             )}
           </div>

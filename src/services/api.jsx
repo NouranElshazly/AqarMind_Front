@@ -575,7 +575,7 @@ export const submitRentalProposal = (postId, proposalData) => {
 // ======================= 2FA API Functions =====================
 /**
  * Start 2FA setup process
- * Returns: alreadyEnabled, secretBase32, otpAuthUri
+ * Returns: alreadyEnabled (or twoFactorEnabled), secretBase32, otpAuthUri
  */
 export const setup2FA = () => API.post("/Auth/2fa/setup");
 
