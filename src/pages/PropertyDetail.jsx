@@ -372,13 +372,10 @@ const PropertyDetail = () => {
     });
 
     return sortedListWithReplies.sort((a, b) => {
+      // 1. Pinned comments always on top
       if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1;
-      const aIsOwner = String(a.user_id) === postOwnerIdStr;
-      const bIsOwner = String(b.user_id) === postOwnerIdStr;
-      if (aIsOwner !== bIsOwner) return aIsOwner ? -1 : 1;
-      const aIsCurrentUser = String(a.user_id) === currentUserIdStr;
-      const bIsCurrentUser = String(b.user_id) === currentUserIdStr;
-      if (aIsCurrentUser !== bIsCurrentUser) return aIsCurrentUser ? -1 : 1;
+
+      // 2. Newest comments first (Sort by created_at descending)
       return new Date(b.created_at) - new Date(a.created_at);
     });
   };

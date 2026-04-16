@@ -41,12 +41,17 @@ const attachHeadersPort5000 = (req) => {
   return req;
 };
 
+// Response Interceptor - handle errors
+//port 5001
 PY_API.interceptors.request.use(attachHeadersPort5001, (error) =>
   Promise.reject(error),
 );
+
+//port 5000
 PY_API_5000.interceptors.request.use(attachHeadersPort5000, (error) =>
   Promise.reject(error),
 );
+//port 5002
 PY_API_5002.interceptors.request.use(attachHeadersPort5000, (error) =>
   Promise.reject(error),
 );

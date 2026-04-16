@@ -466,15 +466,11 @@ export const tokenizeCard = (cardData) => {
   formData.append("ExpiryYear", cardData.ExpiryYear);
   formData.append("CVV", cardData.CVV);
 
-  return API.post(
-    `${API_BASE_URL}/api/payments/cards/tokenize`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+  return API.post(`${API_BASE_URL}/api/payments/cards/tokenize`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
     },
-  );
+  });
 };
 
 /**
@@ -490,10 +486,8 @@ export const getUserCards = () => {
  * @param {number} userId - The ID of the user
  * @param {number} paymentCardId - The ID of the card to delete
  */
-export const deleteCard = ( paymentCardId) => {
-  return API.delete(
-    `${API_BASE_URL}/api/payments/cards/${paymentCardId}`,
-  );
+export const deleteCard = (paymentCardId) => {
+  return API.delete(`${API_BASE_URL}/api/payments/cards/${paymentCardId}`);
 };
 
 /**
@@ -502,9 +496,7 @@ export const deleteCard = ( paymentCardId) => {
  * @param {number} paymentCardId - The ID of the card to set as default
  */
 export const setDefaultCard = (paymentCardId) => {
-  return API.put(
-    `${API_BASE_URL}/api/payments/cards/default/${paymentCardId}`,
-  );
+  return API.put(`${API_BASE_URL}/api/payments/cards/default/${paymentCardId}`);
 };
 
 // ======================= Complaints API Functions =====================
@@ -570,12 +562,10 @@ export const submitRentalProposal = (postId, proposalData) => {
   );
 };
 
-
-
 // ======================= 2FA API Functions =====================
 /**
  * Start 2FA setup process
- * Returns: alreadyEnabled (or twoFactorEnabled), secretBase32, otpAuthUri
+ * Returns: alreadyEnabled, secretBase32, otpAuthUri
  */
 export const setup2FA = () => API.post("/Auth/2fa/setup");
 
@@ -598,4 +588,3 @@ export const disable2FA = (code) => API.post("/Auth/disable", { code });
  */
 export const verifyLogin2FA = (twoFactorToken, code) =>
   API.post("/Auth/2fa/verify", { twoFactorToken, code });
-
