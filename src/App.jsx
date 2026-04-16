@@ -12,6 +12,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminCommDashboard from "./pages/AdminCommDashboard";
 import PendingApprovals from "./pages/PendingApprovals";
 import LandlordApplicationDetail from "./pages/LandlordApplicationDetail";
 import LandlordDashboard from "./pages/LandlordDashboard";
@@ -177,6 +178,7 @@ function App() {
                 element={<LandlordApplicationDetail />}
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
+              <Route path="/admin/comment-tracker" element={<AdminCommDashboard />} />
               <Route path="/admin/manage-subs" element={<AdminManageSubs />} />
               <Route path="/admin/manage-admins" element={<ManageAdmins />} />
               <Route

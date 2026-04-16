@@ -22,14 +22,19 @@ const PY_API_5002 = axios.create({
 
 // Request Interceptor - attach token and user info
 const attachHeadersPort5001 = (req) => {
-  const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
   const role = localStorage.getItem("role");
-  const userName = localStorage.getItem("userName");
+  
+  // Try to get userName directly or from profile
+  let userName = localStorage.getItem("userName");
+  if (!userName) {
+    const profile = JSON.parse(localStorage.getItem("profile") || "{}");
+    userName = profile?.user?.name || profile?.user?.UserName;
+  }
 
-  if (token) req.headers["Authorization"] = `Bearer ${token}`;
+  // Minimal Auth - only via request headers, no tokens or sessions
   if (userId) req.headers["User-Id"] = userId;
-  if (role) req.headers["User-Role"] = role;
+  if (role) req.headers["User-Role"] = role.toLowerCase(); // Ensure lowercase as per backend requirement
   if (userName) req.headers["User-Name"] = userName;
 
   return req;
@@ -109,7 +114,6 @@ export const clearUserHistory = (userId) =>
   PY_API.delete(`/api/history/${userId}`);
 
 // ==================== Chat ====================
-
 // Files & Uploads
 export const getFile = (filename) => PY_API_5002.get(`/api/files/${filename}`);
 export const uploadFile = (formData) =>
@@ -160,6 +164,18 @@ export const getBlockStatus = (userId, otherId) =>
   PY_API_5002.get(`/api/block/status/${userId}/${otherId}`);
 export const getBlockedList = (userId) =>
   PY_API_5002.get(`/api/block/list/${userId}`);
+
+// ==================== Comments Tracking ====================
+export const getAdminMonitorComments = () =>
+  PY_API.get("/api/admin/comments/monitor");
+
+export const togglePostLock = (postId) =>
+  PY_API.post(`/api/admin/posts/${postId}/toggle-lock`,{});
+
+export const wipePostComments = (postId) =>
+  PY_API.delete(`/api/admin/posts/${postId}/wipe-comments`);
+
+export const getHealthStatus = () => PY_API.get("/api/health");
 
 export { PY_API_5002 };
 export default PY_API;

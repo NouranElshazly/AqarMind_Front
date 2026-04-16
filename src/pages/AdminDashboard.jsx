@@ -19,6 +19,7 @@ import {
   DollarSign,
   Eye,
   MessageSquareWarning,
+  LucideBotMessageSquare,
 } from "lucide-react";
 import axios from "axios";
 import "../styles/AdminDashboard.css";
@@ -301,49 +302,39 @@ const AdminDashboard = () => {
                 <p>View analytics and reports</p>
               </div>
             </Link>
+
+             {/* Track Comments System */}
+            <Link
+              to="/admin/comment-tracker"
+              className="action-card action-reports"
+            >
+              <div className="action-icon">
+                <LucideBotMessageSquare size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Comment Tracker System</h3>
+                <p>Track & View all comments </p>
+              </div>
+            </Link>
+
+              {/* Track Messages System */}
+            <Link
+              to="/admin/SystemReports"
+              className="action-card action-reports"
+            >
+              <div className="action-icon">
+                <LucideBotMessageSquare size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Message Tracker System</h3>
+                <p>Track & View all messages and conversations</p>
+              </div>
+            </Link>
+
+           
           </div>
         </div>
-
-        {/* Recent Activity */}
       </div>
-
-      {/* System Alerts */}
-      {(stats.pendingProperties > 10 || stats.pendingLandlords > 10) && (
-        <div className="alerts-section">
-          <div className="section-header">
-            <h2 className="section-title">
-              <AlertCircle size={24} />
-              System Alerts
-            </h2>
-          </div>
-
-          <div className="alerts-grid">
-            {stats.pendingProperties > 10 && (
-              <div className="alert-card alert-warning">
-                <AlertCircle size={24} />
-                <div className="alert-content">
-                  <h4>High Pending Properties</h4>
-                  <p>
-                    {stats.pendingProperties} properties waiting for approval
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {stats.pendingLandlords > 10 && (
-              <div className="alert-card alert-info">
-                <AlertCircle size={24} />
-                <div className="alert-content">
-                  <h4>High Pending Landlords</h4>
-                  <p>
-                    {stats.pendingLandlords} registrations awaiting approval
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
