@@ -44,6 +44,7 @@ import ManageContracts from "./pages/ManageContracts";
 import TenantPaymentPlans from "./pages/TenantPaymentPlans";
 import PaymentPlanDetails from "./pages/PaymentPlanDetails";
 
+
 // Create DarkMode Context
 const DarkModeContext = createContext();
 
@@ -179,6 +180,7 @@ function App() {
               />
               <Route path="/admin/SystemReports" element={<SystemReports />} />
               <Route path="/admin/comment-tracker" element={<AdminCommDashboard />} />
+              <Route path="/admin/chat-tracker" element={<AdminChatDashboard />} />
               <Route path="/admin/manage-subs" element={<AdminManageSubs />} />
               <Route path="/admin/manage-admins" element={<ManageAdmins />} />
               <Route

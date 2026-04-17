@@ -24,7 +24,7 @@ const PY_API_5002 = axios.create({
 const attachHeadersPort5001 = (req) => {
   const userId = localStorage.getItem("userId");
   const role = localStorage.getItem("role");
-  
+
   // Try to get userName directly or from profile
   let userName = localStorage.getItem("userName");
   if (!userName) {
@@ -58,6 +58,14 @@ PY_API_5000.interceptors.request.use(attachHeadersPort5000, (error) =>
 );
 //port 5002
 PY_API_5002.interceptors.request.use(attachHeadersPort5000, (error) =>
+  Promise.reject(error),
+);
+
+export const PY_API_5003 = axios.create({
+  baseURL: "http://localhost:5003",
+});
+
+PY_API_5003.interceptors.request.use(attachHeadersPort5000, (error) =>
   Promise.reject(error),
 );
 
@@ -170,12 +178,24 @@ export const getAdminMonitorComments = () =>
   PY_API.get("/api/admin/comments/monitor");
 
 export const togglePostLock = (postId) =>
-  PY_API.post(`/api/admin/posts/${postId}/toggle-lock`,{});
+  PY_API.post(`/api/admin/posts/${postId}/toggle-lock`, {});
 
 export const wipePostComments = (postId) =>
   PY_API.delete(`/api/admin/posts/${postId}/wipe-comments`);
 
 export const getHealthStatus = () => PY_API.get("/api/health");
+
+// ==================== Messages Tracking ====================
+export const getAdminConversations = () =>
+  PY_API_5003.get("/api/admin/conversations");
+
+export const getAdminConversationMessages = (conversationId) =>
+  PY_API_5003.get(`/api/admin/conversation/${conversationId}`);
+
+export const softDeleteMessage = (messageId) =>
+  PY_API_5003.delete(`/api/admin/message/${messageId}`);
+
+export const getAdminFile = (filename) => PY_API.get(`/api/files/${filename}`);
 
 export { PY_API_5002 };
 export default PY_API;

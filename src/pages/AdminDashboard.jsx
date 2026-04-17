@@ -317,9 +317,9 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-              {/* Track Messages System */}
+              {/* Message Tracker System */}
             <Link
-              to="/admin/SystemReports"
+              to="/admin/chat-tracker"
               className="action-card action-reports"
             >
               <div className="action-icon">
