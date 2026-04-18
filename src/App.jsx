@@ -13,7 +13,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminCommDashboard from "./pages/AdminCommDashboard";
+import CompanyDashboard from "./pages/CompanyDashboard";
+import CompanyCreateProject from "./pages/CompanyCreateProject";
 import PendingApprovals from "./pages/PendingApprovals";
+import PendingApprovalsCompanies from "./pages/PendingApprovalsCompanies";
+import PendingCompaniesProjects from "./pages/PendingCompaniesProjects";
 import LandlordApplicationDetail from "./pages/LandlordApplicationDetail";
 import LandlordDashboard from "./pages/LandlordDashboard";
 import ManageProperties from "./pages/ManageProperties";
@@ -105,20 +109,24 @@ function App() {
 
   useEffect(() => {
     // Auto-redirect to role dashboard if user has a session
+    // Commented out to allow all roles (including Company) to access the Home page
+    /*
     const role = localStorage.getItem("role");
     const token = localStorage.getItem("token");
     const guestMode = localStorage.getItem("guestMode");
 
-    // Only redirect when landing on the home page and not in guest mode
     if (location.pathname !== "/" || guestMode === "true") return;
 
     if (token && role) {
       if (role === "admin") navigate("/admin/dashboard", { replace: true });
       else if (role === "landlord")
         navigate("/landlord/dashboard", { replace: true });
+      else if (role === "Company")
+        navigate("/company/dashboard", { replace: true });
       else if (role === "tenant")
         navigate("/tenant/dashboard", { replace: true });
     }
+    */
   }, [location.pathname, navigate]);
 
   const hideNavbarFooter =
@@ -170,6 +178,14 @@ function App() {
                 element={<PendingApprovals />}
               />
               <Route
+                path="/admin/pending-companies"
+                element={<PendingApprovalsCompanies />}
+              />
+              <Route
+                path="/admin/pending-projects"
+                element={<PendingCompaniesProjects />}
+              />
+              <Route
                 path="/admin/pending-approvals"
                 element={<AdminPendingApprovals />}
               />{" "}
@@ -192,6 +208,16 @@ function App() {
                 element={<AdminManageComplaints />}
               />
               <Route path="/admin/manage-ads" element={<ManageAds />} />
+
+              {/* Company Routes */}
+              <Route
+                path="/company/dashboard"
+                element={<CompanyDashboard />}
+              />
+              <Route
+                path="/company/add-project"
+                element={<CompanyCreateProject />}
+              />
               {/* Landlord Routes */}
               <Route
                 path="/landlord/dashboard"

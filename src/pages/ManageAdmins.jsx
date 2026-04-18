@@ -520,14 +520,15 @@ const ManageAdmins = () => {
         )}
       </div>
       
-      <ConfirmationModal 
+      <ConfirmationModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDeleteAdmin}
         title="Delete Administrator"
-        message="Are you sure you want to delete this administrator? This action cannot be undone."
-        isLoading={isDeleting}
+        message="Are you sure you want to delete this administrator account? This action cannot be undone."
         confirmText="Delete Admin"
+        type="danger"
+        isLoading={isDeleting}
       />
     </div>
   );

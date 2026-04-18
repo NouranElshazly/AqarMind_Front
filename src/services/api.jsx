@@ -342,6 +342,18 @@ export const getPropertyTransactions = (propertyId) =>
 export const getUserTransactions = () => API.get("/users/transactions");
 
 // ==================== Admin ====================
+export const fetchWaitingCompanies = () => API.get("/admin/waitingCompanies");
+export const approveCompany = (id) =>
+  API.put(`${API_BASE_URL}/api/admin/accept-company/${id}`);
+export const rejectCompany = (id) =>
+  API.put(`${API_BASE_URL}/api/admin/reject-company/${id}`);
+
+export const fetchWaitingProjects = () => API.get("/admin/waitingProjects");
+export const approveCompanyProject = (id) =>
+  API.put(`${API_BASE_URL}/api/admin/accept-project/${id}`);
+export const rejectCompanyProject = (id) =>
+  API.put(`${API_BASE_URL}/api/admin/reject-project/${id}`);
+
 export const fetchPendingLandlords = () => API.get("/admin/pending-landlords");
 export const fetchPendingProperties = () =>
   API.get(`${API_BASE_URL}/api/admin/waitinPosts`);
@@ -588,3 +600,86 @@ export const disable2FA = (code) => API.post("/Auth/disable", { code });
  */
 export const verifyLogin2FA = (twoFactorToken, code) =>
   API.post("/Auth/2fa/verify", { twoFactorToken, code });
+
+
+// ======================= Company API Functions =====================
+
+/**
+ * Get all company projects
+ * Returns: list of projects with project details
+ */
+export const getCompanyProjects = () =>
+  API.get("/company/projects/my-projects");
+
+/**
+ * Get project details with units
+ * @param {number} projectId - The ID of the project
+ * Returns: project details + units array
+ */
+export const getProjectDetails = (projectId) =>
+  API.get(`/company/projects/${projectId}`);
+
+/**
+ * Create a new real estate project
+ * @param {FormData} projectData - Project data including:
+ * @param {string} projectData.ProjectName - Name of the project
+ * @param {string} projectData.Description - Project description
+ * @param {string} projectData.Location - City, Country
+ * @param {string} projectData.LocationPath - Detailed address
+ * @param {number} projectData.TotalFloors - Number of floors
+ * @param {boolean} projectData.HasElevator - Has elevator or not
+ * @param {number} projectData.UnitsPerFloor - Number of unit templates
+ * @param {number} projectData.Type - 0 = Rent, 1 = Sale
+ * @param {string[]} projectData.Tags - Array of tags
+ * @param {Object[]} projectData.UnitTemplates - Array of unit templates
+ * @param {File} projectData.ProjectDocFile - PDF document (max 10MB)
+ */
+export const createCompanyProject = (projectData) => {
+  const formData = new FormData();
+
+  formData.append("CompanyId", projectData.companyId);
+  formData.append("ProjectName", projectData.projectName);
+  formData.append("Description", projectData.description);
+  formData.append("Location", projectData.location);
+  formData.append("LocationPath", projectData.locationPath);
+  formData.append("TotalFloors", Number(projectData.totalFloors));
+  formData.append("HasElevator", projectData.hasElevator);
+  formData.append("UnitsPerFloor", projectData.unitTemplates.length);
+  formData.append("Type", Number(projectData.type));
+
+  projectData.tags.forEach((tag, i) => {
+    if (tag.trim()) formData.append(`Tags[${i}]`, tag.trim());
+  });
+
+  projectData.unitTemplates.forEach((t, i) => {
+    formData.append(`UnitTemplates[${i}].title`, t.title);
+    formData.append(`UnitTemplates[${i}].area`, Number(t.area));
+    formData.append(`UnitTemplates[${i}].basePrice`, Number(t.basePrice));
+    formData.append(`UnitTemplates[${i}].numberOfRooms`, Number(t.numberOfRooms || 0));
+    formData.append(`UnitTemplates[${i}].numberOfBathrooms`, Number(t.numberOfBathrooms || 0));
+    formData.append(`UnitTemplates[${i}].hasGarage`, t.hasGarage);
+    formData.append(`UnitTemplates[${i}].isFurnished`, t.isFurnished);
+    formData.append(`UnitTemplates[${i}].hasGarden`, t.hasGarden);
+    formData.append(`UnitTemplates[${i}].hasPool`, t.hasPool);
+    formData.append(`UnitTemplates[${i}].hasSecurity`, t.hasSecurity);
+    formData.append(`UnitTemplates[${i}].hasParking`, t.hasParking);
+    formData.append(`UnitTemplates[${i}].priceIncreasePerFloor`, Number(t.priceIncreasePerFloor || 0));
+    formData.append(`UnitTemplates[${i}].unitCode`, t.unitCode);
+    formData.append(`UnitTemplates[${i}].description`, t.description);
+  });
+
+  if (projectData.projectDocFile) {
+    formData.append("ProjectDocFile", projectData.projectDocFile);
+  }
+
+  return API.post("/company/projects/create", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+/**
+ * Delete a company project
+ * @param {number} projectId - The ID of the project to delete
+ */
+export const deleteCompanyProject = (projectId) =>
+  API.delete(`/company/projects/${projectId}`);

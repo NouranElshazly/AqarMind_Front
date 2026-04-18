@@ -296,6 +296,7 @@ const AdminPendingApprovals = () => {
     onConfirm: null,
     confirmText: "",
     cancelText: "Cancel",
+    type: "danger",
   });
 
   useEffect(() => {
@@ -344,6 +345,7 @@ const AdminPendingApprovals = () => {
       title: "Approve Property",
       message: "Are you sure you want to approve this property?",
       confirmText: "Approve",
+      type: "success",
       onConfirm: () => performApprove(postId),
     });
   };
@@ -374,6 +376,7 @@ const AdminPendingApprovals = () => {
       title: "Reject Property",
       message: "Are you sure you want to reject this property?",
       confirmText: "Reject",
+      type: "danger",
       onConfirm: () => performReject(postId),
     });
   };
@@ -482,6 +485,7 @@ const AdminPendingApprovals = () => {
         message={confirmationModal.message}
         confirmText={confirmationModal.confirmText}
         cancelText={confirmationModal.cancelText}
+        type={confirmationModal.type}
         isLoading={actionLoading}
       />
     </div>

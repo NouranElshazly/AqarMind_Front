@@ -27,6 +27,8 @@ import "../styles/AdminDashboard.css";
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     pendingLandlords: 0,
+    pendingCompanies: 0,
+    pendingProjects: 0,
     pendingProperties: 0,
     totalLandlords: 0,
     totalTenants: 0,
@@ -34,6 +36,12 @@ const AdminDashboard = () => {
     acceptedProperties: 0,
     rejectedProperties: 0,
     monthlyRevenue: 0,
+    users: {
+      totalUsers: 0,
+      admins: 0,
+      tenants: 0,
+      landlords: 0
+    }
   });
 
   const [user, setUser] = useState(null);
@@ -223,6 +231,24 @@ const AdminDashboard = () => {
                 )}
               </div>
             </Link>
+            <Link
+              to="/admin/pending-projects"
+              className="action-card action-properties"
+            >
+              <div className="action-icon">
+                <Home size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Pending Projects</h3>
+                <p>Review and approve project listings</p>
+                {stats.pendingProjects > 0 && (
+                  <span className="action-badge">
+                    <AlertCircle size={14} />
+                    {stats.pendingProjects} waiting
+                  </span>
+                )}
+              </div>
+            </Link>
 
             <Link
               to="/admin/pending-landlords"
@@ -233,11 +259,30 @@ const AdminDashboard = () => {
               </div>
               <div className="action-content">
                 <h3>Approve Landlords</h3>
-                <p>Review new registration requests</p>
+                <p>Review new Landlords requests</p>
                 {stats.pendingLandlords > 0 && (
                   <span className="action-badge">
                     <AlertCircle size={14} />
                     {stats.pendingLandlords} pending
+                  </span>
+                )}
+              </div>
+            </Link>
+            
+            <Link
+              to="/admin/pending-companies"
+              className="action-card action-landlords"
+            >
+              <div className="action-icon">
+                <Users size={32} />
+              </div>
+              <div className="action-content">
+                <h3>Approve Companies</h3>
+                <p>Review new Companies requests</p>
+                {stats.pendingCompanies > 0 && (
+                  <span className="action-badge">
+                    <AlertCircle size={14} />
+                    {stats.pendingCompanies} pending
                   </span>
                 )}
               </div>

@@ -444,7 +444,7 @@ const Navbar = () => {
   const storedRole = localStorage.getItem("role");
   const shouldShowProfile =
     storedRole &&
-    ["tenant", "landlord", "admin"].includes(storedRole.toLowerCase());
+    ["tenant", "landlord", "admin", "company"].includes(storedRole.toLowerCase());
 
   useEffect(() => {
     const handleScroll = () => {
@@ -528,6 +528,11 @@ const Navbar = () => {
             path: "/admin/pending-landlords",
           },
           {
+            icon: <BusinessIcon />,
+            label: "Pending Companies",
+            path: "/admin/pending-companies",
+          },
+          {
             icon: <ComputerIcon />,
             label: "Chat Dashboard",
             path: "/admin/AdminChatDashboard",
@@ -558,6 +563,32 @@ const Navbar = () => {
             path: "/landlord/proposals",
           },
           { icon: <HeartIcon />, label: "Saved Posts", path: "/saved-posts" },
+          { icon: <ChatIcon />, label: "Messages", path: "/messages" },
+        ];
+
+      case "Company":
+        return [
+          ...commonItems,
+          {
+            icon: <DashboardIcon />,
+            label: "Dashboard",
+            path: "/company/dashboard",
+          },
+          {
+            icon: <BuildingIcon />,
+            label: "My Projects",
+            path: "/company/projects",
+          },
+          {
+            icon: <DocumentIcon />,
+            label: "My Contracts",
+            path: "/tenant/contracts",
+          },
+          {
+            icon: <ClipboardIcon />,
+            label: "Proposals",
+            path: "/landlord/manage-proposals",
+          },
           { icon: <ChatIcon />, label: "Messages", path: "/messages" },
         ];
 
@@ -643,7 +674,9 @@ const Navbar = () => {
                     ? "/admin/dashboard"
                     : user.role === "Landlord"
                       ? "/landlord/dashboard"
-                      : "/tenant/dashboard"
+                      : user.role === "Company"
+                        ? "/company/dashboard"
+                        : "/tenant/dashboard"
                 }
                 className={`nav-link ${
                   location.pathname.includes("/dashboard") ? "active" : ""
@@ -991,7 +1024,9 @@ const Navbar = () => {
                       ? "/admin/dashboard"
                       : user.role === "Landlord"
                         ? "/landlord/dashboard"
-                        : "/tenant/dashboard"
+                        : user.role === "Company"
+                          ? "/company/dashboard"
+                          : "/tenant/dashboard"
                   }
                   className="menu-card"
                   onClick={closeMenu}

@@ -185,7 +185,8 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "Tenant",
+    role: "0",
+    companyName: "",
   });
 
   const [useFaceId, setUseFaceId] = useState(false);
@@ -195,6 +196,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [propertyDocument, setPropertyDocument] = useState(null);
+  const [commercialRegisterFile, setCommercialRegisterFile] = useState(null);
   const [nationalId, setNationalId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -244,13 +246,23 @@ const Register = () => {
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
-    if (!nationalId) {
-      newErrors.nationalId = "National ID is required for all users";
+
+    if (formData.role !== "3" && !nationalId) {
+      newErrors.nationalId = "National ID is required";
     }
 
-    if (formData.role === "Landlord" && !propertyDocument) {
+    if (formData.role === "1" && !propertyDocument) {
       newErrors.propertyDocument =
         "Property document is required for Landlords";
+    }
+
+    if (formData.role === "3") {
+      if (!formData.companyName.trim()) {
+        newErrors.companyName = "Company name is required";
+      }
+      if (!commercialRegisterFile) {
+        newErrors.commercialRegisterFile = "Commercial register file is required";
+      }
     }
 
     setErrors(newErrors);
@@ -271,12 +283,21 @@ const Register = () => {
       form.append("ConfirmPassword", formData.confirmPassword);
       form.append("role_name", formData.role);
 
-      if (nationalId) {
+      if (formData.role !== "3" && nationalId) {
         form.append("NIDFile", nationalId);
       }
 
-      if (formData.role === "Landlord" && propertyDocument) {
+      if (formData.role === "1" && propertyDocument) {
         form.append("File", propertyDocument);
+      }
+
+      if (formData.role === "3") {
+        if (formData.companyName) {
+          form.append("CompanyName", formData.companyName);
+        }
+        if (commercialRegisterFile) {
+          form.append("CommercialRegisterFile", commercialRegisterFile);
+        }
       }
 
       const res = await axios.post(`${API_BASE_URL}/api/Auth/register`, form, {
@@ -613,50 +634,52 @@ const Register = () => {
               </div>
 
               {/* National ID */}
-              <div className="register-field">
-                <label className="register-label">
-                  National ID Card (Required)
-                </label>
-                <div className="register-file-upload">
-                  <input
-                    type="file"
-                    onChange={(e) => setNationalId(e.target.files[0])}
-                    className="register-file-input"
-                  />
-                  <div
-                    className={`register-file-area ${
-                      errors.nationalId ? "error" : ""
-                    }`}
-                  >
-                    <div className="register-file-content">
-                      <svg
-                        className="register-file-icon"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
-                      <p className="register-file-text">
-                        {nationalId
-                          ? nationalId.name
-                          : "Click to upload National ID"}
-                      </p>
-                      <p className="register-file-subtext">
-                        JPG, PNG, PDF up to 10MB
-                      </p>
+              {formData.role !== "3" && (
+                <div className="register-field">
+                  <label className="register-label">
+                    National ID Card (Required)
+                  </label>
+                  <div className="register-file-upload">
+                    <input
+                      type="file"
+                      onChange={(e) => setNationalId(e.target.files[0])}
+                      className="register-file-input"
+                    />
+                    <div
+                      className={`register-file-area ${
+                        errors.nationalId ? "error" : ""
+                      }`}
+                    >
+                      <div className="register-file-content">
+                        <svg
+                          className="register-file-icon"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <p className="register-file-text">
+                          {nationalId
+                            ? nationalId.name
+                            : "Click to upload National ID"}
+                        </p>
+                        <p className="register-file-subtext">
+                          JPG, PNG, PDF up to 10MB
+                        </p>
+                      </div>
                     </div>
                   </div>
+                  {errors.nationalId && (
+                    <span className="register-error">{errors.nationalId}</span>
+                  )}
                 </div>
-                {errors.nationalId && (
-                  <span className="register-error">{errors.nationalId}</span>
-                )}
-              </div>
+              )}
 
               {/* Account Type */}
               <div className="register-field">
@@ -670,13 +693,105 @@ const Register = () => {
                   onChange={handleChange}
                   className="register-select"
                 >
-                  <option value="Tenant">Tenant (Looking for property)</option>
-                  <option value="Landlord">Landlord (List property)</option>
+                  <option value="0">Tenant (Looking for property)</option>
+                  <option value="1">Landlord (List property)</option>
+                  <option value="3">Company (Creating projects) </option>
                 </select>
               </div>
 
+              {/* Company Specific Fields */}
+              {formData.role === "3" && (
+                <>
+                  <div className="register-field">
+                    <label htmlFor="companyName" className="register-label">
+                      Company Name
+                    </label>
+                    <div className="register-input-wrapper">
+                      <svg
+                        className="register-input-icon"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        placeholder="Your Company Name"
+                        className={`register-input ${
+                          errors.companyName ? "error" : ""
+                        }`}
+                      />
+                    </div>
+                    {errors.companyName && (
+                      <span className="register-error">
+                        {errors.companyName}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="register-field">
+                    <label className="register-label">
+                      Commercial Register File
+                    </label>
+                    <div className="register-file-upload">
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          setCommercialRegisterFile(e.target.files[0])
+                        }
+                        className="register-file-input"
+                      />
+                      <div
+                        className={`register-file-area ${
+                          errors.commercialRegisterFile ? "error" : ""
+                        }`}
+                      >
+                        <div className="register-file-content">
+                          <svg
+                            className="register-file-icon"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          <p className="register-file-text">
+                            {commercialRegisterFile
+                              ? commercialRegisterFile.name
+                              : "Click to upload Commercial Register"}
+                          </p>
+                          <p className="register-file-subtext">
+                            JPG, PNG, PDF up to 10MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {errors.commercialRegisterFile && (
+                      <span className="register-error">
+                        {errors.commercialRegisterFile}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+
               {/* Property Document for Landlords */}
-              {formData.role === "Landlord" && (
+              {formData.role === "1" && (
                 <div className="register-field">
                   <label className="register-label">
                     Property Ownership Document

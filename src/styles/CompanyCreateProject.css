@@ -1,0 +1,117 @@
+/* ==========================================
+   COMPANY CREATE PROJECT - STYLES
+   Reusing styles from AddProperty.css
+   ========================================== */
+
+/* The .add-property-* classes are used here to match the JSX structure */
+
+/* Project Specific Styles */
+.templates-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.template-card {
+  background: var(--bg-secondary);
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid var(--border-primary);
+  transition: all 0.3s ease;
+}
+
+.template-card:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.template-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  margin: 0;
+}
+
+.btn-remove-template {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-remove-template:hover {
+  background: var(--error);
+  color: white;
+}
+
+.btn-add-template {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border: 2px dashed var(--brand-primary);
+  color: var(--brand-primary);
+  border-radius: 1rem;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.btn-add-template:hover {
+  background: rgba(251, 191, 36, 0.05);
+  transform: translateY(-2px);
+}
+
+.doc-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--brand-primary);
+}
+
+.doc-preview p {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .add-property-form {
+    padding: 1.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .upload-section {
+    grid-template-columns: 1fr;
+  }
+}
