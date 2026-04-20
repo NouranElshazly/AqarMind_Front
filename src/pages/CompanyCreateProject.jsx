@@ -135,14 +135,17 @@ const CompanyCreateProject = () => {
 
     try {
       const profile = JSON.parse(localStorage.getItem("profile") || "{}");
-      const userId = profile.user?._id || profile.userId || localStorage.getItem("userId");
+      const userId =
+        profile.user?._id || profile.userId || localStorage.getItem("userId");
 
       if (!userId) {
         throw new Error("User not authenticated. Please login again.");
       }
 
       if (!form.projectName || !form.location || !form.totalFloors || !file) {
-        throw new Error("Please fill in all required fields and upload the project document.");
+        throw new Error(
+          "Please fill in all required fields and upload the project document.",
+        );
       }
 
       const data = new FormData();
@@ -181,8 +184,8 @@ const CompanyCreateProject = () => {
         },
       });
 
-      navigate("/company/dashboard", { 
-        state: { message: "Project created successfully!" } 
+      navigate("/company/dashboard", {
+        state: { message: "Project created successfully!" },
       });
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Error occurred");
@@ -199,7 +202,9 @@ const CompanyCreateProject = () => {
           <Building className="header-icon" size={40} />
           <div>
             <h1 className="header-title">Create New Project</h1>
-            <p className="header-subtitle">Fill in the details to create your next masterpiece</p>
+            <p className="header-subtitle">
+              Fill in the details to create your next masterpiece
+            </p>
           </div>
         </div>
       </div>
@@ -377,7 +382,9 @@ const CompanyCreateProject = () => {
                     <input
                       type="text"
                       value={t.title}
-                      onChange={(e) => handleTemplateChange(i, "title", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "title", e.target.value)
+                      }
                       className="form-control"
                       placeholder="e.g., Type A Apartment"
                       required
@@ -389,7 +396,9 @@ const CompanyCreateProject = () => {
                     <input
                       type="text"
                       value={t.unitCode}
-                      onChange={(e) => handleTemplateChange(i, "unitCode", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "unitCode", e.target.value)
+                      }
                       className="form-control"
                       placeholder="e.g., UA-01"
                       required
@@ -400,7 +409,9 @@ const CompanyCreateProject = () => {
                     <label className="form-label">Description *</label>
                     <textarea
                       value={t.description}
-                      onChange={(e) => handleTemplateChange(i, "description", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "description", e.target.value)
+                      }
                       className="form-control"
                       rows="2"
                       placeholder="Unit details..."
@@ -415,7 +426,9 @@ const CompanyCreateProject = () => {
                     <input
                       type="number"
                       value={t.area}
-                      onChange={(e) => handleTemplateChange(i, "area", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "area", e.target.value)
+                      }
                       className="form-control"
                       placeholder="0"
                       required
@@ -429,7 +442,9 @@ const CompanyCreateProject = () => {
                     <input
                       type="number"
                       value={t.basePrice}
-                      onChange={(e) => handleTemplateChange(i, "basePrice", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "basePrice", e.target.value)
+                      }
                       className="form-control"
                       placeholder="0.00"
                       required
@@ -443,7 +458,9 @@ const CompanyCreateProject = () => {
                     <input
                       type="number"
                       value={t.numberOfRooms}
-                      onChange={(e) => handleTemplateChange(i, "numberOfRooms", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(i, "numberOfRooms", e.target.value)
+                      }
                       className="form-control"
                       placeholder="0"
                     />
@@ -456,7 +473,13 @@ const CompanyCreateProject = () => {
                     <input
                       type="number"
                       value={t.numberOfBathrooms}
-                      onChange={(e) => handleTemplateChange(i, "numberOfBathrooms", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(
+                          i,
+                          "numberOfBathrooms",
+                          e.target.value,
+                        )
+                      }
                       className="form-control"
                       placeholder="0"
                     />
@@ -467,7 +490,13 @@ const CompanyCreateProject = () => {
                     <input
                       type="number"
                       value={t.priceIncreasePerFloor}
-                      onChange={(e) => handleTemplateChange(i, "priceIncreasePerFloor", e.target.value)}
+                      onChange={(e) =>
+                        handleTemplateChange(
+                          i,
+                          "priceIncreasePerFloor",
+                          e.target.value,
+                        )
+                      }
                       className="form-control"
                       placeholder="0.00"
                     />
@@ -481,7 +510,13 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.hasGarage}
-                          onChange={(e) => handleTemplateChange(i, "hasGarage", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(
+                              i,
+                              "hasGarage",
+                              e.target.checked,
+                            )
+                          }
                         />
                         <div className="feature-label">
                           <Car size={18} />
@@ -492,7 +527,13 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.isFurnished}
-                          onChange={(e) => handleTemplateChange(i, "isFurnished", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(
+                              i,
+                              "isFurnished",
+                              e.target.checked,
+                            )
+                          }
                         />
                         <div className="feature-label">
                           <Wind size={18} />
@@ -503,7 +544,13 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.hasGarden}
-                          onChange={(e) => handleTemplateChange(i, "hasGarden", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(
+                              i,
+                              "hasGarden",
+                              e.target.checked,
+                            )
+                          }
                         />
                         <div className="feature-label">
                           <Trees size={18} />
@@ -514,7 +561,9 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.hasPool}
-                          onChange={(e) => handleTemplateChange(i, "hasPool", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(i, "hasPool", e.target.checked)
+                          }
                         />
                         <div className="feature-label">
                           <Droplets size={18} />
@@ -525,7 +574,13 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.hasSecurity}
-                          onChange={(e) => handleTemplateChange(i, "hasSecurity", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(
+                              i,
+                              "hasSecurity",
+                              e.target.checked,
+                            )
+                          }
                         />
                         <div className="feature-label">
                           <Shield size={18} />
@@ -536,7 +591,13 @@ const CompanyCreateProject = () => {
                         <input
                           type="checkbox"
                           checked={t.hasParking}
-                          onChange={(e) => handleTemplateChange(i, "hasParking", e.target.checked)}
+                          onChange={(e) =>
+                            handleTemplateChange(
+                              i,
+                              "hasParking",
+                              e.target.checked,
+                            )
+                          }
                         />
                         <div className="feature-label">
                           <Lock size={18} />
@@ -549,7 +610,11 @@ const CompanyCreateProject = () => {
               </div>
             ))}
 
-            <button type="button" onClick={addUnit} className="btn-add-template">
+            <button
+              type="button"
+              onClick={addUnit}
+              className="btn-add-template"
+            >
               <PlusCircle size={20} />
               Add Another Unit Template
             </button>
@@ -564,7 +629,10 @@ const CompanyCreateProject = () => {
           </div>
 
           <div className="upload-group">
-            <p className="upload-hint">Please upload the project legal documents or brochure (PDF only, max 10MB)</p>
+            <p className="upload-hint">
+              Please upload the project legal documents or brochure (PDF only,
+              max 10MB)
+            </p>
             <div className="upload-area">
               <input
                 type="file"
@@ -601,11 +669,7 @@ const CompanyCreateProject = () => {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? (
               <>
                 <div className="spinner"></div>
