@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
-import API, { approveLandlord, rejectLandlord } from "../services/api";
+import API, {
+  approveLandlord,
+  rejectLandlord,
+  fetchVerifiedWaitingLandlords,
+  fetchRejectedLandlords,
+  fetchWaitingLandlords,
+} from "../services/api";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/PendingApprovals.css";
+import { toast } from "react-toastify";
 import {
   Search,
   X,
@@ -18,71 +25,116 @@ import {
   Clock,
   File,
   Download,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
 } from "lucide-react";
 
 const PendingApprovals = () => {
-  const [pendingLandlords, setPendingLandlords] = useState([]);
-  const [filteredLandlords, setFilteredLandlords] = useState([]);
+  const [verifiedLandlords, setVerifiedLandlords] = useState([]);
+  const [rejectedLandlords, setRejectedLandlords] = useState([]);
+  const [uncertainLandlords, setUncertainLandlords] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [documentType, setDocumentType] = useState("");
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const fetchSection = async (fetchFn, setter) => {
+        try {
+          const res = await fetchFn();
+          setter(res.data || []);
+        } catch (err) {
+          console.error(`Error fetching section:`, err);
+          // If it's a 404, we just keep the list empty rather than crashing the whole page
+          setter([]);
+        }
+      };
+
+      await Promise.all([
+        fetchSection(fetchVerifiedWaitingLandlords, setVerifiedLandlords),
+        fetchSection(fetchRejectedLandlords, setRejectedLandlords),
+        fetchSection(fetchWaitingLandlords, setUncertainLandlords),
+      ]);
+
+    } catch (err) {
+      console.error("Critical error fetching landlords:", err);
+      setError("Failed to load landlords data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPendingLandlords = async () => {
-      try {
-        setLoading(true);
-        const response = await API.get("/admin/waitingLandlords");
-        setPendingLandlords(response.data);
-        setFilteredLandlords(response.data);
-      } catch (err) {
-        setMessage("No data available");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPendingLandlords();
+    fetchData();
   }, []);
 
-  // Filter landlords based on search term
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredLandlords(pendingLandlords);
-    } else {
-      const filtered = pendingLandlords.filter(
-        (landlord) =>
-          landlord.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          landlord.email?.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-      setFilteredLandlords(filtered);
-    }
-  }, [searchTerm, pendingLandlords]);
+  const filterLandlords = (list) => {
+    if (!searchTerm.trim()) return list;
+    return list.filter(
+      (landlord) =>
+        landlord.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        landlord.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
 
-  const handleLandlordAction = async (userId, action) => {
+  const handleLandlordAction = async (userId, action, listType) => {
     if (!userId) {
-      toast.error(`Invalid user ID. Cannot ${action}.`);
+      toast.error(`Invalid ID. Cannot ${action}.`);
       return;
     }
-    const originalLandlords = [...pendingLandlords];
-    setPendingLandlords((prev) =>
-      prev.filter((landlord) => landlord.userId !== userId),
-    );
+
+    // Helper to filter by multiple ID fields
+    const filterById = (list) =>
+      list.filter((l) => {
+        const lId = l.userId || l.id || l.landlordId;
+        return String(lId) !== String(userId);
+      });
+
     try {
       if (action === "accept") {
         await approveLandlord(userId);
       } else if (action === "reject") {
         await rejectLandlord(userId);
       }
-      setSuccessMessage(`Landlord ${action}ed successfully!`);
+
+      // Remove from the local state
+      if (listType === "verified") {
+        setVerifiedLandlords(filterById);
+      } else if (listType === "rejected") {
+        setRejectedLandlords(filterById);
+      } else if (listType === "uncertain") {
+        setUncertainLandlords(filterById);
+      }
+
+      setSuccessMessage(`Landlord ${action === "accept" ? "approved" : "rejected"} successfully!`);
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      toast.error(`Failed to ${action} landlord.`);
-      // Restore original list on error
-      setPendingLandlords(originalLandlords);
-      setTimeout(() => setError(null), 3000);
+      console.error(`Error during ${action}:`, err);
+      
+      // Handle 409 Conflict - usually means action already taken or state mismatch
+      if (err.response?.status === 409) {
+        toast.info("This action has already been processed or the landlord's status has changed.");
+        
+        // Even on conflict, we should probably remove it from the pending list
+        if (listType === "verified") {
+          setVerifiedLandlords(filterById);
+        } else if (listType === "rejected") {
+          setRejectedLandlords(filterById);
+        } else if (listType === "uncertain") {
+          setUncertainLandlords(filterById);
+        }
+      } else {
+        const errorMsg = err.response?.data?.message || `Failed to ${action} landlord.`;
+        toast.error(errorMsg);
+      }
     }
   };
 
@@ -230,7 +282,10 @@ const PendingApprovals = () => {
           )}
         </div>
         <p className="search-stats">
-          {filteredLandlords.length} landlord(s) found
+          {filterLandlords(verifiedLandlords).length +
+            filterLandlords(rejectedLandlords).length +
+            filterLandlords(uncertainLandlords).length}{" "}
+          landlord(s) found
         </p>
       </div>
 
@@ -242,11 +297,104 @@ const PendingApprovals = () => {
         </div>
       )}
 
-      {/* Landlords Grid */}
-      {filteredLandlords.length > 0 ? (
-        <div className="landlords-grid">
-          {filteredLandlords.map((landlord) => (
-            <div key={landlord.userId} className="landlord-card">
+      {/* Verified Section */}
+      <LandlordSection
+        title="reviewed by ai and waiting admin approval"
+        icon={<ShieldCheck size={24} />}
+        landlords={filterLandlords(verifiedLandlords)}
+        type="verified"
+        handleAction={handleLandlordAction}
+        setSelectedDocument={setSelectedDocument}
+        setDocumentType={setDocumentType}
+        searchTerm={searchTerm}
+      />
+
+      {/* Rejected Section */}
+      <LandlordSection
+        title="reviewed by ai and waiting admin rejection"
+        icon={<ShieldAlert size={24} />}
+        landlords={filterLandlords(rejectedLandlords)}
+        type="rejected"
+        handleAction={handleLandlordAction}
+        setSelectedDocument={setSelectedDocument}
+        setDocumentType={setDocumentType}
+        searchTerm={searchTerm}
+      />
+
+      {/* Uncertain Section */}
+      <LandlordSection
+        title="uncertain by ai and waiting admin final decision"
+        icon={<ShieldQuestion size={24} />}
+        landlords={filterLandlords(uncertainLandlords)}
+        type="uncertain"
+        handleAction={handleLandlordAction}
+        setSelectedDocument={setSelectedDocument}
+        setDocumentType={setDocumentType}
+        searchTerm={searchTerm}
+      />
+
+      {/* Empty State */}
+      {filterLandlords(verifiedLandlords).length === 0 &&
+        filterLandlords(rejectedLandlords).length === 0 &&
+        filterLandlords(uncertainLandlords).length === 0 && (
+          <div className="empty-state">
+            <Search className="empty-state-icon" />
+            <p className="empty-state-text">
+              {searchTerm
+                ? "No landlords found matching your search"
+                : "No pending landlord"}
+            </p>
+          </div>
+        )}
+    </div>
+  );
+};
+
+const LandlordSection = ({
+  title,
+  icon,
+  landlords,
+  type,
+  handleAction,
+  setSelectedDocument,
+  setDocumentType,
+  searchTerm,
+}) => {
+  if (landlords.length === 0 && !searchTerm) return null;
+  if (landlords.length === 0 && searchTerm) return null;
+
+  return (
+    <div className={`landlord-section-container mb-12 section-${type}`}>
+      <div className="section-header-wrapper">
+        <div className="section-header-content">
+          <div className="section-header-info">
+            <div className={`section-icon-box icon-${type}`}>
+              {icon}
+            </div>
+            <div className="section-text-content">
+              <h2 className="section-title">
+                {title}
+              </h2>
+              <p className="section-subtitle">
+                {type === 'verified' ? 'AI suggests approval' : 
+                 type === 'rejected' ? 'AI suggests rejection' : 
+                 'Manual review required'}
+              </p>
+            </div>
+          </div>
+          <div className="section-header-stats">
+            <span className={`section-count-badge count-${type}`}>
+              {landlords.length} Landlords
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="landlords-grid">
+        {landlords.map((landlord) => {
+          const lId = landlord.userId || landlord.id || landlord.landlordId;
+          return (
+            <div key={lId} className="landlord-card">
               {/* Card Header */}
               <div className="card-header-gradient">
                 <h3 className="landlord-name">{landlord.userName}</h3>
@@ -317,18 +465,14 @@ const PendingApprovals = () => {
               {/* Card Actions */}
               <div className="card-actions">
                 <button
-                  onClick={() =>
-                    handleLandlordAction(landlord.userId, "accept")
-                  }
+                  onClick={() => handleAction(lId, "accept", type)}
                   className="action-btn btn-approve"
                 >
                   <Check size={20} />
                   Approve
                 </button>
                 <button
-                  onClick={() =>
-                    handleLandlordAction(landlord.userId, "reject")
-                  }
+                  onClick={() => handleAction(lId, "reject", type)}
                   className="action-btn btn-reject"
                 >
                   <X size={20} />
@@ -336,18 +480,9 @@ const PendingApprovals = () => {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="empty-state">
-          <Search className="empty-state-icon" />
-          <p className="empty-state-text">
-            {searchTerm
-              ? "No landlords found matching your search"
-              : "No pending landlord"}
-          </p>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };

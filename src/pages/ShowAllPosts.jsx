@@ -78,8 +78,10 @@ const PropertyCardCarousel = ({ images, title }) => {
 
   if (!images || images.length === 0) {
     return (
-      <div className="property-image-placeholder">
-        <FaHome />
+      <div className="property-image">
+        <div className="property-image-placeholder">
+          <FaHome />
+        </div>
       </div>
     );
   }
@@ -137,7 +139,25 @@ const ShowAllPosts = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [message, setMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 8;
   const navigate = useNavigate();
+
+  // Reset to first page when filtering changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredPosts]);
+
+  // Pagination Logic
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const userInfo = getUserInfoFromToken();
   const { role: userRole, userId, userName } = userInfo || {}; // 'userId' is the current user
 
@@ -151,7 +171,14 @@ const ShowAllPosts = () => {
 
         const initialPosts = res.data.map((post) => ({
           ...post,
-          images: post.images || [],
+          images:
+            post.images && post.images.length > 0
+              ? post.images
+              : post.projectImages && post.projectImages.length > 0
+                ? post.projectImages
+                : post.image
+                  ? [post.image]
+                  : [],
           fileBase64: post.fileBase64 || null,
         }));
 
@@ -401,7 +428,7 @@ const ShowAllPosts = () => {
 
         {/* Properties Grid */}
         <div className="properties-grid">
-          {filteredPosts.map((post) => {
+          {currentPosts.map((post) => {
             const postUserIdStr = String(userId);
 
             const images = Array.isArray(post.images)
@@ -491,6 +518,39 @@ const ShowAllPosts = () => {
             );
           })}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="pagination-btn"
+            >
+              Previous
+            </button>
+            <div className="pagination-numbers">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => paginate(i + 1)}
+                  className={`pagination-number ${
+                    currentPage === i + 1 ? "active" : ""
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="pagination-btn"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

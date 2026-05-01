@@ -343,6 +343,9 @@ export const getUserTransactions = () => API.get("/users/transactions");
 
 // ==================== Admin ====================
 export const fetchWaitingCompanies = () => API.get("/admin/waitingCompanies");
+export const fetchVerifiedWaitingLandlords = () => API.get("/admin/verifiedWaitingLandlords");
+export const fetchRejectedLandlords = () => API.get("/admin/rejectedLandlords");
+export const fetchWaitingLandlords = () => API.get("/admin/waitingLandlords");
 export const approveCompany = (id) =>
   API.put(`${API_BASE_URL}/api/admin/accept-company/${id}`);
 export const rejectCompany = (id) =>
