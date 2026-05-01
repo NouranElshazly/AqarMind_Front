@@ -47,6 +47,7 @@ import ManageAds from "./pages/ManageAds";
 import ManageContracts from "./pages/ManageContracts";
 import TenantPaymentPlans from "./pages/TenantPaymentPlans";
 import PaymentPlanDetails from "./pages/PaymentPlanDetails";
+import Chatbot from "./pages/Chatbot";
 
 
 // Create DarkMode Context
@@ -252,6 +253,8 @@ function App() {
               <Route path="/saved-posts" element={<SavedPosts />} />
               <Route path="/UserProposals" element={<UserProposals />} />
               <Route path="/contract-details/:contractId" element={<ContractDetails />} />
+              {/* Chatbot Route */}
+              <Route path="/chatbot" element={<Chatbot />} />
               {/* Messages Routes */}
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:receiverId" element={<Messages />} />

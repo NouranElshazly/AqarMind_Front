@@ -858,6 +858,15 @@ const Navbar = () => {
                   </div>
                   {shouldShowProfile && (
                     <>
+                      {localStorage.getItem("role")?.toLowerCase() === "tenant" && (
+                        <Link
+                          to="/chatbot"
+                          className="profile-btn-desktop"
+                          title="Chatbot"
+                        >
+                          <ChatIcon />
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         className="profile-btn-desktop"
@@ -955,18 +964,35 @@ const Navbar = () => {
                 </Link>
 
                 {shouldShowProfile && (
-                  <Link to="/profile" className="menu-card" onClick={closeMenu}>
-                    <div className="menu-card-icon">
-                      <ProfileIcon />
-                    </div>
-                    <div className="menu-card-content">
-                      <div className="menu-card-title">Profile</div>
-                      <div className="menu-card-description">
-                        View and edit your profile
+                  <>
+                    <Link to="/profile" className="menu-card" onClick={closeMenu}>
+                      <div className="menu-card-icon">
+                        <ProfileIcon />
                       </div>
-                    </div>
-                    <div className="menu-card-arrow">→</div>
-                  </Link>
+                      <div className="menu-card-content">
+                        <div className="menu-card-title">Profile</div>
+                        <div className="menu-card-description">
+                          View and edit your profile
+                        </div>
+                      </div>
+                      <div className="menu-card-arrow">→</div>
+                    </Link>
+
+                    {localStorage.getItem("role")?.toLowerCase() === "tenant" && (
+                      <Link to="/chatbot" className="menu-card" onClick={closeMenu}>
+                        <div className="menu-card-icon">
+                          <ChatIcon />
+                        </div>
+                        <div className="menu-card-content">
+                          <div className="menu-card-title">AI Chatbot</div>
+                          <div className="menu-card-description">
+                            Find properties with AI
+                          </div>
+                        </div>
+                        <div className="menu-card-arrow">→</div>
+                      </Link>
+                    )}
+                  </>
                 )}
 
                 <Link
