@@ -414,8 +414,8 @@ const Home = () => {
             <div className="home-properties-grid">
               {featuredProperties.map((property) => {
                 const propertyKey = property.postId;
-                const currentIndex = currentImageIndexes[propertyKey] ;
-                const images =property.images ;
+                const currentIndex = currentImageIndexes[propertyKey] || 0;
+                const images = property.images;
                 const hasMultipleImages = images && images.length > 1;
 
                 return (
@@ -426,19 +426,39 @@ const Home = () => {
                   >
                     <div className="home-property-card">
                       <div className="home-property-image">
-                        <img
-                          src={
-                            images && images.length > 0
-                              ? images[currentIndex].startsWith("http")
-                                ? images[currentIndex]
-                                : `${API_BASE_URL}/${images[currentIndex]}`
-                              : property.image &&
-                                  property.image.startsWith("http")
-                                ? property.image
-                                : `${API_BASE_URL}/${property.image}`
-                          }
-                          alt={property.title}
-                        />
+                        {images && images.length > 0 && images[currentIndex] ? (
+                           <img
+                             src={
+                               images[currentIndex].startsWith("http")
+                                 ? images[currentIndex]
+                                 : `${API_BASE_URL}/${images[currentIndex]}`
+                             }
+                             alt={property.title}
+                             onError={(e) => {
+                               e.target.style.display = 'none';
+                               e.target.nextSibling.style.display = 'flex';
+                             }}
+                           />
+                         ) : property.image ? (
+                           <img
+                             src={
+                               property.image.startsWith("http")
+                                 ? property.image
+                                 : `${API_BASE_URL}/${property.image}`
+                             }
+                             alt={property.title}
+                             onError={(e) => {
+                               e.target.style.display = 'none';
+                               e.target.nextSibling.style.display = 'flex';
+                             }}
+                           />
+                         ) : null}
+                         <div 
+                           className="home-property-image-placeholder"
+                           style={{ display: (images && images.length > 0) || property.image ? 'none' : 'flex' }}
+                         >
+                           <FaHome />
+                         </div>
                         <div className="home-property-badge">
                           {property.status === -1
                             ? "Sold"
@@ -499,7 +519,7 @@ const Home = () => {
                             {property.title}
                           </h3>
                           <div className="home-property-description">
-                            <i class="fa-solid fa-angle-right"></i>
+                            <i className="fa-solid fa-angle-right"></i>
                             <span>{property.description}</span>
                           </div>
                           <div className="home-price-row">
