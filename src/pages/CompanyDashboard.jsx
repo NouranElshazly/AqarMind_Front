@@ -195,7 +195,7 @@ const CompanyDashboard = () => {
     }
 
     if (allImages.length === 0) {
-      allImages = ["https://placehold.co/400x300/1e3a8a/ffffff?text=Project+Image"];
+      allImages = [];
     }
 
     const currentImageSrc = allImages[currentIndex] || allImages[0];
@@ -203,7 +203,22 @@ const CompanyDashboard = () => {
     return (
       <div className="property-card fade-in">
         <div className="property-image">
-          <img src={currentImageSrc} alt={project.projectName} />
+          {currentImageSrc ? (
+            <img 
+              src={currentImageSrc} 
+              alt={project.projectName} 
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className="property-image-placeholder"
+            style={{ display: currentImageSrc ? 'none' : 'flex' }}
+          >
+            <Home size={64} />
+          </div>
           <div className="property-status-overlay">
             {getStatusBadge(project.pendingStatus)}
           </div>

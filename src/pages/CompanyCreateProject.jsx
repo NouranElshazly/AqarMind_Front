@@ -27,6 +27,7 @@ import {
   Droplets,
   Trees,
   Lock,
+  Image as ImageIcon,
 } from "lucide-react";
 import "../styles/CompanyCreateProject.css";
 
@@ -49,19 +50,17 @@ const CompanyCreateProject = () => {
   const [templates, setTemplates] = useState([
     {
       title: "",
+      unitCode: "",
+      description: "",
       area: "",
       basePrice: "",
       numberOfRooms: "",
       numberOfBathrooms: "",
+      priceIncreasePerFloor: "",
       hasGarage: false,
       isFurnished: false,
-      hasGarden: false,
-      hasPool: false,
-      hasSecurity: false,
-      hasParking: false,
-      priceIncreasePerFloor: "",
-      unitCode: "",
-      description: "",
+      images: [],
+      previewImages: [],
     },
   ]);
 
@@ -87,21 +86,52 @@ const CompanyCreateProject = () => {
       ...templates,
       {
         title: "",
+        unitCode: "",
+        description: "",
         area: "",
         basePrice: "",
         numberOfRooms: "",
         numberOfBathrooms: "",
+        priceIncreasePerFloor: "",
         hasGarage: false,
         isFurnished: false,
-        hasGarden: false,
-        hasPool: false,
-        hasSecurity: false,
-        hasParking: false,
-        priceIncreasePerFloor: "",
-        unitCode: "",
-        description: "",
+        images: [],
+        previewImages: [],
       },
     ]);
+  };
+
+  const handleTemplateImagesUpload = (index, files) => {
+    const updatedTemplates = [...templates];
+    const newFiles = Array.from(files);
+
+    updatedTemplates[index].images = [
+      ...updatedTemplates[index].images,
+      ...newFiles,
+    ];
+
+    newFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updatedTemplates[index].previewImages = [
+          ...updatedTemplates[index].previewImages,
+          reader.result,
+        ];
+        setTemplates([...updatedTemplates]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeTemplateImage = (unitIndex, imageIndex) => {
+    const updatedTemplates = [...templates];
+    updatedTemplates[unitIndex].images = updatedTemplates[
+      unitIndex
+    ].images.filter((_, i) => i !== imageIndex);
+    updatedTemplates[unitIndex].previewImages = updatedTemplates[
+      unitIndex
+    ].previewImages.filter((_, i) => i !== imageIndex);
+    setTemplates(updatedTemplates);
   };
 
   const removeUnit = (i) => {
@@ -166,14 +196,22 @@ const CompanyCreateProject = () => {
       }
 
       templates.forEach((t, i) => {
-        Object.keys(t).forEach((key) => {
-          let val = t[key];
-          if (typeof val === "boolean") {
-            data.append(`UnitTemplates[${i}].${key}`, val);
-          } else if (val !== "") {
-            data.append(`UnitTemplates[${i}].${key}`, val);
-          }
-        });
+        data.append(`UnitTemplates[${i}].Title`, t.title);
+        data.append(`UnitTemplates[${i}].Area`, Number(t.area));
+        data.append(`UnitTemplates[${i}].BasePrice`, Number(t.basePrice));
+        data.append(`UnitTemplates[${i}].NumberOfRooms`, Number(t.numberOfRooms || 0));
+        data.append(`UnitTemplates[${i}].NumberOfBathrooms`, Number(t.numberOfBathrooms || 0));
+        data.append(`UnitTemplates[${i}].PriceIncreasePerFloor`, Number(t.priceIncreasePerFloor || 0));
+        data.append(`UnitTemplates[${i}].UnitCode`, t.unitCode);
+        data.append(`UnitTemplates[${i}].Description`, t.description);
+        data.append(`UnitTemplates[${i}].HasGarage`, t.hasGarage);
+        data.append(`UnitTemplates[${i}].IsFurnished`, t.isFurnished);
+
+        if (t.images && t.images.length > 0) {
+          t.images.forEach((img) => {
+            data.append(`UnitTemplates[${i}].Images`, img);
+          });
+        }
       });
 
       data.append("ProjectDocFile", file);
@@ -540,71 +578,46 @@ const CompanyCreateProject = () => {
                           <span>Furnished</span>
                         </div>
                       </label>
-                      <label className="feature-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={t.hasGarden}
-                          onChange={(e) =>
-                            handleTemplateChange(
-                              i,
-                              "hasGarden",
-                              e.target.checked,
-                            )
-                          }
-                        />
-                        <div className="feature-label">
-                          <Trees size={18} />
-                          <span>Garden</span>
-                        </div>
-                      </label>
-                      <label className="feature-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={t.hasPool}
-                          onChange={(e) =>
-                            handleTemplateChange(i, "hasPool", e.target.checked)
-                          }
-                        />
-                        <div className="feature-label">
-                          <Droplets size={18} />
-                          <span>Pool</span>
-                        </div>
-                      </label>
-                      <label className="feature-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={t.hasSecurity}
-                          onChange={(e) =>
-                            handleTemplateChange(
-                              i,
-                              "hasSecurity",
-                              e.target.checked,
-                            )
-                          }
-                        />
-                        <div className="feature-label">
-                          <Shield size={18} />
-                          <span>Security</span>
-                        </div>
-                      </label>
-                      <label className="feature-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={t.hasParking}
-                          onChange={(e) =>
-                            handleTemplateChange(
-                              i,
-                              "hasParking",
-                              e.target.checked,
-                            )
-                          }
-                        />
-                        <div className="feature-label">
-                          <Lock size={18} />
-                          <span>Parking</span>
-                        </div>
+                    </div>
+                  </div>
+
+                  {/* Template Images */}
+                  <div className="form-group full-width">
+                    <label className="form-label">
+                      <ImageIcon size={18} /> Unit Images
+                    </label>
+                    <div className="upload-area">
+                      <input
+                        type="file"
+                        id={`template-images-${i}`}
+                        onChange={(e) => handleTemplateImagesUpload(i, e.target.files)}
+                        accept="image/*"
+                        multiple
+                        hidden
+                      />
+                      <label htmlFor={`template-images-${i}`} className="upload-box">
+                        <ImageIcon size={40} />
+                        <p>Click to upload unit images</p>
+                        <span className="upload-hint">JPG, PNG (Max 5MB each)</span>
                       </label>
                     </div>
+
+                    {t.previewImages && t.previewImages.length > 0 && (
+                      <div className="images-preview">
+                        {t.previewImages.map((img, imgIdx) => (
+                          <div key={imgIdx} className="preview-image">
+                            <img src={img} alt={`Preview ${imgIdx + 1}`} />
+                            <button
+                              type="button"
+                              onClick={() => removeTemplateImage(i, imgIdx)}
+                              className="remove-image"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

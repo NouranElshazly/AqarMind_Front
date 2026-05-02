@@ -117,9 +117,31 @@ const ProjectDetails = ({ project, onApprove, onReject, actionLoading }) => {
                      <strong>Rooms:</strong> {unit.numberOfRooms}
                    </div>
                    <div className="unit-meta" style={{ fontSize: '0.85rem' }}>
+                     <strong>Bathrooms:</strong> {unit.numberOfBathrooms}
+                   </div>
+                   <div className="unit-meta" style={{ fontSize: '0.85rem' }}>
                      <strong>Increase/Floor:</strong> ${unit.priceIncreasePerFloor}
                    </div>
+                   <div className="unit-meta" style={{ fontSize: '0.85rem' }}>
+                     <strong>Garage:</strong> {unit.hasGarage ? "✓" : "✗"}
+                   </div>
+                   <div className="unit-meta" style={{ fontSize: '0.85rem' }}>
+                     <strong>Furnished:</strong> {unit.isFurnished ? "✓" : "✗"}
+                   </div>
                 </div>
+
+                {unit.images && unit.images.length > 0 && (
+                  <div className="unit-images" style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    {unit.images.map((img, imgIdx) => (
+                      <img 
+                        key={imgIdx} 
+                        src={img.startsWith("http") ? img : `${API_BASE_URL}/${img}`} 
+                        alt={`Unit ${idx} Img ${imgIdx}`}
+                        style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '0.25rem', border: '1px solid var(--border-primary)' }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
