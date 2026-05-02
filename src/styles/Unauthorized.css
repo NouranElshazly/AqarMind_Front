@@ -1,0 +1,218 @@
+/* ==========================================
+   UNAUTHORIZED PAGE STYLES
+   AqarMind Restricted Access UI
+   ========================================== */
+
+.unauthorized-shell {
+  min-height: 100vh;
+  width: 100%;
+  background-color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.unauthorized-ambient-glow {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+  top: -20vw;
+  right: -10vw;
+  pointer-events: none;
+}
+
+.unauthorized-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 550px;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.unauthorized-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  padding: 3.5rem 2.5rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.unauthorized-icon-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2.5rem;
+}
+
+.icon-circle {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.lock-icon {
+  font-size: 3rem;
+  color: #0f172a;
+}
+
+.shield-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background: #1e3a8a;
+  color: #fbbf24;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border: 3px solid #0f172a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.unauthorized-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+}
+
+.unauthorized-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.divider-line {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(251, 191, 36, 0.5));
+}
+
+.divider-line:last-child {
+  background: linear-gradient(to left, transparent, rgba(251, 191, 36, 0.5));
+}
+
+.divider-dot {
+  width: 6px;
+  height: 6px;
+  background: #fbbf24;
+  border-radius: 50%;
+}
+
+.unauthorized-description {
+  font-size: 1.125rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 2.5rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.unauthorized-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 480px) {
+  .unauthorized-actions {
+    flex-direction: row;
+  }
+}
+
+.unauthorized-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.unauthorized-btn.primary {
+  background: #fbbf24;
+  color: #0f172a;
+}
+
+.unauthorized-btn.primary:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3);
+}
+
+.unauthorized-btn.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unauthorized-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.unauthorized-footer {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.unauthorized-footer a {
+  color: #fbbf24;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.unauthorized-footer a:hover {
+  text-decoration: underline;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.6);
+  }
+}
