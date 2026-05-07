@@ -1083,9 +1083,9 @@ const Messages = () => {
       console.error("Send message error", err);
       setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
       if (err.response?.data?.blocked) {
-        alert("Cannot send message: " + err.response.data.error);
+        toastify.error("Cannot send message: " + err.response.data.error);
       } else {
-        alert("Failed to send message.");
+        toastify.error("Failed to send message.");
       }
     }
   };
@@ -1149,7 +1149,7 @@ const Messages = () => {
       setEditContent("");
     } catch (err) {
       console.error("Edit message error", err);
-      alert("Failed to edit message");
+      toastify.error("Failed to edit message");
     }
   };
 
@@ -1157,7 +1157,7 @@ const Messages = () => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
-      alert("File size is too large. Maximum size is 50MB");
+      toastify.error("File size is too large. Maximum size is 50MB");
       return;
     }
     setSelectedFile(file);
@@ -1209,7 +1209,7 @@ const Messages = () => {
     } catch (err) {
       console.error("Send media error", err);
       if (err.response?.data?.blocked) {
-        alert("Cannot send file: " + err.response.data.error);
+        toastify.error("Cannot send file: " + err.response.data.error);
       }
     } finally {
       setUploading(false);
@@ -1266,7 +1266,7 @@ const Messages = () => {
       setMediaRecorder(recorder);
     } catch (err) {
       console.error("Error starting recording:", err);
-      alert(
+      toastify.error(
         "Cannot access microphone. Please make sure you have given permission.",
       );
     }

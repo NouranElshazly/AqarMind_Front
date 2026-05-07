@@ -192,7 +192,7 @@ const TenantDashboard = () => {
 
   const handleSaveProperty = async (propertyId, isCurrentlySaved) => {
     if (!userId || !token) {
-      alert("Please login to save properties");
+      toastify.error("Please login to save properties");
       navigate("/login");
       return;
     }
@@ -280,7 +280,7 @@ const TenantDashboard = () => {
 
     } catch (error) {
       console.error("Error saving property:", error);
-      alert("Failed to save property. Please try again.");
+      toastify.error("Failed to save property. Please try again.");
     } finally {
       setSavingStates(prev => ({ ...prev, [propertyId]: false }));
     }

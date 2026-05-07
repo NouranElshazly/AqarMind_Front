@@ -166,7 +166,7 @@ const LandlordProposalManage = () => {
       setModalOpen(false);
     } catch (err) {
       console.error(`Error ${action}ing proposal:`, err);
-      alert(`Failed to ${action} proposal. Please try again.`);
+      toast.error(`Failed to ${action} proposal. Please try again.`);
       setModalOpen(false);
     } finally {
       setIsProcessing(false);

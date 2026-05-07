@@ -149,7 +149,7 @@ const PropertyProposals = () => {
     // في حالة Pending، لا نتحقق من الـ 3 أيام
     const normalizedStatus = getNormalizedStatus(proposal.rentalStatus);
     if (normalizedStatus !== "pending" && !canModify) {
-      alert("Cannot modify this request after 3 days have passed");
+      toastify.error("Cannot modify this request after 3 days have passed");
       return;
     }
 
@@ -213,11 +213,11 @@ const PropertyProposals = () => {
       setSubmittedData(updatedData);
       
       // إظهار رسالة نجاح
-      alert("✅ Application approved successfully!");
+      toastify.error("✅ Application approved successfully!");
       
     } catch (error) {
       console.error("Error approving proposal:", error);
-      alert("❌ Failed to approve application. Please try again.");
+      toastify.error("❌ Failed to approve application. Please try again.");
     } finally {
       closeConfirmationModal();
     }
@@ -246,11 +246,11 @@ const PropertyProposals = () => {
       setSubmittedData(updatedData);
       
       // إظهار رسالة نجاح
-      alert("✅ Application rejected successfully!");
+      toastify.error("✅ Application rejected successfully!");
       
     } catch (error) {
       console.error("Error rejecting proposal:", error);
-      alert("❌ Failed to reject application. Please try again.");
+      toastify.error("❌ Failed to reject application. Please try again.");
     } finally {
       closeConfirmationModal();
     }

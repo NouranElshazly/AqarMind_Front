@@ -55,7 +55,7 @@ const ManageProperties = () => {
       setPropertyToDelete(null);
     } catch (err) {
       console.error("Error deleting property:", err);
-      alert("Failed to delete property. Please try again.");
+      toast.error("Failed to delete property. Please try again.");
     } finally {
       setDeleteLoading(false);
     }
