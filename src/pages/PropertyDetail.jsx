@@ -151,7 +151,7 @@ const InlineReplyBox = ({
       !file.type.startsWith("image/") ||
       file.size > 5 * 1024 * 1024
     ) {
-      alert("Please select an image file smaller than 5MB.");
+     toast.warning("Please select an image file smaller than 5MB.");
       return;
     }
     setSelectedImage(file);
@@ -170,7 +170,7 @@ const InlineReplyBox = ({
     e.preventDefault();
     if (!replyText.trim() && !selectedImage) return;
     if (!userInfo?.userId) {
-      alert("You must be logged in to reply.");
+      toast.warning("You must be logged in to reply.");
       return;
     }
     setIsSubmitting(true);
@@ -198,7 +198,7 @@ const InlineReplyBox = ({
       }
       onSuccess(response.data);
     } catch (error) {
-      alert("Failed to post reply.");
+     toast.warning("Failed to post reply.");
     } finally {
       setIsSubmitting(false);
     }
@@ -486,7 +486,7 @@ const PropertyDetail = () => {
       !file.type.startsWith("image/") ||
       file.size > 5 * 1024 * 1024
     ) {
-      alert("Please select an image file smaller than 5MB.");
+     toast.warning("Please select an image file smaller than 5MB.");
       return;
     }
     setSelectedImage(file);
@@ -507,7 +507,7 @@ const PropertyDetail = () => {
       return;
     }
     if (!newComment.trim() && !selectedImage) {
-      alert("Please enter a comment or select an image");
+     toast.warning("Please enter a comment or select an image");
       return;
     }
     try {
@@ -591,7 +591,7 @@ const PropertyDetail = () => {
   };
   const handleMessageClick = () => {
     if (!localStorage.getItem("token")) {
-      alert("You need to login to send a message");
+     toast.warning("You need to login to send a message");
       navigate("/login");
       return;
     } else {
@@ -603,7 +603,7 @@ const PropertyDetail = () => {
   const handleApplyClick = () => {
     try {
       if (!tenantRole) {
-        alert("You must be logged in");
+        toast.warning("You must be logged in");
         navigate("/login");
         return;
       }
@@ -919,7 +919,7 @@ const PropertyDetail = () => {
   };
   const handleLikeComment = async (commentId) => {
     if (!userId) {
-      alert("You must be logged in to like a comment.");
+      toast.warning("You must be logged in to like a comment.");
       navigate("/login");
       return;
     }
@@ -927,12 +927,12 @@ const PropertyDetail = () => {
       const response = await likeComment(commentId);
       updateCommentInState(response.data.comment);
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to update like.");
+    toast.warning(err.response?.data?.error || "Failed to update like.");
     }
   };
   const handlePinComment = async (commentId) => {
     if (!post || !post.userId) {
-      alert("Post data not loaded.");
+     toast.warning("Post data not loaded.");
       return;
     }
     try {
@@ -940,7 +940,7 @@ const PropertyDetail = () => {
       await pinComment(commentId);
       await loadComments();
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to update pin status.");
+    toast.warning(err.response?.data?.error || "Failed to update pin status.");
     } finally {
       setLoadingAction(null);
     }
@@ -999,7 +999,7 @@ const PropertyDetail = () => {
         });
       }
     } catch (err) {
-      alert("Failed to like post.");
+     toast.warning("Failed to like post.");
       setLikeStatus(originalLikeStatus);
     }
   };
@@ -1020,9 +1020,9 @@ const PropertyDetail = () => {
     } else {
       try {
         await navigator.clipboard.writeText(postUrl);
-        alert("Link copied to clipboard!");
+       toast.warning("Link copied to clipboard!");
       } catch (err) {
-        alert("Could not copy link.");
+       toast.warning("Could not copy link.");
       }
     }
   };
@@ -1068,7 +1068,7 @@ const PropertyDetail = () => {
         !file.type.startsWith("image/") ||
         file.size > 5 * 1024 * 1024
       ) {
-        alert("Please select an image file smaller than 5MB.");
+      toast.warning("Please select an image file smaller than 5MB.");
         return;
       }
       setEditImageFile(file);
@@ -1082,7 +1082,7 @@ const PropertyDetail = () => {
     };
     const handleSaveEdit = async () => {
       if (!editText.trim() && !editImagePreview) {
-        alert("Comment cannot be empty.");
+       toast.warning("Comment cannot be empty.");
         return;
       }
       const updatePayload = { comment_description: editText.trim() };
