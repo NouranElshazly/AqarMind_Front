@@ -91,7 +91,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchFeaturedProperties();
-    
+
     // Delay fetching ad to handle redirect cases (e.g. after login)
     // If the user is redirected immediately, the component will unmount and clear this timeout
     const adTimer = setTimeout(() => {
@@ -109,6 +109,8 @@ const Home = () => {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) return; // Don't call API if user is not logged in
+
       const res = await axios.get(`${API_BASE_URL}/api/ads/popup`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -427,38 +429,38 @@ const Home = () => {
                     <div className="home-property-card">
                       <div className="home-property-image">
                         {images && images.length > 0 && images[currentIndex] ? (
-                           <img
-                             src={
-                               images[currentIndex].startsWith("http")
-                                 ? images[currentIndex]
-                                 : `${API_BASE_URL}/${images[currentIndex]}`
-                             }
-                             alt={property.title}
-                             onError={(e) => {
-                               e.target.style.display = 'none';
-                               e.target.nextSibling.style.display = 'flex';
-                             }}
-                           />
-                         ) : property.image ? (
-                           <img
-                             src={
-                               property.image.startsWith("http")
-                                 ? property.image
-                                 : `${API_BASE_URL}/${property.image}`
-                             }
-                             alt={property.title}
-                             onError={(e) => {
-                               e.target.style.display = 'none';
-                               e.target.nextSibling.style.display = 'flex';
-                             }}
-                           />
-                         ) : null}
-                         <div 
-                           className="home-property-image-placeholder"
-                           style={{ display: (images && images.length > 0) || property.image ? 'none' : 'flex' }}
-                         >
-                           <FaHome />
-                         </div>
+                          <img
+                            src={
+                              images[currentIndex].startsWith("http")
+                                ? images[currentIndex]
+                                : `${API_BASE_URL}/${images[currentIndex]}`
+                            }
+                            alt={property.title}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : property.image ? (
+                          <img
+                            src={
+                              property.image.startsWith("http")
+                                ? property.image
+                                : `${API_BASE_URL}/${property.image}`
+                            }
+                            alt={property.title}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="home-property-image-placeholder"
+                          style={{ display: (images && images.length > 0) || property.image ? 'none' : 'flex' }}
+                        >
+                          <FaHome />
+                        </div>
                         <div className="home-property-badge">
                           {property.status === -1
                             ? "Sold"
@@ -538,8 +540,8 @@ const Home = () => {
                             <span>
                               {property.datePost
                                 ? new Date(
-                                    property.datePost,
-                                  ).toLocaleDateString()
+                                  property.datePost,
+                                ).toLocaleDateString()
                                 : "Just now"}
                             </span>
                           </div>
@@ -625,44 +627,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="home-testimonials">
-        <div className="container">
-          <div className="home-testimonials-header">
-            <h2>What Our Dreamers Say</h2>
-            <p>
-              Join thousands of satisfied clients who found their dream homes
-              with us
-            </p>
-          </div>
-
-          <div className="home-testimonials-grid">
-            {testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="home-testimonial-card">
-                <div className="home-testimonial-rating">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <FaStar key={i} />
-                  ))}
-                </div>
-                <p className="home-testimonial-text">"{testimonial.comment}"</p>
-                <div className="home-testimonial-author">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.name}
-                    className="home-testimonial-avatar"
-                  />
-                  <div className="home-testimonial-info">
-                    <h4 className="home-testimonial-name">
-                      {testimonial.name}
-                    </h4>
-                    <p className="home-testimonial-role">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="home-cta">
@@ -695,11 +659,11 @@ const Home = () => {
           </div>
         </div>
       </section>
-      
-      <AdPopup 
-        isOpen={showAdPopup} 
-        onClose={() => setShowAdPopup(false)} 
-        ad={adData} 
+
+      <AdPopup
+        isOpen={showAdPopup}
+        onClose={() => setShowAdPopup(false)}
+        ad={adData}
       />
     </div>
   );
