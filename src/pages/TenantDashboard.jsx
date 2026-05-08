@@ -93,12 +93,10 @@ const TenantDashboard = () => {
         `${API_BASE_URL}/api/Tenant/my-proposals/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       const applications = applicationsResponse.data || [];
 
       // Get user's history for views
       const historyResponse = await getUserHistory(userId);
-
       const userHistory = historyResponse.data || [];
 
       // Process featured properties with real data

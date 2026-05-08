@@ -60,50 +60,45 @@ const LandlordProposalManage = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchProposals = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-        const token = localStorage.getItem("token");
+ // 👇 Outside useEffect
+const fetchProposals = async () => {
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
 
-        if (!userId) {
-          throw new Error("User ID not found. Please log in.");
-        }
+    if (!userId) {
+      throw new Error("User ID not found. Please log in.");
+    }
 
-        // With this
-        const response = await API.get(`/Landlord/proposals`);
+    const response = await API.get(`/Landlord/proposals`);
 
-        // Handle both array and message object responses
-        if (
-          response.data &&
-          typeof response.data === "object" &&
-          response.data.message
-        ) {
-          // Backend returned a message (e.g., "No posts found for this landlord.")
-          setProposals([]);
-        } else {
-          // Ensure we have an array and sort by proposalId (highest first) to show recent ones
-          const data = Array.isArray(response.data) ? response.data : [];
-          const sortedData = [...data].sort(
-            (a, b) => b.proposalId - a.proposalId,
-          );
-          setProposals(sortedData);
-        }
-      } catch (err) {
-        // Handle error responses
-        if (err.response?.data?.message) {
-          setError(err.response.data.message);
-        } else {
-          setError("Failed to load proposals.");
-        }
-        setProposals([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (
+      response.data &&
+      typeof response.data === "object" &&
+      response.data.message
+    ) {
+      setProposals([]);
+    } else {
+      const data = Array.isArray(response.data) ? response.data : [];
+      const sortedData = [...data].sort((a, b) => b.proposalId - a.proposalId);
+      setProposals(sortedData);
+    }
+  } catch (err) {
+    if (err.response?.data?.message) {
+      setError(err.response.data.message);
+    } else {
+      setError("Failed to load proposals.");
+    }
+    setProposals([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    fetchProposals();
-  }, []);
+// 👇 useEffect just calls it
+useEffect(() => {
+  fetchProposals();
+}, []);
 
   const handleAccept = (proposalId) => {
     setModalConfig({
@@ -163,7 +158,8 @@ const LandlordProposalManage = () => {
         ),
       );
 
-      setModalOpen(false);
+  setModalOpen(false);
+      await fetchProposals(); // ✅ add here
     } catch (err) {
       console.error(`Error ${action}ing proposal:`, err);
       toast.error(`Failed to ${action} proposal. Please try again.`);

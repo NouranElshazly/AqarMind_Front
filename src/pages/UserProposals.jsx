@@ -40,7 +40,7 @@ const UserProposals = () => {
       setError(null);
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/api/Tenant/my-proposals/${tenantId}`,
+          `${API_BASE_URL}/api/Tenant/my-proposals`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

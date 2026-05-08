@@ -753,7 +753,7 @@ const PropertyDetail = () => {
       }
 
       // const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`;
-      const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}/${tenantId}`;
+      const apiUrl = `${API_BASE_URL}/api/Tenant/submit-proposal/${postId}`;
       const token = localStorage.getItem("token");
 
       const headers = {
