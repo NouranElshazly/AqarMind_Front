@@ -1263,12 +1263,17 @@ const Profile = () => {
               <div className="two-factor-disable-container">
                 <form
                   onSubmit={handleDisable2FA}
-                  className="two-factor-verify-form"
+                  className="verify-section"
                 >
-                  <div className="form-group">
-                    <label className="form-label">
-                      Enter 6-digit Code to Disable 2FA
-                    </label>
+                  <div className="verify-header">
+                    <h3>Disable 2FA</h3>
+                    <p>
+                      Enter the 6-digit code from your authenticator app to
+                      confirm disabling two-factor authentication.
+                    </p>
+                  </div>
+
+                  <div className="verification-input-group">
                     <input
                       type="text"
                       maxLength="6"
@@ -1276,24 +1281,28 @@ const Profile = () => {
                       onChange={(e) =>
                         setTwoFactorCode(e.target.value.replace(/\D/g, ""))
                       }
-                      className="form-control"
-                      placeholder="000000"
+                      className="two-factor-input"
+                      placeholder="000 000"
                       required
-                      style={{
-                        textAlign: "center",
-                        fontSize: "1.5rem",
-                        letterSpacing: "0.5rem",
-                      }}
                     />
                   </div>
-                  <div
-                    className="profile-actions"
-                    style={{ justifyContent: "center" }}
-                  >
+
+                  <div className="setup-actions">
+                    <button
+                      type="button"
+                      className="btn-cancel"
+                      onClick={() => {
+                        setIsDisableInputVisible(false);
+                        setTwoFactorCode("");
+                      }}
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="submit"
-                      className="btn-cancel"
-                      disabled={isDisabling2FA}
+                      className="btn-save"
+                      style={{ backgroundColor: "var(--error)" }}
+                      disabled={isDisabling2FA || twoFactorCode.length !== 6}
                     >
                       {isDisabling2FA ? "Disabling..." : "Confirm Disable"}
                     </button>
@@ -1310,69 +1319,94 @@ const Profile = () => {
               </div>
             ) : is2FASetupVisible && twoFactorData ? (
               <div className="two-factor-setup-container">
-                <div className="two-factor-setup-header">
-                  <h3>Scan QR Code</h3>
-                  <p>
-                    Scan this QR code with your authenticator app, then enter
-                    the code below to enable.
-                  </p>
-                </div>
-
-                <div className="qr-code-display">
-                  <QRCodeSVG value={twoFactorData.otpAuthUri} size={200} />
-                  <div className="manual-entry-code">
-                    <span>Manual Entry Code:</span>
-                    <code>{twoFactorData.secretBase32}</code>
+                <div className="setup-steps">
+                  <div className="setup-step active">
+                    <div className="step-number">1</div>
+                    <div className="step-label">Scan QR</div>
+                  </div>
+                  <div className="step-divider"></div>
+                  <div className="setup-step">
+                    <div className="step-number">2</div>
+                    <div className="step-label">Verify</div>
                   </div>
                 </div>
 
-                <form
-                  onSubmit={handleEnable2FA}
-                  className="two-factor-verify-form"
-                >
-                  <div className="form-group">
-                    <label className="form-label">Verification Code</label>
-                    <input
-                      type="text"
-                      maxLength="6"
-                      value={twoFactorCode}
-                      onChange={(e) =>
-                        setTwoFactorCode(e.target.value.replace(/\D/g, ""))
-                      }
-                      className="form-control"
-                      placeholder="000000"
-                      required
-                      style={{
-                        textAlign: "center",
-                        fontSize: "1.5rem",
-                        letterSpacing: "0.5rem",
-                      }}
-                    />
+                <div className="setup-content">
+                  <div className="qr-section">
+                    <div className="qr-wrapper">
+                      <QRCodeSVG
+                        value={twoFactorData.otpAuthUri}
+                        size={180}
+                        level="H"
+                        includeMargin={true}
+                        className="qr-code-svg"
+                      />
+                    </div>
+                    <div className="qr-instructions">
+                      <h3>Scan with Authenticator</h3>
+                      <p>
+                        Open your authenticator app (like Google Authenticator
+                        or Authy) and scan this QR code.
+                      </p>
+                      <div className="manual-entry-box">
+                        <span className="manual-label">
+                          <FaEdit /> Manual Entry Code:
+                        </span>
+                        <code className="manual-code">
+                          {twoFactorData.secretBase32}
+                        </code>
+                      </div>
+                    </div>
                   </div>
-                  <div
-                    className="profile-actions"
-                    style={{ justifyContent: "center" }}
+
+                  <form
+                    onSubmit={handleEnable2FA}
+                    className="verify-section"
                   >
-                    <button
-                      type="button"
-                      className="btn-cancel"
-                      onClick={() => {
-                        setIs2FASetupVisible(false);
-                        setTwoFactorData(null);
-                        setTwoFactorCode("");
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn-save"
-                      disabled={isEnabling2FA}
-                    >
-                      {isEnabling2FA ? "Enabling..." : "Enable 2FA"}
-                    </button>
-                  </div>
-                </form>
+                    <div className="verify-header">
+                      <h3>Enter Verification Code</h3>
+                      <p>
+                        Enter the 6-digit code generated by your app to
+                        complete the setup.
+                      </p>
+                    </div>
+
+                    <div className="verification-input-group">
+                      <input
+                        type="text"
+                        maxLength="6"
+                        value={twoFactorCode}
+                        onChange={(e) =>
+                          setTwoFactorCode(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="two-factor-input"
+                        placeholder="000 000"
+                        required
+                      />
+                    </div>
+
+                    <div className="setup-actions">
+                      <button
+                        type="button"
+                        className="btn-cancel"
+                        onClick={() => {
+                          setIs2FASetupVisible(false);
+                          setTwoFactorData(null);
+                          setTwoFactorCode("");
+                        }}
+                      >
+                        Cancel Setup
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn-save"
+                        disabled={isEnabling2FA || twoFactorCode.length !== 6}
+                      >
+                        {isEnabling2FA ? "Enabling..." : "Enable 2FA"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
             ) : (
               <p className="security-info">
