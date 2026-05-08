@@ -326,6 +326,22 @@ const CreditCardIcon = ({ className = "icon" }) => (
   </svg>
 );
 
+const ComplaintIcon = ({ className = "icon" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+    />
+  </svg>
+);
+
 // Logout Modal Component
 const LogoutModal = ({ isOpen, onConfirm, onCancel }) => {
   if (!isOpen) return null;
@@ -542,6 +558,11 @@ const Navbar = () => {
             label: "Pending Properties",
             path: "/admin/landlord-applications",
           },
+          {
+            icon: <ComplaintIcon />,
+            label: "Complaints",
+            path: "/admin/manage-complaints",
+          },
         ];
 
       case "Landlord":
@@ -687,8 +708,8 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* Quick Links Dropdown - Only show for logged in users */}
-            {user && (
+            {/* Quick Links Dropdown - Only show for non-admin logged in users */}
+            {user && user.role !== "Admin" && (
               <div className="quick-links-dropdown">
                 <button
                   className={`dropdown-trigger ${showQuickLinksDropdown ? "open" : ""}`}
@@ -717,17 +738,19 @@ const Navbar = () => {
                   onMouseEnter={() => setShowQuickLinksDropdown(true)}
                   onMouseLeave={() => setShowQuickLinksDropdown(false)}
                 >
-                  <Link to="/saved-posts" className="dropdown-item">
-                    <div className="dropdown-item-icon">
-                      <HeartIcon />
-                    </div>
-                    <div className="dropdown-item-content">
-                      <div className="dropdown-item-title">Saved Posts</div>
-                      <div className="dropdown-item-description">
-                        Your favorite properties
+                  {user.role !== "Admin" && (
+                    <Link to="/saved-posts" className="dropdown-item">
+                      <div className="dropdown-item-icon">
+                        <HeartIcon />
                       </div>
-                    </div>
-                  </Link>
+                      <div className="dropdown-item-content">
+                        <div className="dropdown-item-title">Saved Posts</div>
+                        <div className="dropdown-item-description">
+                          Your favorite properties
+                        </div>
+                      </div>
+                    </Link>
+                  )}
 
                   <Link to="/messages" className="dropdown-item">
                     <div className="dropdown-item-icon">
@@ -783,6 +806,25 @@ const Navbar = () => {
                         </div>
                         <div className="dropdown-item-description">
                           View and manage plans
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+
+                  {user.role === "Admin" && (
+                    <Link
+                      to="/admin/manage-complaints"
+                      className="dropdown-item"
+                    >
+                      <div className="dropdown-item-icon">
+                        <ComplaintIcon />
+                      </div>
+                      <div className="dropdown-item-content">
+                        <div className="dropdown-item-title">
+                          Complaints
+                        </div>
+                        <div className="dropdown-item-description">
+                          Manage user complaints
                         </div>
                       </div>
                     </Link>
@@ -867,6 +909,15 @@ const Navbar = () => {
                           <ChatIcon />
                         </Link>
                       )}
+                      {localStorage.getItem("role")?.toLowerCase() === "admin" && (
+                        <Link
+                          to="/admin/manage-complaints"
+                          className="profile-btn-desktop"
+                          title="Complaints"
+                        >
+                          <ComplaintIcon />
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         className="profile-btn-desktop"
@@ -874,13 +925,17 @@ const Navbar = () => {
                       >
                         <ProfileIcon />
                       </Link>
-                      <Link
-                        to="/contact"
-                        className="profile-btn-desktop"
-                        title="Support"
-                      >
-                        <SupportIcon />
-                      </Link>
+                      {["tenant", "landlord", "company"].includes(
+                        localStorage.getItem("role")?.toLowerCase()
+                      ) && (
+                        <Link
+                          to="/contact"
+                          className="profile-btn-desktop"
+                          title="Support"
+                        >
+                          <SupportIcon />
+                        </Link>
+                      )}
                     </>
                   )}
                   <button
@@ -1086,23 +1141,6 @@ const Navbar = () => {
                   <div className="menu-card-arrow">→</div>
                 </Link>
 
-                <Link
-                  to="/saved-posts"
-                  className="menu-card"
-                  onClick={closeMenu}
-                >
-                  <div className="menu-card-icon">
-                    <HeartIcon />
-                  </div>
-                  <div className="menu-card-content">
-                    <div className="menu-card-title">Saved Posts</div>
-                    <div className="menu-card-description">
-                      Your favorite properties
-                    </div>
-                  </div>
-                  <div className="menu-card-arrow">→</div>
-                </Link>
-
                 <Link to="/messages" className="menu-card" onClick={closeMenu}>
                   <div className="menu-card-icon">
                     <ChatIcon />
@@ -1133,22 +1171,24 @@ const Navbar = () => {
                   <div className="menu-card-arrow">→</div>
                 </Link>
 
-                <Link
-                  to="/UserProposals"
-                  className="menu-card"
-                  onClick={closeMenu}
-                >
-                  <div className="menu-card-icon">
-                    <DocumentIcon />
-                  </div>
-                  <div className="menu-card-content">
-                    <div className="menu-card-title">Your Applications</div>
-                    <div className="menu-card-description">
-                      Track your applications
+                {user.role === "Admin" && (
+                  <Link
+                    to="/admin/manage-complaints"
+                    className="menu-card"
+                    onClick={closeMenu}
+                  >
+                    <div className="menu-card-icon">
+                      <ComplaintIcon />
                     </div>
-                  </div>
-                  <div className="menu-card-arrow">→</div>
-                </Link>
+                    <div className="menu-card-content">
+                      <div className="menu-card-title">Complaints</div>
+                      <div className="menu-card-description">
+                        Manage user complaints
+                      </div>
+                    </div>
+                    <div className="menu-card-arrow">→</div>
+                  </Link>
+                )}
 
                 {/* Dark Mode Toggle */}
                 <div

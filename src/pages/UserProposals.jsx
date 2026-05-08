@@ -110,6 +110,25 @@ const UserProposals = () => {
 
   // ─── Open Payment Modal ───────────────────────────────────────────────────
   const handleOpenPaymentModal = async (property) => {
+    const type = Number(property.propertyType);
+    const installment = Number(property.isInstallment);
+
+    // ✅ Rent eligibility check — backend blocks if rentIsAble == Disable (0)
+    if (type === 0 && Number(property.rentIsAble) === 0) {
+      toast.error(
+        "Eligibility check required before rent. Please submit the eligibility form first."
+      );
+      return;
+    }
+
+    // ✅ Installment eligibility check — backend blocks if isAble == Disable (0)
+    if (type === 1 && installment === 1 && Number(property.isAble) === 0) {
+      toast.error(
+        "Eligibility check required before installment. Please submit the eligibility form first."
+      );
+      return;
+    }
+
     setSelectedProperty(property);
     setShowPaymentModal(true);
     await fetchPaymentCards();
