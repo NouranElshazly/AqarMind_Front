@@ -389,10 +389,10 @@ export const getTenantProposals = (tenantId) =>
   API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/proposals`);
 
 export const getTenantPaymentPlans = (tenantId) =>
-  API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/payment-plans`);
+  API.get(`${API_BASE_URL}/api/Tenant/payment-plans`);
 
 export const getTenantPaymentPlanDetails = (tenantId, planId) =>
-  API.get(`${API_BASE_URL}/api/Tenant/${tenantId}/payment-plan/${planId}`);
+  API.get(`${API_BASE_URL}/api/Tenant/payment-plan/${planId}`);
 
 export const payRemainingAmount = (paymentData) =>
   API.post(`${API_BASE_URL}/api/payments/remaining/pay`, paymentData);
@@ -534,7 +534,7 @@ export const createComplaint = (reporterUserId, complaintData) => {
   }
 
   return API.post(
-    `${API_BASE_URL}/api/Complaint/${reporterUserId}/create`,
+    `${API_BASE_URL}/api/Complaint/create`,
     formData,
   );
 };

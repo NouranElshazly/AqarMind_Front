@@ -24,6 +24,7 @@ import {
   FaCar,
   FaFileSignature,
   FaTimes,
+  FaSync,
 } from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import { toast } from "react-toastify";
@@ -34,6 +35,7 @@ const ContractDetails = () => {
   const { contractId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [signLoading, setSignLoading] = useState(false);
@@ -45,63 +47,65 @@ const ContractDetails = () => {
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [cvv, setCvv] = useState("");
 
-  useEffect(() => {
-    const fetchContractDetails = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_BASE_URL}/api/contracts/${contractId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        setData(response.data);
-      } catch (err) {
-        console.error("Error fetching contract details:", err);
-        setError("Failed to load contract details. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (contractId) {
-      fetchContractDetails();
+  const fetchContractDetails = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_BASE_URL}/api/contracts/${contractId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setData(response.data);
+    } catch (err) {
+      console.error("Error fetching contract details:", err);
+      setError("Failed to load contract details. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  }, [contractId]);
+  };
 
-  useEffect(() => {
-    const fetchPaymentInfo = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `${API_BASE_URL}/api/payments/tx/by-contract/${contractId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        setPaymentInfo(res.data);
-      } catch (err) {}
-    };
+  const fetchPaymentInfo = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API_BASE_URL}/api/payments/tx/by-contract/${contractId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setPaymentInfo(res.data);
+    } catch (err) { }
+  };
+
+  const fetchVerifyInfo = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(
+        `${API_BASE_URL}/api/contracts/${contractId}/verify`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setVerifyInfo(res.data);
+    } catch (err) { }
+  };
+
+  const refreshAllData = async () => {
     if (contractId) {
-      fetchPaymentInfo();
+      setRefreshing(true);
+      await Promise.all([
+        fetchContractDetails(),
+        fetchPaymentInfo(),
+        fetchVerifyInfo()
+      ]);
+      setRefreshing(false);
     }
-  }, [contractId]);
+  };
 
   useEffect(() => {
-    const fetchVerifyInfo = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          `${API_BASE_URL}/api/contracts/${contractId}/verify`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        setVerifyInfo(res.data);
-      } catch (err) {}
-    };
     if (contractId) {
-      fetchVerifyInfo();
+      refreshAllData();
     }
   }, [contractId]);
 
@@ -176,7 +180,7 @@ const ContractDetails = () => {
     myRole?.toLowerCase() === "buyer" || myRole?.toLowerCase() === "tenant"
       ? 1
       : myRole?.toLowerCase() === "seller" ||
-          myRole?.toLowerCase() === "landlord"
+        myRole?.toLowerCase() === "landlord"
         ? 2
         : null;
   const alreadySigned =
@@ -199,13 +203,7 @@ const ContractDetails = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      const refresh = await axios.get(
-        `${API_BASE_URL}/api/contracts/${contractId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      setData(refresh.data);
+      await refreshAllData();
       setSignMessage("Signed successfully");
     } catch (e) {
       setSignMessage("Failed to sign. Please try again.");
@@ -239,11 +237,7 @@ const ContractDetails = () => {
         toast.success(response.data.message || "Payment finalized successfully!");
         setShowFinalizeModal(false);
         // Refresh contract data to reflect status change
-        const refresh = await axios.get(
-          `${API_BASE_URL}/api/contracts/${contractId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setData(refresh.data);
+        await refreshAllData();
       } else {
         const errMsg = response.data.message || "Failed to finalize payment";
         setFinalizeMessage(errMsg);
@@ -269,6 +263,21 @@ const ContractDetails = () => {
             title="Go Back"
           >
             <FaChevronLeft />
+          </button>
+          <button
+            className={`refresh-btn-top ${refreshing ? "spinning" : ""}`}
+            onClick={refreshAllData}
+            disabled={refreshing}
+            title="Refresh Contract"
+          >
+            <FaSync />
+          </button>
+          <button
+            className="print-btn-top"
+            onClick={() => window.print()}
+            title="Print Contract"
+          >
+            <FaPrint />
           </button>
           <div className="header-content-wrapper">
             <div className={`header-icon-box ${isSale ? "sale" : "rent"}`}>
@@ -517,12 +526,10 @@ const ContractDetails = () => {
               )}
           </div>
 
-          {/* Actions */}
+
           {/* Actions */}
           <div className="contract-footer-actions">
-            <button className="action-btn print" onClick={() => window.print()}>
-              <FaPrint /> Print Contract
-            </button>
+
 
             {!isFullySigned && !alreadySigned && roleNumber && (
               <button
@@ -579,7 +586,7 @@ const ContractDetails = () => {
               <p className="subs-modal-subtitle">
                 Please enter your card CVV to finalize the payment for Contract #{contractId}
               </p>
-              
+
               <div className="subs-cvv-section">
                 <label htmlFor="cvv">CVV Code</label>
                 <input

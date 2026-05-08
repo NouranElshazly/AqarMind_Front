@@ -124,6 +124,68 @@
   border-color: var(--brand-primary);
 }
 
+.refresh-btn-top {
+  position: absolute;
+  top: 1.5rem;
+  right: 5rem;
+  background: var(--bg-accent);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-btn-top:hover:not(:disabled) {
+  background: var(--brand-primary);
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+  transform: rotate(180deg);
+}
+
+.refresh-btn-top:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refresh-btn-top.spinning svg {
+  animation: spin 1s linear infinite;
+}
+
+.print-btn-top {
+  position: absolute;
+  top: 1.5rem;
+  right: 8.5rem;
+  background: var(--bg-accent);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.print-btn-top:hover {
+  background: var(--brand-primary);
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Status Badges - Matching ManageContracts */
 .status-badge {
   padding: 0.4rem 1rem;
@@ -513,18 +575,116 @@
   }
 }
 
-/* Print Styling */
-@media print {
+@media (max-width: 640px) {
   .contract-details-page {
-    background: white;
-    padding: 0;
+    padding: 4rem 1rem;
   }
+  
+  .contract-header-banner {
+    padding: 2rem;
+  }
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+@media print {
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .contract-details-page {
+    padding: 0 !important;
+    background: white !important;
+  }
+
   .contract-details-container {
-    box-shadow: none;
-    border: none;
-    max-width: 100%;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
   }
-  .back-btn-top, .contract-footer-actions {
-    display: none;
+
+  /* Hide UI elements not needed in print */
+  .back-btn-top,
+  .refresh-btn-top,
+  .print-btn-top,
+  .finalize-contract-container,
+  .finalize-modal-overlay,
+  .Toastify {
+    display: none !important;
+  }
+
+  .contract-header-banner {
+    padding: 20px 0 !important;
+    background: white !important;
+    border-bottom: 2px solid #eee !important;
+    text-align: center;
+  }
+
+  .header-content-wrapper {
+    display: block !important;
+  }
+
+  .header-icon-box {
+    margin: 0 auto 15px !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .header-top-row {
+    justify-content: center !important;
+  }
+
+  .contract-body {
+    padding: 20px 0 !important;
+  }
+
+  .contract-details-section {
+    page-break-inside: avoid;
+    margin-bottom: 30px !important;
+  }
+
+  .section-title {
+    color: black !important;
+    border-bottom: 1px solid #eee !important;
+    padding-bottom: 5px !important;
+  }
+
+  .property-showcase-card,
+  .party-card,
+  .detail-card {
+    background: #fdfdfd !important;
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
+  }
+
+  .parties-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+
+  .price-value {
+    color: black !important;
+  }
+
+  .signature-status-pill.signed {
+    background: #f0fff4 !important;
+    color: #22543d !important;
+    border: 1px solid #c6f6d5 !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .status-badge {
+    border: 1px solid #ddd !important;
+    color: black !important;
+    background: white !important;
   }
 }
