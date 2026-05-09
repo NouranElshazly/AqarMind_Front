@@ -268,7 +268,7 @@ const AdminDashboard = () => {
                 )}
               </div>
             </Link>
-            
+
             <Link
               to="/admin/pending-companies"
               className="action-card action-landlords"
@@ -298,15 +298,6 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-            <Link to="/show-all-post" className="action-card action-view">
-              <div className="action-icon">
-                <Eye size={32} />
-              </div>
-              <div className="action-content">
-                <h3>All Properties</h3>
-                <p>View all property listings</p>
-              </div>
-            </Link>
 
             <Link
               to="/admin/manage-complaints"
@@ -348,7 +339,7 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-             {/* Track Comments System */}
+            {/* Track Comments System */}
             <Link
               to="/admin/comment-tracker"
               className="action-card action-reports"
@@ -362,7 +353,7 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-              {/* Message Tracker System */}
+            {/* Message Tracker System */}
             <Link
               to="/admin/chat-tracker"
               className="action-card action-reports"
@@ -376,7 +367,7 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
-           
+
           </div>
         </div>
       </div>

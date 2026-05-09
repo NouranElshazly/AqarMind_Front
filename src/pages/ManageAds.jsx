@@ -266,7 +266,7 @@ const ManageAds = () => {
                   </div>
 
                   <div className="ad-actions">
-                    <Link to={`/property/${ad.postId}`} className="btn-view">
+                    <Link to={`/properties/${ad.postId}`} className="btn-view">
                       <Eye size={16} /> View Details
                     </Link>
                     <button
