@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import API_BASE_URL from "../services/ApiConfig";
@@ -10,25 +10,14 @@ import {
 import "../styles/SubsPlan.css";
 
 const SubsPlan = () => {
+  // ─── State ────────────────────────────────────────────────────────────────
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [subscribingId, setSubscribingId] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const plansPerPage = 3;
 
-  const nextSlide = () => {
-    if (currentIndex + plansPerPage < plans.length) {
-      setCurrentIndex((prev) => prev + 1);
-    }
-  };
-
-  const prevSlide = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  };
-
-  // Card Selection Modal States
+  // Modal
   const [showCardModal, setShowCardModal] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [paymentCards, setPaymentCards] = useState([]);
@@ -39,39 +28,46 @@ const SubsPlan = () => {
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("token");
 
+  // ─── Fetch Plans ──────────────────────────────────────────────────────────
   useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/subscription-plans`);
+        setPlans(response.data);
+      } catch (error) {
+        console.error("Error fetching plans:", error);
+        toast.error("Failed to load subscription plans.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPlans();
   }, []);
 
-  const fetchPlans = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/subscription-plans`,
-      );
-      setPlans(response.data);
-    } catch (error) {
-      console.error("Error fetching plans:", error);
-      toast.error("Failed to load subscription plans.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // ─── Fetch Payment Cards ──────────────────────────────────────────────────
   const fetchPaymentCards = async () => {
     if (!userId || !token) return;
 
     setLoadingCards(true);
     try {
-      console.log(`Fetching cards for user ${userId}...`);
-      const response = await axios.get(
-        `${API_BASE_URL}/api/payments/cards/${userId}`,
-        {
+      let response;
+      try {
+        response = await axios.get(`${API_BASE_URL}/api/payments/cards`, {
           headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      console.log("Cards API Response:", response.data);
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        console.log("First card sample:", response.data[0]);
+        });
+      } catch (primaryError) {
+        if (
+          primaryError?.response?.status === 404 ||
+          primaryError?.response?.status === 405
+        ) {
+          response = await axios.get(
+            `${API_BASE_URL}/api/payments/cards/${userId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } else {
+          throw primaryError;
+        }
       }
       setPaymentCards(response.data || []);
     } catch (error) {
@@ -83,24 +79,41 @@ const SubsPlan = () => {
     }
   };
 
+  // ─── Carousel ─────────────────────────────────────────────────────────────
+  const nextSlide = () => {
+    if (currentIndex + plansPerPage < plans.length)
+      setCurrentIndex((prev) => prev + 1);
+  };
+
+  const prevSlide = () => {
+    if (currentIndex > 0)
+      setCurrentIndex((prev) => prev - 1);
+  };
+
+  // ─── Modal Controls ───────────────────────────────────────────────────────
   const handleSubscribeClick = async (planId) => {
     if (!userId || !token) {
       toast.error("Please login to subscribe");
       return;
     }
-
-    // Open modal and fetch cards
     setSelectedPlanId(planId);
     setShowCardModal(true);
     await fetchPaymentCards();
   };
 
+  const closeModal = () => {
+    setShowCardModal(false);
+    setSelectedCardId(null);
+    setCvv("");
+    setSelectedPlanId(null);
+  };
+
+  // ─── Confirm Subscription ─────────────────────────────────────────────────
   const handleConfirmSubscription = async () => {
     if (!selectedCardId) {
       toast.error("Please select a payment card");
       return;
     }
-
     if (!cvv || cvv.length < 3) {
       toast.error("Please enter a valid CVV");
       return;
@@ -109,47 +122,45 @@ const SubsPlan = () => {
     setSubscribingId(selectedPlanId);
 
     try {
-      // Generate or retrieve ExternalRef
       const externalRef = getOrCreateExternalRef({
         op: "SUBPRO",
         a: userId,
         b: selectedPlanId,
       });
 
-      console.log("🔑 ExternalRef for subscription:", externalRef);
-
       const payload = {
         subscriptionPlanId: selectedPlanId,
-        paymentCardId: selectedCardId,
-        cvv: cvv,
+        paymentCardId: Number(selectedCardId),
+        cvv,
         externalRef,
       };
 
       const response = await axios.post(
-        `${API_BASE_URL}/api/landlord/subscribe-pro/${userId}`,
+        `${API_BASE_URL}/api/landlord/subscribe-pro`,
         payload,
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
-      if (response.data && response.data.success) {
+      if (response.data?.success) {
         clearExternalRef({ op: "SUBPRO", a: userId, b: selectedPlanId });
 
-        toast.success("Subscription successful! 🎉");
+        const successMessage = response.data.message?.trim();
+        if (successMessage) {
+          successMessage.toLowerCase().includes("already")
+            ? toast.info(successMessage)
+            : toast.success(successMessage);
+        } else {
+          toast.success("Subscription successful!");
+        }
 
-        // Close modal and reset
-        setShowCardModal(false);
-        setSelectedCardId(null);
-        setCvv("");
-        setSelectedPlanId(null);
+        closeModal();
       } else {
-        toast.warning(
-          response.data.message || "Subscription failed. Please try again.",
-        );
+        toast.warning(response.data.message || "Subscription failed. Please try again.");
       }
     } catch (error) {
       console.error("Subscription error:", error);
@@ -169,9 +180,7 @@ const SubsPlan = () => {
           clearExternalRef({ op: "SUBPRO", a: userId, b: selectedPlanId });
         }
       } else if (error.request) {
-        toast.error(
-          "Network error. Please check your connection and try again.",
-        );
+        toast.error("Network error. Please check your connection and try again.");
       } else {
         toast.error("An unexpected error occurred.");
       }
@@ -180,13 +189,7 @@ const SubsPlan = () => {
     }
   };
 
-  const closeModal = () => {
-    setShowCardModal(false);
-    setSelectedCardId(null);
-    setCvv("");
-    setSelectedPlanId(null);
-  };
-
+  // ─── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="subs-plan-loading">
@@ -196,6 +199,7 @@ const SubsPlan = () => {
     );
   }
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="subs-plan-page">
       <div className="subs-plan-header">
@@ -224,50 +228,44 @@ const SubsPlan = () => {
                   className={`plan-card ${index === 1 ? "featured-plan" : ""}`}
                 >
                   <div className="plan-header">
-                  <h3 className="plan-name">{plan.name}</h3>
-                  <div className="plan-price">
-                    <span className="currency">$</span>
-                    <span className="amount">{plan.price}</span>
-                    <span className="period">
-                      /{plan.durationInMonths}{" "}
-                      {plan.durationInMonths === 1 ? "Month" : "Months"}
-                    </span>
+                    <h3 className="plan-name">{plan.name}</h3>
+                    <div className="plan-price">
+                      <span className="currency">$</span>
+                      <span className="amount">{plan.price}</span>
+                      <span className="period">
+                        /{plan.durationInMonths}{" "}
+                        {plan.durationInMonths === 1 ? "Month" : "Months"}
+                      </span>
+                    </div>
+                    <span>Duration: {plan.durationInMonths} Months</span>
                   </div>
-                   <span>Duration: {plan.durationInMonths} Months</span>
-                </div>
 
-                <div className="plan-body">
-                  <p className="plan-description">{plan.description}</p>
-
-                  <div className="plan-features">
-                    <div className="feature-item">
-                      <Check size={18} className="feature-icon" />
-                     
-                    </div>
-                    <div className="feature-item">
-                      
-                      <span>Premium Support</span>
-                    </div>
-                    <div className="feature-item">
-                      
-                      <span>High Posts Priority</span>
+                  <div className="plan-body">
+                    <p className="plan-description">{plan.description}</p>
+                    <div className="plan-features">
+                      <div className="feature-item">
+                        <Check size={18} className="feature-icon" />
+                      </div>
+                      <div className="feature-item">
+                        <span>Premium Support</span>
+                      </div>
+                      <div className="feature-item">
+                        <span>High Posts Priority</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="plan-footer">
-                  <button
-                    className="subscribe-btn"
-                    onClick={() => handleSubscribeClick(plan.id)}
-                    disabled={subscribingId === plan.id}
-                  >
-                    {subscribingId === plan.id
-                      ? "Processing..."
-                      : "Subscribe Now"}
-                  </button>
+                  <div className="plan-footer">
+                    <button
+                      className="subscribe-btn"
+                      onClick={() => handleSubscribeClick(plan.id)}
+                      disabled={subscribingId === plan.id}
+                    >
+                      {subscribingId === plan.id ? "Processing..." : "Subscribe Now"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
           ) : (
             <div className="no-plans">
               <p>No subscription plans available at the moment.</p>
@@ -289,10 +287,7 @@ const SubsPlan = () => {
       {/* Card Selection Modal */}
       {showCardModal && (
         <div className="card-modal-overlay" onClick={closeModal}>
-          <div
-            className="card-modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="card-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="card-modal-header">
               <h2>Select Payment Method</h2>
               <button className="close-modal-btn" onClick={closeModal}>
@@ -318,9 +313,8 @@ const SubsPlan = () => {
                 <>
                   <div className="cards-list">
                     {paymentCards.map((card) => {
-                      // Handle potential casing differences from API
-                      const cardId = card.paymentCardId;
-                      const cardNumber = card.maskedCardNumber;
+                      const cardId = card.paymentCardId ?? card.cardId ?? card.id;
+                      const cardNumber = card.maskedCardNumber ?? card.cardNumber ?? "";
 
                       return (
                         <label key={cardId} className="card-option">
@@ -335,7 +329,7 @@ const SubsPlan = () => {
                             <CreditCard size={24} />
                             <div>
                               <div className="card-number">
-                                •••• •••• •••• {cardNumber.slice(-4) || "****"}
+                                •••• •••• •••• {String(cardNumber).slice(-4) || "****"}
                               </div>
                             </div>
                           </div>
@@ -352,9 +346,7 @@ const SubsPlan = () => {
                       maxLength="4"
                       placeholder="Enter CVV"
                       value={cvv}
-                      onChange={(e) =>
-                        setCvv(e.target.value.replace(/\D/g, ""))
-                      }
+                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                       className="cvv-input"
                     />
                   </div>

@@ -209,6 +209,12 @@
   gap: 1rem;
 }
 
+.hero-advanced-filters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
 .hero-price-input-group {
   display: flex;
   flex-direction: column;
@@ -233,11 +239,62 @@
   box-shadow: var(--shadow-sm);
 }
 
+.hero-feature-select {
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 1rem;
+  font-size: 1rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
 .hero-price-input:focus {
   outline: none;
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
   transform: translateY(-2px);
+}
+
+.hero-feature-select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Dark mode hero search theme */
+.dark .hero-search-container {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.dark .hero-search-input-group .search-icon {
+  color: #cbd5e1;
+}
+
+.dark .hero-search-input,
+.dark .hero-price-input {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+.dark .hero-feature-select {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+.dark .hero-search-input::placeholder,
+.dark .hero-price-input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+
+.dark .hero-price-label {
+  color: #e2e8f0;
 }
 
 .hero-search-actions {
@@ -284,6 +341,50 @@
   background: var(--brand-primary);
   color: var(--text-white);
   transform: translateY(-3px);
+}
+
+.hero-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem 1rem;
+  background: #ffffff;
+  color: #dc2626;
+  border: 2px solid #dc2626;
+  border-radius: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.hero-clear-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
+  transform: translateY(-3px);
+}
+
+.dark .hero-filter-btn {
+  background: #0f172a;
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.dark .hero-filter-btn:hover {
+  background: #fbbf24;
+  color: #0f172a;
+}
+
+.dark .hero-clear-btn {
+  background: #0f172a;
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+.dark .hero-clear-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
 }
 
 /* Properties Grid */
@@ -496,6 +597,13 @@
   background-clip: text;
 }
 
+.property-location-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: right;
+}
+
 .property-description {
   color: var(--text-secondary);
   font-size: 0.875rem;
@@ -505,6 +613,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
 
 .property-footer {
   display: flex;
@@ -1124,6 +1233,10 @@
     grid-template-columns: 1fr;
   }
 
+  .hero-advanced-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .hero-search-actions {
     flex-direction: column;
   }
@@ -1179,6 +1292,10 @@
 @media (max-width: 480px) {
   .hero-price-inputs {
     grid-template-columns: 1fr; /* Stack prices on small phones */
+  }
+
+  .hero-advanced-filters {
+    grid-template-columns: 1fr;
   }
 
   .properties-grid {

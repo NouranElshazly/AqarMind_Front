@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"; // added useCallback
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
@@ -131,13 +131,16 @@ const PropertyCardCarousel = ({ images, title }) => {
 
 // --- المكون الرئيسي ---
 const ShowAllPosts = () => {
-  // ... (State variables without change) ...
   const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [bedroomsFilter, setBedroomsFilter] = useState("");
+  const [bathroomsFilter, setBathroomsFilter] = useState("");
+  const [garageFilter, setGarageFilter] = useState("any");
+  const [furnishedFilter, setFurnishedFilter] = useState("any");
   const [message, setMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 8;
@@ -158,8 +161,9 @@ const ShowAllPosts = () => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const userInfo = getUserInfoFromToken();
-  const { role: userRole, userId, userName } = userInfo || {}; // 'userId' is the current user
+  const { role: userRole, userId, userName } = userInfo || {};
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -182,7 +186,6 @@ const ShowAllPosts = () => {
           fileBase64: post.fileBase64 || null,
         }));
 
-        // ✅ Show posts immediately
         setPosts(initialPosts);
         setFilteredPosts(initialPosts);
         setMessage("");
@@ -203,24 +206,193 @@ const ShowAllPosts = () => {
     navigate(`/properties/${post.postId}`);
   };
 
-  const handleSearch = async () => {
+  const recordHistoryEvent = async (currentUserId, activityType, details) => {
+    if (!currentUserId || !activityType || !details) return;
+    try {
+      await addHistory(currentUserId, { activity_type: activityType, details });
+    } catch (error) {
+      console.error(`Failed to record history event (${activityType}):`, error);
+    }
+  };
+
+  const normalizeText = (value) => String(value || "").toLowerCase().trim();
+
+  const getFirstNumber = (...values) => {
+    for (const value of values) {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+    return null;
+  };
+
+  const getBooleanValue = (value) => {
+    if (
+      value === true ||
+      value === 1 ||
+      value === "1" ||
+      value === "true" ||
+      value === "True"
+    ) {
+      return true;
+    }
+    if (
+      value === false ||
+      value === 0 ||
+      value === "0" ||
+      value === "false" ||
+      value === "False"
+    ) {
+      return false;
+    }
+    return null;
+  };
+
+  const getSearchableText = (post) =>
+    [
+      post.title,
+      post.location,
+      post.locationPath,
+      post.userName,
+      post.user_name,
+    ]
+      .map((value) => normalizeText(value))
+      .filter(Boolean)
+      .join(" ");
+
+  const locationSuggestions = useMemo(() => {
+    const query = normalizeText(searchQuery);
+    if (!query) return [];
+
+    const uniqueLocations = [
+      ...new Set(
+        posts
+          .flatMap((post) => [post.location, post.locationPath])
+          .map((value) => String(value || "").trim())
+          .filter(Boolean),
+      ),
+    ];
+
+    return uniqueLocations
+      .filter((location) => normalizeText(location).includes(query))
+      .sort((a, b) => {
+        const aStarts = normalizeText(a).startsWith(query);
+        const bStarts = normalizeText(b).startsWith(query);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.localeCompare(b);
+      })
+      .slice(0, 8);
+  }, [posts, searchQuery]);
+
+  // ── Live filtering: wrapped in useCallback so the useEffect below
+  //    only re-runs when the actual filter values change, not on every render ──
+  const applyFilters = useCallback(() => {
     const filtered = posts.filter((post) => {
-      const matchesSearch =
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const query = normalizeText(searchQuery);
+      const searchableText = getSearchableText(post);
+      const matchesSearch = !query || searchableText.includes(query);
+
       const matchesPrice =
         (minPrice ? post.price >= Number(minPrice) : true) &&
         (maxPrice ? post.price <= Number(maxPrice) : true);
-      return matchesSearch && matchesPrice;
+
+      const postBedrooms = getFirstNumber(
+        post.numOfRooms,
+        post.numberOfRooms,
+        post.bedrooms,
+      );
+      const postBathrooms = getFirstNumber(
+        post.numOfBathrooms,
+        post.numberOfBathrooms,
+        post.bathrooms,
+      );
+      const postHasGarage = getBooleanValue(post.hasGarage);
+      const postIsFurnished = getBooleanValue(post.isFurnished);
+
+      const matchesBedrooms = bedroomsFilter
+        ? postBedrooms === Number(bedroomsFilter)
+        : true;
+      const matchesBathrooms = bathroomsFilter
+        ? postBathrooms === Number(bathroomsFilter)
+        : true;
+
+      const matchesGarage =
+        garageFilter === "any"
+          ? true
+          : garageFilter === "yes"
+            ? postHasGarage === true
+            : postHasGarage === false;
+
+      const matchesFurnished =
+        furnishedFilter === "any"
+          ? true
+          : furnishedFilter === "yes"
+            ? postIsFurnished === true
+            : postIsFurnished === false;
+
+      return (
+        matchesSearch &&
+        matchesPrice &&
+        matchesBedrooms &&
+        matchesBathrooms &&
+        matchesGarage &&
+        matchesFurnished
+      );
     });
+
     setFilteredPosts(filtered);
     setMessage(
-      filtered.length === 0 ? "No posts found matching your criteria." : "",
+      filtered.length === 0 && posts.length > 0
+        ? "No posts found matching your criteria."
+        : "",
     );
-    if (searchQuery.trim() && userId) {
-      await recordHistoryEvent(userId, "search", { query: searchQuery.trim() });
-    }
+  }, [
+    posts,
+    searchQuery,
+    minPrice,
+    maxPrice,
+    bedroomsFilter,
+    bathroomsFilter,
+    garageFilter,
+    furnishedFilter,
+  ]);
+
+  // ── Triggers applyFilters automatically on every filter change ──
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // ── Debounced history recording — fires 800ms after the user stops typing ──
+  useEffect(() => {
+    if (!searchQuery.trim() || !userId) return;
+    const timer = setTimeout(() => {
+      recordHistoryEvent(userId, "search", { query: searchQuery.trim() });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [searchQuery, userId]);
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setMinPrice("");
+    setMaxPrice("");
+    setBedroomsFilter("");
+    setBathroomsFilter("");
+    setGarageFilter("any");
+    setFurnishedFilter("any");
+    setFilteredPosts(posts);
+    setMessage("");
   };
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    minPrice !== "" ||
+    maxPrice !== "" ||
+    bedroomsFilter !== "" ||
+    bathroomsFilter !== "" ||
+    garageFilter !== "any" ||
+    furnishedFilter !== "any";
 
   // --- JSX Rendering (Main Page) ---
   if (loading)
@@ -267,11 +439,16 @@ const ShowAllPosts = () => {
                       <input
                         type="text"
                         placeholder="Search by title or location..."
+                        list="location-suggestions"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                         className="hero-search-input"
                       />
+                      <datalist id="location-suggestions">
+                        {locationSuggestions.map((location) => (
+                          <option key={location} value={location} />
+                        ))}
+                      </datalist>
                     </div>
 
                     <div className="hero-price-inputs">
@@ -299,21 +476,66 @@ const ShowAllPosts = () => {
                       </div>
                     </div>
 
-                    <div className="hero-search-actions">
-                      <button
-                        onClick={handleSearch}
-                        className="hero-search-btn"
-                      >
-                        <FaSearch />
-                        Search Properties
-                      </button>
-                      <button
-                        onClick={handleSearch}
-                        className="hero-filter-btn"
-                      >
-                        <FaFilter />
-                      </button>
+                    <div className="hero-advanced-filters">
+                      <div className="hero-price-input-group">
+                        <label className="hero-price-label">Bedrooms</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Any"
+                          value={bedroomsFilter}
+                          onChange={(e) => setBedroomsFilter(e.target.value)}
+                          className="hero-price-input"
+                        />
+                      </div>
+                      <div className="hero-price-input-group">
+                        <label className="hero-price-label">Bathrooms</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Any"
+                          value={bathroomsFilter}
+                          onChange={(e) => setBathroomsFilter(e.target.value)}
+                          className="hero-price-input"
+                        />
+                      </div>
+                      <div className="hero-price-input-group">
+                        <label className="hero-price-label">Garage</label>
+                        <select
+                          value={garageFilter}
+                          onChange={(e) => setGarageFilter(e.target.value)}
+                          className="hero-feature-select"
+                        >
+                          <option value="any">Any</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                      </div>
+                      <div className="hero-price-input-group">
+                        <label className="hero-price-label">Furnished</label>
+                        <select
+                          value={furnishedFilter}
+                          onChange={(e) => setFurnishedFilter(e.target.value)}
+                          className="hero-feature-select"
+                        >
+                          <option value="any">Any</option>
+                          <option value="yes">Yes</option>
+                          <option value="no">No</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {hasActiveFilters && (
+                      <div className="hero-search-actions">
+                        <button
+                          onClick={handleClearSearch}
+                          className="hero-clear-btn"
+                        >
+                          <FaTimes />
+                          Clear
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -350,15 +572,6 @@ const ShowAllPosts = () => {
                 <div className="hero-stat-number">{posts.length}</div>
                 <div className="hero-stat-label">Total Listings</div>
               </div>
-              <div className="hero-stat">
-                <div className="hero-stat-number">
-                  {filteredPosts.reduce(
-                    (sum, post) => sum + (post.likes_count || 0),
-                    0,
-                  )}
-                </div>
-                <div className="hero-stat-label">Total Likes</div>
-              </div>
             </div>
 
             {/* Hero Search Section */}
@@ -369,12 +582,17 @@ const ShowAllPosts = () => {
                     <FaSearch className="search-icon" />
                     <input
                       type="text"
-                      placeholder="Search by title or location..."
+                      placeholder="Search by title or location or a Username..."
+                      list="location-suggestions"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                       className="hero-search-input"
                     />
+                    <datalist id="location-suggestions">
+                      {locationSuggestions.map((location) => (
+                        <option key={location} value={location} />
+                      ))}
+                    </datalist>
                   </div>
 
                   <div className="hero-price-inputs">
@@ -402,15 +620,66 @@ const ShowAllPosts = () => {
                     </div>
                   </div>
 
-                  <div className="hero-search-actions">
-                    <button onClick={handleSearch} className="hero-search-btn">
-                      <FaSearch />
-                      Search Properties
-                    </button>
-                    <button onClick={handleSearch} className="hero-filter-btn">
-                      <FaFilter />
-                    </button>
+                  <div className="hero-advanced-filters">
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Bedrooms</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Any"
+                        value={bedroomsFilter}
+                        onChange={(e) => setBedroomsFilter(e.target.value)}
+                        className="hero-price-input"
+                      />
+                    </div>
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Bathrooms</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Any"
+                        value={bathroomsFilter}
+                        onChange={(e) => setBathroomsFilter(e.target.value)}
+                        className="hero-price-input"
+                      />
+                    </div>
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Garage</label>
+                      <select
+                        value={garageFilter}
+                        onChange={(e) => setGarageFilter(e.target.value)}
+                        className="hero-feature-select"
+                      >
+                        <option value="any">Any</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
+                    <div className="hero-price-input-group">
+                      <label className="hero-price-label">Furnished</label>
+                      <select
+                        value={furnishedFilter}
+                        onChange={(e) => setFurnishedFilter(e.target.value)}
+                        className="hero-feature-select"
+                      >
+                        <option value="any">Any</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    </div>
                   </div>
+
+                  {hasActiveFilters && (
+                    <div className="hero-search-actions">
+                      <button
+                        onClick={handleClearSearch}
+                        className="hero-clear-btn"
+                      >
+                        <FaTimes />
+                        Clear
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -449,7 +718,7 @@ const ShowAllPosts = () => {
               if (typeof firstImage === "string") {
                 imageSrc =
                   firstImage.startsWith("http") ||
-                  firstImage.startsWith("data:")
+                    firstImage.startsWith("data:")
                     ? firstImage
                     : `${API_BASE_URL}/${firstImage}`;
               } else if (
@@ -469,7 +738,6 @@ const ShowAllPosts = () => {
                       ? possible
                       : `${API_BASE_URL}/${possible}`;
                 } else {
-                  // fallback to empty string to avoid runtime errors
                   imageSrc = "";
                 }
               } else {
@@ -512,6 +780,9 @@ const ShowAllPosts = () => {
                     <span className="property-price">
                       ${post.price.toLocaleString()}
                     </span>
+                    <span className="property-location-text">
+                      {post.location || "Location not available"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -534,9 +805,8 @@ const ShowAllPosts = () => {
                 <button
                   key={i + 1}
                   onClick={() => paginate(i + 1)}
-                  className={`pagination-number ${
-                    currentPage === i + 1 ? "active" : ""
-                  }`}
+                  className={`pagination-number ${currentPage === i + 1 ? "active" : ""
+                    }`}
                 >
                   {i + 1}
                 </button>

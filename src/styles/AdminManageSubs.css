@@ -15,7 +15,7 @@
 
 .subs-container {
   width: 100%;
-  max-width: 700px;
+  max-width: 1200px;
   animation: slideUp 0.5s ease-out;
 }
 
@@ -238,7 +238,7 @@
 
 /* Table Styles */
 .plans-table-container {
-  overflow-x: auto;
+  overflow-x: visible;
   border-radius: 1rem;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
   background: var(--bg-card, white);
@@ -248,7 +248,8 @@
 .plans-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  min-width: 0;
+  table-layout: auto;
 }
 
 .plans-table th,
@@ -256,6 +257,28 @@
   padding: 1.25rem;
   text-align: left;
   border-bottom: 1px solid var(--border-primary, #e2e8f0);
+  vertical-align: top;
+}
+
+.plans-table th:nth-child(1),
+.plans-table td:nth-child(1) {
+  width: 220px;
+}
+
+.plans-table th:nth-child(2),
+.plans-table td:nth-child(2) {
+  width: 120px;
+}
+
+.plans-table th:nth-child(3),
+.plans-table td:nth-child(3) {
+  width: 130px;
+}
+
+.plans-table th:nth-child(5),
+.plans-table td:nth-child(5) {
+  width: 100px;
+  text-align: center;
 }
 
 .plans-table th {
@@ -305,10 +328,13 @@
 }
 
 .desc-cell {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: none;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: normal;
+  overflow-wrap: break-word;
+  line-height: 1.5;
   color: var(--text-secondary, #64748b) !important;
 }
 
@@ -371,7 +397,7 @@
 }
 
 /* Action Buttons */
-.action-btn {
+.subs-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -383,23 +409,84 @@
   transition: all 0.2s ease;
 }
 
-.edit-btn {
+.subs-edit-btn {
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
 }
 
-.edit-btn:hover {
+.subs-edit-btn:hover {
   background: rgba(59, 130, 246, 0.2);
   transform: translateY(-2px);
 }
 
-.dark .edit-btn {
+.dark .subs-edit-btn {
   background: rgba(96, 165, 250, 0.1);
   color: #60a5fa;
 }
 
-.dark .edit-btn:hover {
+.dark .subs-edit-btn:hover {
   background: rgba(96, 165, 250, 0.2);
+}
+
+.plans-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn,
+.pagination-page {
+  border: 1px solid var(--border-primary, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #1e293b);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-page:hover {
+  border-color: var(--brand-secondary, #1e3a8a);
+  color: var(--brand-secondary, #1e3a8a);
+}
+
+.pagination-page.active {
+  background: var(
+    --brand-gradient,
+    linear-gradient(135deg, #fbbf24 0%, #1e3a8a 100%)
+  );
+  color: #ffffff;
+  border: none;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark .pagination-btn,
+.dark .pagination-page {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.dark .pagination-btn:hover:not(:disabled),
+.dark .pagination-page:hover {
+  border-color: #60a5fa;
+  color: #60a5fa;
 }
 
 /* Responsive Design */

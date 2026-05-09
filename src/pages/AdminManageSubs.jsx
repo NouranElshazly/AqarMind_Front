@@ -10,6 +10,7 @@ const AdminManageSubs = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -30,6 +31,17 @@ const AdminManageSubs = () => {
   useEffect(() => {
     fetchPlans();
   }, []);
+
+  const plansPerPage = 4;
+  const totalPages = Math.max(1, Math.ceil(plans.length / plansPerPage));
+  const startIndex = (currentPage - 1) * plansPerPage;
+  const paginatedPlans = plans.slice(startIndex, startIndex + plansPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -220,7 +232,7 @@ const AdminManageSubs = () => {
               </thead>
               <tbody>
                 {plans.length > 0 ? (
-                  plans.map((plan) => (
+                  paginatedPlans.map((plan) => (
                     <tr key={plan.id}>
                       <td>{plan.name}</td>
                       <td className="price-cell">${plan.price}</td>
@@ -228,7 +240,7 @@ const AdminManageSubs = () => {
                       <td className="desc-cell">{plan.description}</td>
                       <td>
                         <button
-                          className="action-btn edit-btn"
+                          className="subs-action-btn subs-edit-btn"
                           onClick={() => handleEdit(plan)}
                           title="Edit Plan"
                         >
@@ -247,6 +259,42 @@ const AdminManageSubs = () => {
               </tbody>
             </table>
           </div>
+
+          {plans.length > plansPerPage && (
+            <div className="plans-pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+
+              <div className="pagination-pages">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={`pagination-page ${currentPage === page ? "active" : ""}`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+              </div>
+
+              <button
+                className="pagination-btn"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

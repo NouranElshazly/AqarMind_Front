@@ -12,7 +12,6 @@ import {
   FaCity,
   FaHeart,
   FaShieldAlt,
-  FaSearch,
   FaMapMarkerAlt,
   FaBed,
   FaBath,
@@ -29,7 +28,6 @@ import {
   FaChevronRight,
   FaUser,
   FaCalendarAlt,
-  FaAlignLeft,
   FaDollarSign,
 } from "react-icons/fa";
 import API_BASE_URL from "../services/ApiConfig";
@@ -357,48 +355,51 @@ const Home = () => {
         <div className="home-hero-overlay" />
 
         <div className="home-hero-content">
+          <div className="home-hero-badge">
+            <FaShieldAlt />
+            Verified Listings. Trusted Local Experts.
+          </div>
           <h1 className="home-hero-title">
             Find Your <span className="home-hero-title-accent">Dream Home</span>
             <br />
-            With Ease
+            With Confidence
           </h1>
           <p className="home-hero-subtitle">
-            Search over 50,000 verified listings across the country with our
-            expert local guidance, available anytime and day.
+            Explore over <AnimatedCounter end={50000} /> verified properties and
+            connect with experienced local agents who guide you from first
+            search to final deal.
           </p>
-
-          {/* Search Box */}
-          <div className="home-search">
-            <div className="home-search-container">
-              <div className="home-search-input-group">
-                <FaMapMarkerAlt />
-                <input
-                  type="text"
-                  placeholder="Location"
-                  className="home-search-input"
-                />
-              </div>
-
-              <div className="home-search-input-group">
-                <FaBuilding />
-                <input
-                  type="text"
-                  placeholder="Property Type"
-                  className="home-search-input"
-                />
-              </div>
-
-              <button className="home-search-btn">
-                <FaSearch />
-                Search Properties
-              </button>
+          <div className="home-hero-actions">
+            <Link to="/show-all-post" className="home-hero-btn-primary">
+              Browse Listings
+              <FaArrowRight />
+            </Link>
+            <a href="#featured-properties" className="home-hero-btn-secondary">
+              View Featured Homes
+            </a>
+          </div>
+          <div className="home-hero-stats">
+            <div className="home-hero-stat">
+              <strong>
+                <AnimatedCounter end={50000} />+
+              </strong>
+              <span>Verified Listings</span>
+            </div>
+            <div className="home-hero-stat">
+              <strong>14+</strong>
+              <span>Expert Agents</span>
+            </div>
+            <div className="home-hero-stat">
+              <strong>24/7</strong>
+              <span>Client Support</span>
             </div>
           </div>
+
         </div>
       </section>
 
       {/* Featured Properties Section */}
-      <section className="home-featured">
+      <section id="featured-properties" className="home-featured">
         <div className="container">
           <div className="home-featured-header">
             <h2>Featured Properties</h2>
