@@ -20,12 +20,11 @@ import axios from "axios";
 import API_BASE_URL from "../services/ApiConfig";
 import "../styles/AdminManageComplaints.css";
 
+// ─── Notification Toast ───────────────────────────────────────────────────────
 const NotificationToast = ({ show, message, type, onClose }) => {
   useEffect(() => {
     if (show) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 3000);
+      const timer = setTimeout(() => onClose(), 3000);
       return () => clearTimeout(timer);
     }
   }, [show, onClose]);
@@ -34,19 +33,15 @@ const NotificationToast = ({ show, message, type, onClose }) => {
 
   return (
     <div className={`notification-toast ${type}`}>
-      {type === "success" ? (
-        <CheckCircle size={20} />
-      ) : (
-        <AlertCircle size={20} />
-      )}
+      {type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
       <span>{message}</span>
     </div>
   );
 };
 
+// ─── Refuse Modal ─────────────────────────────────────────────────────────────
 const RefuseConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -60,21 +55,17 @@ const RefuseConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           Are you sure you want to refuse this complaint? This action cannot be undone.
         </p>
         <div className="modal-actions">
-          <button onClick={onClose} className="modal-btn cancel">
-            Cancel
-          </button>
-          <button onClick={onConfirm} className="modal-btn confirm">
-            Yes, Refuse
-          </button>
+          <button onClick={onClose} className="modal-btn cancel">Cancel</button>
+          <button onClick={onConfirm} className="modal-btn confirm">Yes, Refuse</button>
         </div>
       </div>
     </div>
   );
 };
 
+// ─── Ban Modal ────────────────────────────────────────────────────────────────
 const BanConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -88,21 +79,17 @@ const BanConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           Are you sure you want to ban this user? This action will block their access and resolve the complaint.
         </p>
         <div className="modal-actions">
-          <button onClick={onClose} className="modal-btn cancel">
-            Cancel
-          </button>
-          <button onClick={onConfirm} className="modal-btn ban-confirm">
-            Yes, Ban User
-          </button>
+          <button onClick={onClose} className="modal-btn cancel">Cancel</button>
+          <button onClick={onConfirm} className="modal-btn ban-confirm">Yes, Ban User</button>
         </div>
       </div>
     </div>
   );
 };
 
+// ─── Suspend Modal ────────────────────────────────────────────────────────────
 const SuspendConfirmModal = ({ isOpen, onClose, onConfirm, days, setDays }) => {
   if (!isOpen) return null;
-
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -131,13 +118,11 @@ const SuspendConfirmModal = ({ isOpen, onClose, onConfirm, days, setDays }) => {
           />
         </div>
         <div className="modal-actions">
-          <button onClick={onClose} className="modal-btn cancel">
-            Cancel
-          </button>
-          <button 
-            onClick={onConfirm} 
+          <button onClick={onClose} className="modal-btn cancel">Cancel</button>
+          <button
+            onClick={onConfirm}
             className="modal-btn suspend-confirm"
-            disabled={!days || days < 1}
+            disabled={!days || Number(days) < 1}
           >
             Yes, Suspend User
           </button>
@@ -147,34 +132,27 @@ const SuspendConfirmModal = ({ isOpen, onClose, onConfirm, days, setDays }) => {
   );
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const getComplaintType = (type) => {
   switch (type) {
-    case 0:
-      return "Spam";
-    case 1:
-      return "Harassment";
-    case 2:
-      return "Fraud";
-    case 3:
-      return "Other";
-    default:
-      return "Unknown";
+    case 0: return "Spam";
+    case 1: return "Harassment";
+    case 2: return "Fraud";
+    case 3: return "Other";
+    default: return "Unknown";
   }
 };
 
 const getComplaintStatus = (status) => {
   switch (status) {
-    case 1:
-      return "Pending";
-    case 2:
-      return "Action Taken";
-    case 3:
-      return "Rejected";
-    default:
-      return "Unknown";
+    case 1: return "Pending";
+    case 2: return "Action Taken";
+    case 3: return "Rejected";
+    default: return "Unknown";
   }
 };
 
+// ─── Complaint Details Panel ──────────────────────────────────────────────────
 const ComplaintDetails = ({ complaint, onRefuse, onBan, onSuspend }) => {
   return (
     <div className="post-details fade-in">
@@ -194,44 +172,26 @@ const ComplaintDetails = ({ complaint, onRefuse, onBan, onSuspend }) => {
           </span>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => onRefuse(complaint.complaintId)}
-            className="refuse-btn"
-          >
-            <XCircle size={20} />
-            Refuse Complaint
+          <button onClick={() => onRefuse(complaint.complaintId)} className="refuse-btn">
+            <XCircle size={20} /> Refuse Complaint
           </button>
-          <button
-            onClick={() => onSuspend(complaint.complaintId)}
-            className="suspend-btn"
-          >
-            <Clock size={20} />
-            Suspend User
+          <button onClick={() => onSuspend(complaint.complaintId)} className="suspend-btn">
+            <Clock size={20} /> Suspend User
           </button>
-          <button
-            onClick={() => onBan(complaint.complaintId)}
-            className="ban-btn"
-          >
-            <Ban size={20} />
-            Ban User
+          <button onClick={() => onBan(complaint.complaintId)} className="ban-btn">
+            <Ban size={20} /> Ban User
           </button>
         </div>
       </div>
 
       <div className="details-section">
-        <h3>
-          <AlertCircle size={20} />
-          Content
-        </h3>
+        <h3><AlertCircle size={20} /> Content</h3>
         <p className="text-lg leading-relaxed">{complaint.content}</p>
       </div>
 
       {complaint.imagePath && (
         <div className="details-section">
-          <h3>
-            <ImageIcon size={20} />
-            Attachment
-          </h3>
+          <h3><ImageIcon size={20} /> Attachment</h3>
           <img
             src={`${API_BASE_URL}/${complaint.imagePath}`}
             alt="Complaint Attachment"
@@ -242,28 +202,22 @@ const ComplaintDetails = ({ complaint, onRefuse, onBan, onSuspend }) => {
       )}
 
       <div className="details-section">
-        <h3>
-          <User size={20} />
-          Involved Parties
-        </h3>
+        <h3><User size={20} /> Involved Parties</h3>
         <div className="details-grid">
           <div className="detail-item">
             <span className="detail-label">Reporter (Plaintiff)</span>
             <div className="detail-contact-group">
               <span className="detail-value with-icon">
-                <User size={16} />
-                {complaint.reporterName}
+                <User size={16} /> {complaint.reporterName}
               </span>
               {complaint.reporterPhone && (
                 <span className="detail-contact-info">
-                  <Phone size={14} />
-                  {complaint.reporterPhone}
+                  <Phone size={14} /> {complaint.reporterPhone}
                 </span>
               )}
               {complaint.reporterEmail && (
                 <span className="detail-contact-info">
-                  <Mail size={14} />
-                  {complaint.reporterEmail}
+                  <Mail size={14} /> {complaint.reporterEmail}
                 </span>
               )}
             </div>
@@ -271,21 +225,16 @@ const ComplaintDetails = ({ complaint, onRefuse, onBan, onSuspend }) => {
           <div className="detail-item">
             <span className="detail-label">Reported User (Defendant)</span>
             <span className="detail-value with-icon">
-              <User size={16} />
-              {complaint.reportedName}
+              <User size={16} /> {complaint.reportedName}
             </span>
           </div>
           <div className="detail-item">
             <span className="detail-label">Complaint Type</span>
-            <span className="detail-value">
-              {getComplaintType(complaint.type)}
-            </span>
+            <span className="detail-value">{getComplaintType(complaint.type)}</span>
           </div>
           <div className="detail-item">
             <span className="detail-label">Status</span>
-            <span className="detail-value">
-              {getComplaintStatus(complaint.status)}
-            </span>
+            <span className="detail-value">{getComplaintStatus(complaint.status)}</span>
           </div>
         </div>
       </div>
@@ -293,87 +242,99 @@ const ComplaintDetails = ({ complaint, onRefuse, onBan, onSuspend }) => {
   );
 };
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 const AdminManageComplaints = () => {
   const [loading, setLoading] = useState(true);
   const [complaints, setComplaints] = useState([]);
   const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
-  const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [detailsLoading, setDetailsLoading] = useState(false);
+
+  // ✅ Separate loading state for actions (ban/suspend/refuse)
+  // so the details panel doesn't flicker during actions
+  const [actionLoading, setActionLoading] = useState(false);
+
   const [showRefuseModal, setShowRefuseModal] = useState(false);
   const [complaintToRefuse, setComplaintToRefuse] = useState(null);
+
   const [showBanModal, setShowBanModal] = useState(false);
   const [complaintToBan, setComplaintToBan] = useState(null);
+
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [complaintToSuspend, setComplaintToSuspend] = useState(null);
   const [suspendDays, setSuspendDays] = useState("");
+
   const [notification, setNotification] = useState({
     show: false,
     message: "",
     type: "success",
   });
 
+  const token = localStorage.getItem("token");
+
   const showNotification = (message, type = "success") => {
     setNotification({ show: true, message, type });
   };
 
+  // ─── Fetch Complaints ───────────────────────────────────────────────────────
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/api/Complaint/pending`,
-        {
-          withCredentials: true, // Include if you need cookies/auth
-        },
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/Complaint/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setComplaints(response.data || []);
       setFilteredComplaints(response.data || []);
     } catch (error) {
       console.error("Error fetching complaints:", error);
+      if (error.response?.status === 401) {
+        showNotification("Unauthorized. Please login as admin.", "error");
+      } else {
+        showNotification(
+          error.response?.data?.message || "Failed to load complaints.",
+          "error"
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchComplaints();
-  }, []);
+    if (token) {
+      fetchComplaints();
+    } else {
+      setLoading(false);
+      showNotification("You need to login first", "error");
+    }
+  }, [token]);
 
+  // ─── Search Filter ──────────────────────────────────────────────────────────
   useEffect(() => {
     let result = complaints;
-
-    if (filter !== "all") {
-      if (filter === "pending") result = result.filter((c) => c.status === 1);
-    }
-
     if (searchTerm) {
       const lowerTerm = searchTerm.toLowerCase();
       result = result.filter(
         (c) =>
-          c.reporterName.toLowerCase().includes(lowerTerm) ||
-          c.reportedName.toLowerCase().includes(lowerTerm) ||
-          c.content.toLowerCase().includes(lowerTerm),
+          c.reporterName?.toLowerCase().includes(lowerTerm) ||
+          c.reportedName?.toLowerCase().includes(lowerTerm) ||
+          c.content?.toLowerCase().includes(lowerTerm)
       );
     }
-
     setFilteredComplaints(result);
-  }, [complaints, filter, searchTerm]);
+  }, [complaints, searchTerm]);
 
+  // ─── Select Complaint (fetch full details) ──────────────────────────────────
   const handleSelectComplaint = async (complaint) => {
-    setSelectedComplaint(complaint); // Show basic info immediately
-
+    setSelectedComplaint(complaint); // show basic info immediately
     try {
       setDetailsLoading(true);
       const response = await axios.get(
         `${API_BASE_URL}/api/Complaint/${complaint.complaintId}`,
-        {
-          withCredentials: true,
-        },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data) {
-        setSelectedComplaint(response.data);
-      }
+      if (response.data) setSelectedComplaint(response.data);
     } catch (error) {
       console.error("Error fetching complaint details:", error);
     } finally {
@@ -381,6 +342,7 @@ const AdminManageComplaints = () => {
     }
   };
 
+  // ─── Open Modals ────────────────────────────────────────────────────────────
   const handleRefuse = (complaintId) => {
     setComplaintToRefuse(complaintId);
     setShowRefuseModal(true);
@@ -397,102 +359,105 @@ const AdminManageComplaints = () => {
     setShowSuspendModal(true);
   };
 
+  // ─── Confirm Refuse ─────────────────────────────────────────────────────────
   const confirmRefuse = async () => {
     if (!complaintToRefuse) return;
-
     try {
-      setDetailsLoading(true);
-      const response = await axios.put(
+      setActionLoading(true);
+      // ✅ Check HTTP status 200, not response.data.success (backend returns no body)
+      await axios.put(
         `${API_BASE_URL}/api/Complaint/refuse/${complaintToRefuse}`,
         {},
-        {
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      if (response.data && response.data.success) {
-        showNotification(response.data.message, "success");
-        setSelectedComplaint(null);
-        setComplaints((prev) =>
-          prev.filter((c) => c.complaintId !== complaintToRefuse)
-        );
-      }
+      showNotification("Complaint refused successfully.", "success");
+      setSelectedComplaint(null);
+      setComplaints((prev) =>
+        prev.filter((c) => c.complaintId !== complaintToRefuse)
+      );
     } catch (error) {
-      showNotification("Failed to refuse complaint. Please try again.", "error");
+      console.error("Error refusing complaint:", error);
+      // ✅ Show actual backend error message
+      showNotification(
+        error.response?.data?.message || "Failed to refuse complaint. Please try again.",
+        "error"
+      );
     } finally {
-      setDetailsLoading(false);
+      setActionLoading(false);
       setShowRefuseModal(false);
       setComplaintToRefuse(null);
     }
   };
 
+  // ─── Confirm Ban ────────────────────────────────────────────────────────────
   const confirmBan = async () => {
     if (!complaintToBan) return;
-
     try {
-      setDetailsLoading(true);
-      const response = await axios.put(
+      setActionLoading(true);
+      // ✅ Check HTTP status 200, not response.data.success
+      await axios.put(
         `${API_BASE_URL}/api/Complaint/ban/${complaintToBan}`,
         {},
-        {
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      if (response.data && response.data.success) {
-        showNotification(response.data.message, "success");
-        setSelectedComplaint(null);
-        setComplaints((prev) =>
-          prev.filter((c) => c.complaintId !== complaintToBan)
-        );
-      }
+      showNotification("User banned successfully.", "success");
+      setSelectedComplaint(null);
+      setComplaints((prev) =>
+        prev.filter((c) => c.complaintId !== complaintToBan)
+      );
     } catch (error) {
       console.error("Error banning user:", error);
-      showNotification("Failed to ban user. Please try again.", "error");
+      // ✅ Show actual backend error message
+      showNotification(
+        error.response?.data?.message || "Failed to ban user. Please try again.",
+        "error"
+      );
     } finally {
-      setDetailsLoading(false);
+      setActionLoading(false);
       setShowBanModal(false);
       setComplaintToBan(null);
     }
   };
 
+  // ─── Confirm Suspend ────────────────────────────────────────────────────────
   const confirmSuspend = async () => {
-    if (!complaintToSuspend || !suspendDays || suspendDays < 1) return;
+    // ✅ Cast to integer before validation and API call
+    const days = parseInt(suspendDays, 10);
+    if (!complaintToSuspend || !days || days < 1) return;
 
     try {
-      setDetailsLoading(true);
-      const response = await axios.put(
-        `${API_BASE_URL}/api/Complaint/suspend/${complaintToSuspend}/${suspendDays}`,
+      setActionLoading(true);
+      // ✅ Check HTTP status 200, not response.data.success
+      await axios.put(
+        `${API_BASE_URL}/api/Complaint/suspend/${complaintToSuspend}/${days}`,
         {},
-        {
-          withCredentials: true,
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      if (response.data && response.data.success) {
-        showNotification(response.data.message, "success");
-        setSelectedComplaint(null);
-        setComplaints((prev) =>
-          prev.filter((c) => c.complaintId !== complaintToSuspend)
-        );
-      }
+      showNotification(`User suspended for ${days} days successfully.`, "success");
+      setSelectedComplaint(null);
+      setComplaints((prev) =>
+        prev.filter((c) => c.complaintId !== complaintToSuspend)
+      );
     } catch (error) {
       console.error("Error suspending user:", error);
-      showNotification("Failed to suspend user. Please try again.", "error");
+      // ✅ Show actual backend error message
+      showNotification(
+        error.response?.data?.message || "Failed to suspend user. Please try again.",
+        "error"
+      );
     } finally {
-      setDetailsLoading(false);
+      setActionLoading(false);
       setShowSuspendModal(false);
       setComplaintToSuspend(null);
       setSuspendDays("");
     }
   };
 
+  // ─── Complaint Card ─────────────────────────────────────────────────────────
   const ComplaintCard = ({ complaint }) => (
     <div
       className={`complaint-card ${
-        selectedComplaint?.complaintId === complaint.complaintId
-          ? "selected"
-          : ""
+        selectedComplaint?.complaintId === complaint.complaintId ? "selected" : ""
       }`}
       onClick={() => handleSelectComplaint(complaint)}
     >
@@ -504,16 +469,13 @@ const AdminManageComplaints = () => {
       </div>
       <p className="complaint-preview">{complaint.content}</p>
       <div className="complaint-meta">
-        <span className="complaint-type">
-          {getComplaintType(complaint.type)}
-        </span>
-        <span className="text-xs text-gray-500">
-          vs {complaint.reportedName}
-        </span>
+        <span className="complaint-type">{getComplaintType(complaint.type)}</span>
+        <span className="text-xs text-gray-500">vs {complaint.reportedName}</span>
       </div>
     </div>
   );
 
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="complaints-container">
       <header className="complaints-header">
@@ -522,8 +484,7 @@ const AdminManageComplaints = () => {
           <div>
             <h1 className="header-title">Manage Complaints</h1>
             <p className="header-subtitle">
-              Review and resolve user complaints ({filteredComplaints.length}{" "}
-              pending)
+              Review and resolve user complaints ({filteredComplaints.length} pending)
             </p>
           </div>
         </div>
@@ -555,6 +516,7 @@ const AdminManageComplaints = () => {
       </header>
 
       <div className="complaints-content">
+        {/* List */}
         <div className="complaints-list">
           {loading ? (
             <div className="flex justify-center p-8">
@@ -568,23 +530,23 @@ const AdminManageComplaints = () => {
             </div>
           ) : (
             filteredComplaints.map((complaint) => (
-              <ComplaintCard
-                key={complaint.complaintId}
-                complaint={complaint}
-              />
+              <ComplaintCard key={complaint.complaintId} complaint={complaint} />
             ))
           )}
         </div>
 
+        {/* Details Panel */}
         <div className="details-panel">
           {selectedComplaint ? (
+            // ✅ detailsLoading only blocks panel when FETCHING details,
+            // not during ban/suspend/refuse actions
             detailsLoading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="loading-spinner"></div>
               </div>
             ) : (
-              <ComplaintDetails 
-                complaint={selectedComplaint} 
+              <ComplaintDetails
+                complaint={selectedComplaint}
                 onRefuse={handleRefuse}
                 onBan={handleBan}
                 onSuspend={handleSuspend}
@@ -599,26 +561,29 @@ const AdminManageComplaints = () => {
           )}
         </div>
       </div>
-      <RefuseConfirmModal 
-        isOpen={showRefuseModal} 
-        onClose={() => setShowRefuseModal(false)} 
-        onConfirm={confirmRefuse} 
+
+      {/* Modals */}
+      <RefuseConfirmModal
+        isOpen={showRefuseModal}
+        onClose={() => setShowRefuseModal(false)}
+        onConfirm={confirmRefuse}
       />
-      <BanConfirmModal 
-        isOpen={showBanModal} 
-        onClose={() => setShowBanModal(false)} 
-        onConfirm={confirmBan} 
+      <BanConfirmModal
+        isOpen={showBanModal}
+        onClose={() => setShowBanModal(false)}
+        onConfirm={confirmBan}
       />
-      <SuspendConfirmModal 
-        isOpen={showSuspendModal} 
+      <SuspendConfirmModal
+        isOpen={showSuspendModal}
         onClose={() => {
           setShowSuspendModal(false);
           setSuspendDays("");
-        }} 
+        }}
         onConfirm={confirmSuspend}
         days={suspendDays}
         setDays={setSuspendDays}
       />
+
       <NotificationToast
         show={notification.show}
         message={notification.message}
