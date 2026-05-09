@@ -14,15 +14,15 @@ const AdPopup = ({ isOpen, onClose, ad }) => {
   const handleNavigate = async () => {
     try {
       const token = localStorage.getItem('token');
+      const config = {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      };
+      
       // Track the click
       await axios.post(
         `${API_BASE_URL}/api/ads/click`,
         { adId: ad.adId || ad.id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        config
       );
     } catch (error) {
       console.error('Error tracking ad click:', error);

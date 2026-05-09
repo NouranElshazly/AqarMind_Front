@@ -94,7 +94,7 @@ const Home = () => {
     // If the user is redirected immediately, the component will unmount and clear this timeout
     const adTimer = setTimeout(() => {
       fetchAd();
-    }, 800);
+    }, 500);
 
     return () => clearTimeout(adTimer);
   }, []);
